@@ -1,0 +1,13 @@
+branches:
+  except:
+    - master
+language: ruby
+cache: bundler
+sudo: false
+bundler_args: --without local
+rvm:
+- 2.1.8
+script:
+- bundle exec rubocop
+- bundle exec foodcritic -f any .
+- bundle exec rspec test/unit
