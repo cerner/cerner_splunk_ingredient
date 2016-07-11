@@ -3,8 +3,11 @@ require 'chefspec'
 require 'compat_resource'
 require 'chefspec/berkshelf'
 require 'chef/application'
-require_relative '../../../libraries/path_helpers'
-require_relative '../../../libraries/platform_helpers'
+require_relative '../../libraries/path_helpers'
+require_relative '../../libraries/platform_helpers'
+require_relative '../../libraries/resource_helpers'
+require_relative '../../libraries/restart_helpers'
+require_relative '../../libraries/service_helpers'
 
 RSpec.configure do |config|
   config.color = true

@@ -1,4 +1,3 @@
-splunk_install 'uninstall universal_forwarder' do
-  package :universal_forwarder
+splunk_install 'universal_forwarder' do
   action :uninstall
 end

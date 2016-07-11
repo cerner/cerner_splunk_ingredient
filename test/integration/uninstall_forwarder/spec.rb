@@ -1,11 +1,11 @@
 windows = os.windows?
 
-control 'basic_uninstall' do
+control 'forwarder_uninstall' do
   impact 0.4
-  title 'Uninstall Splunk'
+  title 'Uninstall Universal Forwarder'
   tag 'splunk_install'
 
-  describe package(windows ? 'Splunk Enterprise' : 'splunk') do
+  describe package(windows ? 'UniversalForwarder' : 'splunkforwarder') do
     it { is_expected.not_to be_installed }
   end
 
@@ -13,7 +13,7 @@ control 'basic_uninstall' do
     its('exit_status') { is_expected.to eq 1 }
   end
 
-  describe service(windows ? 'splunkd' : 'splunk') do
+  describe service(windows ? 'splunkforwarder' : 'splunk') do
     it { is_expected.not_to be_running }
     it { is_expected.not_to be_enabled }
     it { is_expected.not_to be_installed } if windows

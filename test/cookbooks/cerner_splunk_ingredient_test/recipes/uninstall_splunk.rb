@@ -1,4 +1,3 @@
-splunk_install 'uninstall splunk' do
-  package :splunk
+splunk_install 'splunk' do
   action :uninstall
 end

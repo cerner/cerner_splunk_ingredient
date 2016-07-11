@@ -25,5 +25,18 @@ module CernerSplunk
         }
       }
     end
+
+    def service_names
+      {
+        splunk: {
+          linux: 'splunk',
+          windows: 'splunkd'
+        },
+        universal_forwarder: {
+          linux: 'splunk',
+          windows: 'splunkforwarder'
+        }
+      }
+    end
   end
 end

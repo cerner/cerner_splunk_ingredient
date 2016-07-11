@@ -7,27 +7,31 @@ provisioner:
   require_chef_omnibus: 12.9
 
 platforms:
+  - name: centos-6.7
+    provisioner:
+      require_chef_omnibus: 12.4
+    driver:
+      box: bento/centos-6.7
   - name: centos-7.2
   - name: debian-8.4
   - name: windows
     driver:
       box: opentable/win-2012r2-standard-amd64-nocm
-  - name: centos-7.2-compat
-    provisioner:
-      require_chef_omnibus: 12.4
-    driver:
-      box: bento/centos-7.2
 
 suites:
   - name: install
     run_list:
       - recipe[cerner_splunk_ingredient_test::splunk]
-      - recipe[cerner_splunk_ingredient_test::universal_forwarder]
   - name: uninstall
     run_list:
       - recipe[cerner_splunk_ingredient_test::splunk]
-      - recipe[cerner_splunk_ingredient_test::universal_forwarder]
       - recipe[cerner_splunk_ingredient_test::uninstall_splunk]
+  - name: install_forwarder
+    run_list:
+      - recipe[cerner_splunk_ingredient_test::universal_forwarder]
+  - name: uninstall_forwarder
+    run_list:
+      - recipe[cerner_splunk_ingredient_test::universal_forwarder]
       - recipe[cerner_splunk_ingredient_test::uninstall_universal_forwarder]
 
 verifier:

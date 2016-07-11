@@ -1,24 +1,33 @@
-require_relative 'spec_helper'
-require_relative 'shared_examples'
-include CernerSplunk::PathHelpers, CernerSplunk::PlatformHelpers
+require_relative '../spec_helper'
+require_relative 'install_examples'
 
 describe 'splunk_install' do
+  include CernerSplunk::PathHelpers, CernerSplunk::PlatformHelpers
+
   let(:runner_params) { { platform: 'redhat', version: '7.1' } }
   let(:test_params) { { name: 'splunk', build: 'cae2458f4aef', version: '6.3.4' } }
 
   let(:windows_opts) { 'LAUNCHSPLUNK=0 INSTALL_SHORTCUT=0 AGREETOLICENSE=Yes' }
 
-  let(:mock_run_state) { {} }
+  let(:mock_run_state) { { 'splunk_ingredient' => { 'installations' => {} } } }
   let(:chef_run) do
     ChefSpec::SoloRunner.new({ step_into: ['splunk_install'] }.merge!(runner_params)) do |node|
-      node.set['test_parameters'] = test_params
-      node.set['run_state'].merge!(mock_run_state)
+      node.normal['test_parameters'] = test_params
+      node.normal['run_state'].merge!(mock_run_state)
     end.converge('cerner_splunk_ingredient_test::unit_test')
+  end
+
+  before do
+    allow_any_instance_of(Chef::Resource).to receive(:current_owner).and_return('fauxhai')
   end
 
   let(:run_state) { chef_run.node.run_state['splunk_ingredient'] }
 
   describe 'action :install' do
+    before do
+      allow_any_instance_of(Chef::Resource).to receive(:load_installation_state).and_return false
+      allow_any_instance_of(Chef::Provider).to receive(:load_version_state)
+    end
     platform_package_matrix.each do |platform, versions|
       versions.each do |version, packages|
         describe "on #{platform} #{version}" do
@@ -33,14 +42,6 @@ describe 'splunk_install' do
       let(:test_params) { { name: 'Logmaster', package: :universal_forwarder, build: 'cae2458f4aef', version: '6.3.4' } }
 
       it 'should install' do
-        expect(run_state['current_installation']).to eq(
-          name: 'Logmaster',
-          package: :universal_forwarder,
-          version: '6.3.4',
-          build: 'cae2458f4aef',
-          x64: true
-        )
-
         expect(chef_run).to install_rpm_package('splunkforwarder')
       end
     end
@@ -68,7 +69,7 @@ describe 'splunk_install' do
       let(:test_params) { { name: 'hotcakes', build: 'cae2458f4aef', version: '6.3.4' } }
 
       it 'should fail the Chef run' do
-        expect { chef_run }.to raise_error(/Package must be specified.*/)
+        expect { chef_run }.to raise_error(RuntimeError, /Package must be specified.*/)
       end
     end
 
@@ -93,12 +94,16 @@ describe 'splunk_install' do
       let(:test_params) { { name: 'splunk', build: 'cae2458f4aef', version: '6.3.4' } }
 
       it 'should fail the Chef run' do
-        expect { chef_run }.to raise_error(/Unsupported Combination.*/)
+        expect { chef_run }.to raise_error(RuntimeError, /Unsupported Combination.*/)
       end
     end
   end
 
   describe 'action :uninstall' do
+    before do
+      allow_any_instance_of(Chef::Resource).to receive(:load_installation_state).and_return true
+      allow_any_instance_of(Chef::Provider).to receive(:load_version_state)
+    end
     platform_package_matrix.each do |platform, versions|
       versions.each do |version, packages|
         context "on #{platform} #{version}" do
@@ -112,7 +117,7 @@ describe 'splunk_install' do
     context 'when package is not specified' do
       let(:test_params) { { name: 'hotcakes', action: :uninstall } }
       it 'should fail the Chef run' do
-        expect { chef_run }.to raise_error(/Package must be specified.*/)
+        expect { chef_run }.to raise_error(RuntimeError, /Package must be specified.*/)
       end
     end
   end

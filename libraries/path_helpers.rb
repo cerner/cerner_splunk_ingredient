@@ -34,5 +34,13 @@ module CernerSplunk
     def version_pathname(splunk_home)
       Pathname.new(splunk_home).join('etc/splunk.version')
     end
+
+    # Append the relative path of Splunk's first-time-run marker to the home directory path
+    #
+    # @param splunk_home [String] the absolute path to Splunk's home directory
+    # @return [Pathname] the absolute path to Splunk's first-time-run marker file
+    def ftr_pathname(splunk_home)
+      Pathname.new(splunk_home).join('ftr')
+    end
   end
 end
