@@ -2,6 +2,7 @@ module CernerSplunk
   # Mixin Helper methods for Splunk Ingredient resources
   module ResourceHelpers
     include PathHelpers, PlatformHelpers
+
     # Determines the correct install directory in the context of a Splunk resource.
     # Expects `package` to be in the context of the current resource.
     #

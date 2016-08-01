@@ -8,8 +8,10 @@ require_relative '../../libraries/platform_helpers'
 require_relative '../../libraries/resource_helpers'
 require_relative '../../libraries/restart_helpers'
 require_relative '../../libraries/service_helpers'
+require_relative '../../libraries/conf_helpers'
 
 RSpec.configure do |config|
+  config.extend(ChefSpec::Cacher)
   config.color = true
   config.formatter = 'documentation'
 
@@ -47,4 +49,16 @@ def platform_package_matrix
       }
     }
   }
+end
+
+def environment_combinations
+  @env_per ||= [].tap do |array|
+    platform_package_matrix.each do |platform, versions|
+      versions.each do |version, packages|
+        packages.each do |package, url|
+          array << [platform, version, package, url]
+        end
+      end
+    end
+  end
 end

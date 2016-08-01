@@ -22,6 +22,10 @@ suites:
   - name: install
     run_list:
       - recipe[cerner_splunk_ingredient_test::splunk]
+  - name: configure
+    run_list:
+      - recipe[cerner_splunk_ingredient_test::splunk]
+      - recipe[cerner_splunk_ingredient_test::configure_splunk]
   - name: uninstall
     run_list:
       - recipe[cerner_splunk_ingredient_test::splunk]

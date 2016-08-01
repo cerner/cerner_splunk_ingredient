@@ -14,7 +14,7 @@ describe 'splunk_install' do
     ChefSpec::SoloRunner.new({ step_into: ['splunk_install'] }.merge!(runner_params)) do |node|
       node.normal['test_parameters'] = test_params
       node.normal['run_state'].merge!(mock_run_state)
-    end.converge('cerner_splunk_ingredient_test::unit_test')
+    end.converge('cerner_splunk_ingredient_test::install_unit_test')
   end
 
   before do
