@@ -3,7 +3,7 @@
 #
 # Resource for managing the installation of Splunk
 class SplunkInstall < ChefCompat::Resource
-  include CernerSplunk::PlatformHelpers, CernerSplunk::PathHelpers
+  include CernerSplunk::PlatformHelpers, CernerSplunk::PathHelpers, CernerSplunk::ResourceHelpers
 
   resource_name :splunk_install
 
@@ -11,18 +11,14 @@ class SplunkInstall < ChefCompat::Resource
   property :package, [:splunk, :universal_forwarder], required: true
   property :version, String, required: true
   property :build, String, required: true
+  property :user, String, default: lazy { node['current_user'] || package == :splunk ? 'splunk' : 'splunkforwarder' }
   property :base_url, String, default: 'https://download.splunk.com/products'
 
   default_action :install
 
   def after_created
-    node.run_state['splunk_ingredient'] ||= { 'installations' => {} }
-
-    case name.downcase
-    when 'splunk' then package :splunk
-    when 'universal_forwarder' then package :universal_forwarder
-    else raise 'Package must be specified (:splunk or :universal_forwarder)'
-    end unless property_is_set? :package
+    package_from_name unless property_is_set? :package
+    load_installation_state
   end
 
   ### Inherited Methods
@@ -36,12 +32,6 @@ class SplunkInstall < ChefCompat::Resource
     @package_name ||= package_names[package][node['os'].to_sym]
     raise "Unsupported Combination: #{package} + #{node['os']}" unless @package_name
     @package_name
-  end
-
-  def install_dir
-    @install_dir ||= default_install_dirs[package][node['os'].to_sym]
-    raise "Unsupported Combination: #{package} + #{node['os']}" unless @install_dir
-    @install_dir
   end
 
   def package_url
@@ -60,25 +50,43 @@ class SplunkInstall < ChefCompat::Resource
 
   load_current_value do |desired|
     package desired.package
-    version_file = version_pathname(install_dir)
-    current_value_does_not_exist! unless version_file.exist?
 
-    version_data = version_file.read
-    installed_version, installed_build = version_data.match(/VERSION=(\d(?:\.\d)+).+BUILD=([\w]+)/m).captures
-    version installed_version
-    build installed_build
+    install_state = node.run_state['splunk_ingredient']['installations'][install_dir]
+    current_value_does_not_exist! unless install_state
+    version install_state['version']
+    build install_state['build']
+  end
+
+  action_class do
+    def remove_service
+      splunk_service new_resource.name do
+        package new_resource.package
+        action :stop
+      end
+
+      execute "#{command_prefix} disable boot-start" do
+        cwd splunk_bin_path.to_s
+        live_stream true if defined? live_stream
+      end
+    end
+
+    def post_install
+      converge_if_changed :version, :build do
+        load_version_state
+      end
+
+      execute "chown -R #{user}:#{user} #{install_dir}" unless node['os'] == 'windows' || current_owner == user
+    end
   end
 
   action :install do
-    install_state = node.run_state['splunk_ingredient']
-    raise "Install at #{install_dir} already exists!" if install_state['installations'][install_dir]
-    install_state['current_installation'] = install_state['installations'][install_dir] = {
-      name: name,
-      package: package,
-      version: version,
-      build: build,
-      x64: x64_support
-    }
+    user_resource = Chef::Resource::User.new(user, run_context)
+    user_resource.system true
+    user_resource.manage_home true
+    user_resource.run_action :create
+
+    install_state = node.run_state['splunk_ingredient']['installations'][install_dir]
+    raise "Install at #{install_dir} already exists!" if install_state && install_state['name'] != name
 
     converge_if_changed :version, :build do
       remote_file package_path.to_s do
@@ -90,9 +98,9 @@ class SplunkInstall < ChefCompat::Resource
   end
 
   action :uninstall do
-    install_state = node.run_state['splunk_ingredient']
-    install_state.delete('current_installation')
-    install_state['installations'].delete(install_dir)
+    self_state = node.run_state['splunk_ingredient']
+    self_state.delete('current_installation')
+    self_state['installations'].delete(install_dir)
 
     directory install_dir do
       recursive true
@@ -123,6 +131,13 @@ class LinuxInstall < SplunkInstall
         target_dir install_dir
       end
     end
+
+    post_install
+  end
+
+  action :uninstall do
+    remove_service
+    super()
   end
 end
 
@@ -143,9 +158,12 @@ class RedhatInstall < SplunkInstall
         action :install
       end
     end
+
+    post_install
   end
 
   action :uninstall do
+    remove_service
     rpm_package package_name do
       action :remove
     end
@@ -171,9 +189,12 @@ class DebianInstall < SplunkInstall
         action :install
       end
     end
+
+    post_install
   end
 
   action :uninstall do
+    remove_service
     dpkg_package package_name do
       action :purge
     end
@@ -200,9 +221,12 @@ class WindowsInstall < SplunkInstall
         options 'LAUNCHSPLUNK=0 INSTALL_SHORTCUT=0 AGREETOLICENSE=Yes'
       end
     end
+
+    post_install
   end
 
   action :uninstall do
+    remove_service
     windows_package package_name do
       action :remove
     end

@@ -3,6 +3,7 @@ Developing for cerner_splunk_ingredient should follow these guidelines for submi
 
 ### Submitting Issues
 Issues pertaining to cerner_splunk_ingredient should be submitted to Github's issue tracker.
+
 1. Issues will be triaged and marked with an appropriate label (e.g. bug, enhancement, question).
   - A corresponding internal JIRA may be logged if there is a desire for internal discussion or code review.
 - The issue should be worked in a branch outside of the Cerner repo.
@@ -10,6 +11,7 @@ Issues pertaining to cerner_splunk_ingredient should be submitted to Github's is
 
 ### Pull Requests
 Pull requests for changes should be compared against the 'stable' branch.
+
 1. Your branch should use as few logical commits as possible with descriptive commit messages.
   - _Note: these commits should **not** reference any issues, that will be done in the merge commit._
 - Your pull request should reference the issue it is related to.

@@ -1,19 +1,19 @@
 windows = os.windows?
 
-control 'basic_install' do
+control 'forwarder_install' do
   impact 0.4
-  title 'Install Splunk'
+  title 'Install Universal Forwarder'
   tag 'splunk_install'
 
-  splunk_path = windows ? 'c:\Program Files\Splunk' : '/opt/splunk'
+  splunk_path = windows ? 'c:\Program Files\SplunkUniversalForwarder' : '/opt/splunkforwarder'
   splunk_command = windows ? "& \"#{splunk_path}\\bin\\splunk.exe\"" : "#{splunk_path}/bin/splunk"
 
-  describe package(windows ? 'Splunk Enterprise' : 'splunk') do
+  describe package(windows ? 'UniversalForwarder' : 'splunkforwarder') do
     it { is_expected.to be_installed }
     its('version') { is_expected.to match(/6\.3\.4(\.0)?(-cae2458f4aef)?/) }
   end
 
-  describe service(windows ? 'splunkd' : 'splunk') do
+  describe service(windows ? 'splunkforwarder' : 'splunk') do
     it { is_expected.to be_installed }
     it { is_expected.to be_running }
   end
@@ -24,13 +24,13 @@ control 'basic_install' do
 
   describe file(splunk_path) do
     it { is_expected.to be_directory }
-    it { is_expected.to be_owned_by 'splunk' } unless windows
+    it { is_expected.to be_owned_by 'splunkforwarder' } unless windows
   end
 
   unless windows
     describe file('/etc/init.d/splunk') do
       it { is_expected.to be_file }
-      its('content') { is_expected.to match(/RETVAL=0\s+ulimit -n 4000/m) }
+      its('content') { is_expected.to match(/RETVAL=0\s+ulimit -n 3000/m) }
     end
 
     describe file("#{splunk_path}/restart_on_chef_client") do
@@ -38,7 +38,7 @@ control 'basic_install' do
     end
 
     describe command('cat /proc/$(pgrep splunkd | sed -n 1p)/limits') do
-      its('stdout') { is_expected.to match(/^Max open files \s+ \w+ \s+ 4000 \s+ files\s*$/m) }
+      its('stdout') { is_expected.to match(/^Max open files \s+ \w+ \s+ 3000 \s+ files\s*$/m) }
     end
   end
 end
