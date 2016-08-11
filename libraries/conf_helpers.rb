@@ -8,12 +8,13 @@ module CernerSplunk
     end
 
     def read_config(conf_path)
-      return {} unless Pathname.new(conf_path).exist?
+      conf_file = Pathname.new(conf_path)
+      return {} unless conf_file.exist?
 
       current_stanza = 'default'
       current_config = {}
 
-      Pathname.new(conf_path).readlines.each do |ln|
+      conf_file.readlines.each do |ln|
         case ln
         when /^\s*\[(\w+)\]\s*$/
           current_stanza = Regexp.last_match[1]

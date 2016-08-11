@@ -53,7 +53,7 @@ describe 'ConfHelpers' do
     let(:conf_file) { double('Pathname.new(conf_path)') }
 
     it 'should return the config in a hash' do
-      expect(Pathname).to receive(:new).with(conf_path).twice.and_return(conf_file)
+      expect(Pathname).to receive(:new).with(conf_path).and_return(conf_file)
       expect(conf_file).to receive(:exist?).and_return(true)
       expect(conf_file).to receive(:readlines).and_return(IO.readlines('spec/reference/read_test.conf'))
 
