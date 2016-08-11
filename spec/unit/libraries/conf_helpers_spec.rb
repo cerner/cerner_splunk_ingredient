@@ -70,7 +70,7 @@ describe 'ConfHelpers' do
     end
   end
 
-  describe 'apply_config' do
+  describe 'merge_config' do
     let(:existing_config) do
       {
         'default' => {
@@ -93,40 +93,17 @@ describe 'ConfHelpers' do
         }
       }
     end
-    let(:io_stream) { StringIO.new }
-    let(:conf_file) { double('Pathname.new(conf_path)') }
-    let(:expected_conf_file) { IO.read('spec/reference/write_test.conf') }
-
-    before do
-      expect(Pathname).to receive(:new).with(conf_path).and_return(conf_file)
-
-      expect(conf_file).to receive(:open) do |mode, &blk|
-        io_stream.tap(&blk) if mode == 'w'
-      end.twice
-    end
+    let(:expected_config) { IO.read('spec/reference/write_test.conf') }
 
     it 'should write the config with new and old properties' do
-      apply_config(conf_path, config, existing_config)
-      expect(io_stream.string).to eq expected_conf_file
-    end
-
-    context 'when current_config is falsey' do
-      before do
-        expect(self).to receive(:read_config).with(conf_path).and_return(existing_config)
-      end
-
-      it 'should read the existing config from the file' do
-        apply_config(conf_path, config, false)
-        expect(io_stream.string).to eq expected_conf_file
-      end
+      expect(merge_config(config, existing_config)).to eq expected_config
     end
 
     context 'when current_config is empty' do
-      let(:expected_conf_file) { IO.read('spec/reference/write_test_overwrite.conf') }
+      let(:expected_config) { IO.read('spec/reference/write_test_overwrite.conf') }
 
       it 'should write only the given config to the file' do
-        apply_config(conf_path, config, {})
-        expect(io_stream.string).to eq expected_conf_file
+        expect(merge_config(config, {})).to eq expected_config
       end
     end
   end

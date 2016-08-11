@@ -6,7 +6,10 @@ include CernerSplunk::ConfHelpers, CernerSplunk::ResourceHelpers
 shared_examples 'splunk_conf' do |platform, version, package|
   describe 'action :configure' do
     let(:runner_params) { { platform: platform, version: version, user: 'root' } }
-    let(:config) { { 'a' => { 'foo' => 'bar', 'one' => 1 } } }
+    let(:config) { { a: { 'foo' => 'bar', 'one' => 1 } } }
+    let(:existing_config) { { 'a' => { 'foo' => 'bar' } } }
+    let(:expected_state_config) { { 'a' => { 'foo' => 'bar', 'one' => 1 } } }
+    let(:expected_config) { { 'a' => { 'foo' => 'bar', 'one' => '1' } } }
     let(:action) { :configure }
 
     let(:install_dir) { default_install_dirs[package][platform == 'windows' ? :windows : :linux] }
@@ -30,10 +33,9 @@ shared_examples 'splunk_conf' do |platform, version, package|
 
     let(:chef_run_stubs) do
       expect_any_instance_of(Chef::Resource).to receive(:load_installation_state).and_return true
-      expect_any_instance_of(Chef::Resource).to receive(:read_config).with(conf_path).and_return({})
+      expect_any_instance_of(Chef::Resource).to receive(:read_config).with(conf_path).and_return(existing_config)
+      expect_any_instance_of(Chef::Resource).to receive(:merge_config).with(expected_config, existing_config).and_return 'merged config'
       allow_any_instance_of(Chef::Resource).to receive(:current_owner).and_return(platform == 'windows' ? nil : 'fauxhai')
-
-      expect_any_instance_of(Chef::Provider).to receive(:apply_config).with(conf_path, config, false)
     end
 
     let(:conf_path) { Pathname.new(install_dir) + 'etc/system/local/test.conf' }
@@ -56,16 +58,17 @@ shared_examples 'splunk_conf' do |platform, version, package|
           path: conf_path,
           package: package,
           scope: :default,
-          config: config,
+          config: expected_config,
           user: package.to_s
         }
       end
 
       it { is_expected.to configure_splunk('system/test.conf').with expected_params }
+      it { is_expected.to create_file(conf_path).with content: 'merged config' }
 
       it 'should set the run state' do
         run_state = chef_run.node.run_state['splunk_ingredient']['current_installation']
-        expect(run_state['config']['system/default/test.conf']).to eq config
+        expect(run_state['config']['system/default/test.conf']).to eq expected_state_config
       end
     end
 
@@ -195,13 +198,13 @@ shared_examples 'splunk_conf' do |platform, version, package|
       end
       let(:chef_run_stubs) do
         expect_any_instance_of(Chef::Resource).to receive(:load_installation_state).and_return true
-        expect_any_instance_of(Chef::Resource).to receive(:read_config).with(conf_path).and_return({})
+        expect_any_instance_of(Chef::Resource).to receive(:read_config).with(conf_path).and_return(existing_config)
+        expect_any_instance_of(Chef::Resource).to receive(:merge_config).with(expected_config, {}).and_return 'just my config'
         allow_any_instance_of(Chef::Resource).to receive(:current_owner).and_return(platform == 'windows' ? nil : 'fauxhai')
-
-        expect_any_instance_of(Chef::Provider).to receive(:apply_config).with(conf_path, config, {})
       end
 
       it { is_expected.to configure_splunk('system/test.conf') }
+      it { is_expected.to create_file(conf_path).with content: 'just my config' }
     end
   end
 end

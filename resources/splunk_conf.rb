@@ -15,6 +15,11 @@ class SplunkConf < ChefCompat::Resource
 
   default_action :configure
 
+  def existing_config(path)
+    @cache ||= node.run_state['splunk_ingredient']['_cache'] ||= { 'existing_config' => {} }
+    @cache['existing_config'][path.to_s] ||= read_config(path)
+  end
+
   load_current_value do |desired|
     install_state = node.run_state['splunk_ingredient']['current_installation'] || {}
     if property_is_set? :package
@@ -39,21 +44,19 @@ class SplunkConf < ChefCompat::Resource
 
     desired.config = stringify_config(desired.config)
 
-    existing_config = read_config(desired.path)
-    config reset ? existing_config : existing_config.select { |key, _| desired.config.keys.include? key.to_s }
+    current_config = existing_config(desired.path)
+    config reset ? current_config : current_config.select { |key, _| desired.config.keys.include? key.to_s }
   end
 
   action :configure do
-    file new_resource.path do
-      owner user
-      action :create_if_missing
-    end
-
     config_state = node.run_state['splunk_ingredient']['current_installation']['config'] ||= {}
     config_state[path.to_s[%r{^.+[\\/](.+[\\/].+[\\/].+)$}, 1]] = resolve_types(config)
 
     converge_if_changed :config do
-      apply_config path, config, reset && {}
+      file new_resource.path do
+        owner user
+        content merge_config(config, reset ? {} : existing_config(new_resource.path))
+      end
     end
   end
 end

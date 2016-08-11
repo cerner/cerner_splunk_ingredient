@@ -26,8 +26,8 @@ module CernerSplunk
     end
 
     def resolve_types(config)
-      config.update config do |_, props|
-        props.update props do |_, value|
+      config.merge config do |_, props|
+        props.merge props do |_, value|
           case value
           when /^(true|false)$/
             value == 'true'
@@ -42,25 +42,20 @@ module CernerSplunk
       end
     end
 
-    def apply_config(conf_path, desired_config, current_config = nil)
-      conf_file = Pathname.new(conf_path)
-      conf_file.open('a', &:close)
-
-      current_config || current_config = read_config(conf_path)
-
+    def merge_config(desired_config, current_config)
       (current_config.keys + desired_config.keys).uniq.each do |section|
         (current_config[section] ||= {}).merge! desired_config[section] if desired_config[section]
       end
 
-      conf_file.open('w') do |file|
-        file.puts '# Warning: This file is managed by Chef!'
-        file.puts '# Comments will not be preserved and configuration may be overwritten.'
-        current_config.each do |section, props|
-          file.puts ''
-          file.puts "[#{section}]"
-          props.each { |key, value| file.puts "#{key} = #{value}" }
-        end
+      stream = StringIO.new
+      stream.puts '# Warning: This file is managed by Chef!'
+      stream.puts '# Comments will not be preserved and configuration may be overwritten.'
+      current_config.each do |section, props|
+        stream.puts ''
+        stream.puts "[#{section}]"
+        props.each { |key, value| stream.puts "#{key} = #{value}" }
       end
+      stream.string
     end
   end
 end
