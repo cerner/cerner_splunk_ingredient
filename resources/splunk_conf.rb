@@ -1,14 +1,3 @@
-# splunk_conf '(app_name or system)/(file).conf' do
-#   action :configure
-#   package :splunk # Optional, can be :splunk or :universal_forwarder.
-#   scope :local # Default, must be :local or :default
-#   config {
-#     'stanza': {
-#       'key': 'value'
-#     }
-#   } # Defaults to empty hash, writing nothing. Hash of hashes, keyed by stanza and subsequent hashes containing string key value pairs.
-#   reset false # Default, resets the conf file to defaults before writing changes.
-
 # Cookbook Name:: cerner_splunk_ingredient
 # Resource:: splunk_conf
 #
