@@ -10,7 +10,7 @@ class SplunkService < ChefCompat::Resource
 
   property :name, String, name_property: true, desired_state: false, identity: true
   property :package, [:splunk, :universal_forwarder], required: true
-  property :user, [String, nil], default: lazy { current_owner }
+  property :user, [String, nil]
   property :ulimit, Integer
 
   default_action :start
@@ -54,6 +54,8 @@ class SplunkService < ChefCompat::Resource
         ulimit limit if limit > 0
       end
     end
+
+    user current_owner
   end
 
   action :start do

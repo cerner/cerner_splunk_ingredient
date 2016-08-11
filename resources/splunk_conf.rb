@@ -10,7 +10,7 @@ class SplunkConf < ChefCompat::Resource
   property :package, [:splunk, :universal_forwarder], required: true, desired_state: false
   property :scope, [:local, :default], desired_state: false, default: :local
   property :config, Hash, required: true
-  property :user, [String, nil], default: lazy { current_owner }
+  property :user, [String, nil]
   property :reset, [TrueClass, FalseClass], desired_state: false, default: false
 
   default_action :configure
@@ -46,15 +46,18 @@ class SplunkConf < ChefCompat::Resource
 
     current_config = existing_config(desired.path)
     config reset ? current_config : current_config.select { |key, _| desired.config.keys.include? key.to_s }
+
+    user current_owner
   end
 
   action :configure do
     config_state = node.run_state['splunk_ingredient']['current_installation']['config'] ||= {}
     config_state[path.to_s[%r{^.+[\\/](.+[\\/].+[\\/].+)$}, 1]] = resolve_types(config)
 
+    config_user = user
     converge_if_changed :config do
       file new_resource.path do
-        owner user
+        owner config_user
         content merge_config(config, reset ? {} : existing_config(new_resource.path))
       end
     end
