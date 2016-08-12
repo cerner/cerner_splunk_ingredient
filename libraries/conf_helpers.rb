@@ -16,9 +16,9 @@ module CernerSplunk
 
       conf_file.readlines.each do |ln|
         case ln
-        when /^\s*\[(\w+)\]\s*$/
+        when /^\s*\[([^#]+)\]\s*/
           current_stanza = Regexp.last_match[1]
-        when /^\s*(\w+)\s*=\s*(.+)\s*$/
+        when /^\s*([^\s#]+?)\s*=\s*([^\s#]+)\s*/
           (current_config[current_stanza] ||= {})[Regexp.last_match[1]] = Regexp.last_match[2]
         end
       end

@@ -45,7 +45,7 @@ describe 'ConfHelpers' do
           'outside' => 'true',
           'inside' => 'true'
         },
-        'other' => {
+        'other!@?' => {
           'something' => 'here'
         }
       }
