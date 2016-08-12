@@ -26,7 +26,7 @@ module CernerSplunk
       current_config
     end
 
-    def merge_config(desired_config, current_config)
+    def merge_config(current_config, desired_config)
       (current_config.keys + desired_config.keys).uniq.each do |section|
         (current_config[section] ||= {}).merge! desired_config[section] if desired_config[section]
       end

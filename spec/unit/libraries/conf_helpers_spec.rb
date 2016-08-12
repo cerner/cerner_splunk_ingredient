@@ -96,14 +96,14 @@ describe 'ConfHelpers' do
     let(:expected_config) { IO.read('spec/reference/write_test.conf') }
 
     it 'should write the config with new and old properties' do
-      expect(merge_config(config, existing_config)).to eq expected_config
+      expect(merge_config(existing_config, config)).to eq expected_config
     end
 
     context 'when current_config is empty' do
       let(:expected_config) { IO.read('spec/reference/write_test_overwrite.conf') }
 
       it 'should write only the given config to the file' do
-        expect(merge_config(config, {})).to eq expected_config
+        expect(merge_config({}, config)).to eq expected_config
       end
     end
   end

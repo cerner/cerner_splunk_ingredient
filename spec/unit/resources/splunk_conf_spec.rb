@@ -34,7 +34,7 @@ shared_examples 'splunk_conf' do |platform, version, package|
     let(:chef_run_stubs) do
       expect_any_instance_of(Chef::Resource).to receive(:load_installation_state).and_return true
       expect_any_instance_of(Chef::Resource).to receive(:read_config).with(conf_path).and_return(existing_config)
-      expect_any_instance_of(Chef::Resource).to receive(:merge_config).with(expected_config, existing_config).and_return 'merged config'
+      expect_any_instance_of(Chef::Resource).to receive(:merge_config).with(existing_config, expected_config).and_return 'merged config'
       expect_any_instance_of(Chef::Resource).to receive(:current_owner).and_return(platform == 'windows' ? nil : 'fauxhai')
     end
 
@@ -195,7 +195,7 @@ shared_examples 'splunk_conf' do |platform, version, package|
       let(:chef_run_stubs) do
         expect_any_instance_of(Chef::Resource).to receive(:load_installation_state).and_return true
         expect_any_instance_of(Chef::Resource).to receive(:read_config).with(conf_path).and_return(existing_config)
-        expect_any_instance_of(Chef::Resource).to receive(:merge_config).with(expected_config, {}).and_return 'just my config'
+        expect_any_instance_of(Chef::Resource).to receive(:merge_config).with({}, expected_config).and_return 'just my config'
         expect_any_instance_of(Chef::Resource).to receive(:current_owner).and_return(platform == 'windows' ? nil : 'fauxhai')
       end
 

@@ -55,7 +55,7 @@ class SplunkConf < ChefCompat::Resource
     converge_if_changed :config do
       file new_resource.path.to_s do
         owner config_user
-        content merge_config(config, reset ? {} : existing_config(new_resource.path))
+        content merge_config(reset ? {} : existing_config(new_resource.path), config)
       end
     end
   end
