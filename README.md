@@ -116,7 +116,7 @@ Applies configuration to .conf files.
 You should know where the .conf file is that you wish to modify, as you must provide the path from `$SPLUNK_HOME/etc`.
 
 You can specify the scope as you would in the real path to the file (`system/local/indexes.conf`) or use the `scope`
-property and specfiy this path: `system/indexes.conf`. The resource will modify local config if no scope is provided.
+property and specify this path: `system/indexes.conf`. The resource will modify local config if no scope is provided.
 
 Properties:
 
@@ -192,13 +192,15 @@ node.run_state['splunk_ingredient'] = {
     build: 'a1b2c3d4e5f6',
     x64: true,
     config: {
-      'testing' => {
-        'one' => 1,
-        'two' => 2,
-        'three' => 3
-      },
-      'stanza' => {
-        'key' => 'value'
+      'system/local/test.conf' => {
+        'testing' => {
+          'one' => 1,
+          'two' => 2,
+          'three' => 3
+        },
+        'stanza' => {
+          'key' => 'value'
+        }
       }
     }
   }
