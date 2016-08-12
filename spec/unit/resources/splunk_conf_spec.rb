@@ -65,6 +65,7 @@ shared_examples 'splunk_conf' do |platform, version, package|
 
       it { is_expected.to configure_splunk('system/test.conf').with expected_params }
       it { is_expected.to create_file(conf_path).with(content: 'merged config', owner: package.to_s) }
+      it { is_expected.to init_splunk_service('init_before_config') }
     end
 
     context 'when scope is not provided' do

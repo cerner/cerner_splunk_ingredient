@@ -22,4 +22,8 @@ if defined?(ChefSpec)
   def restart_splunk_service(name)
     ChefSpec::Matchers::ResourceMatcher.new(:splunk_service, :restart, name)
   end
+
+  def init_splunk_service(name)
+    ChefSpec::Matchers::ResourceMatcher.new(:splunk_service, :init, name)
+  end
 end

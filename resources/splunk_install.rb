@@ -71,10 +71,9 @@ class SplunkInstall < ChefCompat::Resource
     end
 
     def post_install
-      converge_if_changed :version, :build do
-        load_version_state
+      ruby_block 'load_version_state' do
+        block { load_version_state }
       end
-
       execute "chown -R #{user}:#{user} #{install_dir}" unless node['os'] == 'windows' || current_owner == user
     end
   end
