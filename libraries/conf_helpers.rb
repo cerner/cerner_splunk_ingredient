@@ -26,23 +26,6 @@ module CernerSplunk
       current_config
     end
 
-    def resolve_types(config)
-      config.merge config do |_, props|
-        props.merge props do |_, value|
-          case value
-          when /^(true|false)$/
-            value == 'true'
-          when /^\d+$/
-            Integer(value)
-          when /^\d*\.\d+$/
-            Float(value)
-          else
-            value
-          end
-        end
-      end
-    end
-
     def merge_config(desired_config, current_config)
       (current_config.keys + desired_config.keys).uniq.each do |section|
         (current_config[section] ||= {}).merge! desired_config[section] if desired_config[section]

@@ -174,41 +174,6 @@ three = 3
 key = value
 ```
 
-##### Run State
-Since there is no concept of type in .conf files, everything is evaluated as strings. Configuration is read as strings
-and the provided config is converted to strings before merging. `splunk_conf` will store config (after merging) into the
-run state when its configure action is run, attempting to convert boolean and number types from strings for convenience.
-
-Keep in mind when accessing the run state:
-* All config keys will be strings regardless of whether you used strings or symbols
-* The `:config` key will not exist in the installation run state until `splunk_conf` is run
-
-```Ruby
-node.run_state['splunk_ingredient'] = {
-  'current_installation' => {
-    name: 'splunk',
-    package: :splunk,
-    version: '5.5.5',
-    build: 'a1b2c3d4e5f6',
-    x64: true,
-    config: {
-      'system/local/test.conf' => {
-        'testing' => {
-          'one' => 1,
-          'two' => 2,
-          'three' => 3
-        },
-        'stanza' => {
-          'key' => 'value'
-        }
-      }
-    }
-  }
-}
-```
-
-
-
 ---
 
 Contributing

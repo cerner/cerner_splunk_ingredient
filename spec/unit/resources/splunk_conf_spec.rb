@@ -65,11 +65,6 @@ shared_examples 'splunk_conf' do |platform, version, package|
 
       it { is_expected.to configure_splunk('system/test.conf').with expected_params }
       it { is_expected.to create_file(conf_path).with(content: 'merged config', owner: package.to_s) }
-
-      it 'should set the run state' do
-        run_state = chef_run.node.run_state['splunk_ingredient']['current_installation']
-        expect(run_state['config']['system/default/test.conf']).to eq expected_state_config
-      end
     end
 
     context 'when scope is not provided' do

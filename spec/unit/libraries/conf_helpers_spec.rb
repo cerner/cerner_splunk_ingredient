@@ -107,37 +107,4 @@ describe 'ConfHelpers' do
       end
     end
   end
-
-  describe 'resolve_types' do
-    let(:config) do
-      {
-        'one' => {
-          'a' => 'true',
-          'b' => '1000',
-          'c' => '50.99',
-          'd' => 'false'
-        },
-        'two' => {
-          'even' => 'more'
-        }
-      }
-    end
-    let(:expected_config) do
-      {
-        'one' => {
-          'a' => true,
-          'b' => 1000,
-          'c' => 50.99,
-          'd' => false
-        },
-        'two' => {
-          'even' => 'more'
-        }
-      }
-    end
-
-    it 'should resolve types for the given config' do
-      expect(resolve_types(config)).to eq(expected_config)
-    end
-  end
 end

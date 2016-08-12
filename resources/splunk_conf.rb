@@ -51,12 +51,9 @@ class SplunkConf < ChefCompat::Resource
   end
 
   action :configure do
-    config_state = node.run_state['splunk_ingredient']['current_installation']['config'] ||= {}
-    config_state[path.to_s[%r{^.+[\\/](.+[\\/].+[\\/].+)$}, 1]] = resolve_types(config)
-
     config_user = user
     converge_if_changed :config do
-      file new_resource.path do
+      file new_resource.path.to_s do
         owner config_user
         content merge_config(config, reset ? {} : existing_config(new_resource.path))
       end
