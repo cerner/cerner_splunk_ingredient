@@ -10,7 +10,7 @@ class SplunkService < ChefCompat::Resource
 
   property :name, String, name_property: true, desired_state: false, identity: true
   property :package, [:splunk, :universal_forwarder], required: true
-  property :user, String
+  property :user, [String, nil]
   property :ulimit, Integer
 
   default_action :start
@@ -23,6 +23,16 @@ class SplunkService < ChefCompat::Resource
     @service_name ||= service_names[package][node['os'].to_sym]
   end
 
+  def initialize_service
+    if ftr_pathname(install_dir).exist?
+      cmd = "#{command_prefix} enable boot-start#{user ? ' -user ' + user : ''} --accept-license --no-prompt"
+      executor = Chef::Resource::Execute.new cmd, run_context
+      executor.cwd splunk_bin_path.to_s
+      executor.live_stream true if defined? live_stream
+      executor.run_action :run
+    end
+  end
+
   action_class do
     def service_action(desired_action)
       service service_name do
@@ -30,15 +40,6 @@ class SplunkService < ChefCompat::Resource
         supports start: true, stop: true, restart: true, status: true
         action desired_action
       end
-    end
-
-    def configure_service
-      # Use run_action to execute immediately and avoid a race condition with /etc/init.d/splunk not existing yet.
-      execute "#{command_prefix} enable boot-start#{user ? ' -user ' + user : ''} --accept-license --no-prompt" do
-        action :nothing
-        cwd splunk_bin_path.to_s
-        live_stream true if defined? live_stream
-      end.run_action :run if ftr_pathname(install_dir).exist?
     end
   end
 
@@ -50,18 +51,19 @@ class SplunkService < ChefCompat::Resource
     raise 'Attempted to reference service for Splunk installation that does not exist' unless load_installation_state
     check_restart unless defined?(performed_actions) && !performed_actions.empty?
 
-    user current_owner
-
     unless node['os'] == 'windows'
       if init_script_path.exist?
         limit = init_script_path.read[/ulimit -n (\d+)/, 1].to_i
         ulimit limit if limit > 0
       end
     end
+
+    user current_owner
+    desired.user ||= user
   end
 
   action :start do
-    configure_service
+    initialize_service
     service_action :start
   end
 
@@ -70,9 +72,13 @@ class SplunkService < ChefCompat::Resource
   end
 
   action :restart do
-    configure_service
+    initialize_service
     service_action :restart
     clear_restart
+  end
+
+  action :init do
+    initialize_service
   end
 end
 
@@ -86,7 +92,7 @@ class LinuxService < SplunkService
   provides :splunk_service, os: 'linux'
 
   action :start do
-    configure_service
+    initialize_service
 
     converge_if_changed :ulimit do
       write_initd_ulimit ulimit
@@ -97,7 +103,7 @@ class LinuxService < SplunkService
   end
 
   action :restart do
-    configure_service
+    initialize_service
 
     converge_if_changed :ulimit do
       write_initd_ulimit ulimit

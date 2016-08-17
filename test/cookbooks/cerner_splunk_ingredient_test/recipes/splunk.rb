@@ -5,6 +5,16 @@ splunk_install 'splunk' do
   base_url 'http://download.splunk.com/products'
 end
 
+splunk_conf 'system/indexes.conf' do
+  config(
+    test_index: {
+      homePath: '$SPLUNK_DB/test_index/db',
+      coldPath: '$SPLUNK_DB/test_index/colddb',
+      thawedPath: '$SPLUNK_DB/test_index/thaweddb'
+    }
+  )
+end
+
 splunk_service 'splunk' do
   ulimit 4000
 end

@@ -27,6 +27,17 @@ control 'basic_install' do
     it { is_expected.to be_owned_by 'splunk' } unless windows
   end
 
+  describe file(Pathname.new(splunk_path).join('etc/system/local/indexes.conf').to_s) do
+    it { is_expected.to be_file }
+    it { is_expected.to be_owned_by 'splunk' } unless windows
+    its('content') do
+      is_expected.to match(/\[test_index\]/)
+      is_expected.to match %r{homePath = \$SPLUNK_DB/test_index/db}
+      is_expected.to match %r{coldPath = \$SPLUNK_DB/test_index/colddb}
+      is_expected.to match %r{thawedPath = \$SPLUNK_DB/test_index/thaweddb}
+    end
+  end
+
   unless windows
     describe file('/etc/init.d/splunk') do
       it { is_expected.to be_file }

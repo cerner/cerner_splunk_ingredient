@@ -27,6 +27,17 @@ control 'forwarder_install' do
     it { is_expected.to be_owned_by 'splunkforwarder' } unless windows
   end
 
+  describe file(Pathname.new(splunk_path).join('etc/system/local/server.conf').to_s) do
+    it { is_expected.to be_file }
+    it { is_expected.to be_owned_by 'splunkforwarder' } unless windows
+    its('content') do
+      is_expected.to match '[general]'
+      is_expected.to match 'serverName = test-forwarder'
+      is_expected.to match '[sslConfig]'
+      is_expected.to match(/sslKeysfilePassword = .+/)
+    end
+  end
+
   unless windows
     describe file('/etc/init.d/splunk') do
       it { is_expected.to be_file }
