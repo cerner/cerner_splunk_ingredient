@@ -5,7 +5,7 @@ gem 'chef', '~> 12.4'
 gem 'compat_resource', '~> 12.5', '>= 12.5.6'
 gem 'rubocop', '~> 0.41'
 gem 'foodcritic', '~> 6.0'
-gem 'chefspec', '~> 4.7'
+gem 'chefspec', '~> 5.0'
 
 group :local do
   gem 'test-kitchen', '~> 1.10'
