@@ -21,7 +21,6 @@ describe 'splunk_install' do
         let(:command_prefix) { runner_params[:platform] == 'windows' ? 'splunk.exe' : './splunk' }
 
         let(:common_stubs) do
-          allow_any_instance_of(Chef::Provider).to receive(:load_version_state)
           allow_any_instance_of(Chef::Resource).to receive(:current_owner).and_return('fauxhai')
         end
 

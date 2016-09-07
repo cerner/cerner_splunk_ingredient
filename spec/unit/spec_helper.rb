@@ -1,6 +1,5 @@
 require 'rspec/expectations'
 require 'chefspec'
-require 'compat_resource'
 require 'chefspec/berkshelf'
 require 'chef/application'
 require_relative '../../libraries/path_helpers'

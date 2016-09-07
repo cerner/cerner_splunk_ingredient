@@ -1,5 +1,6 @@
 shared_examples 'should install' do |platform, expected_url|
   it { is_expected.to create_remote_file(package_path).with(source: expected_url) }
+  it { is_expected.to run_ruby_block('load_version_state') }
 
   case platform
   when 'redhat' then it { is_expected.to install_rpm_package(package_name).with(source: package_path) }

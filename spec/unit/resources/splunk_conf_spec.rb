@@ -1,6 +1,4 @@
-
 require_relative '../spec_helper'
-
 include CernerSplunk::ConfHelpers, CernerSplunk::ResourceHelpers
 
 shared_examples 'splunk_conf' do |platform, version, package|
@@ -207,8 +205,6 @@ shared_examples 'splunk_conf' do |platform, version, package|
 end
 
 describe 'splunk_conf' do
-  include CernerSplunk::PathHelpers
-
   let(:test_resource) { 'splunk_conf' }
   let(:test_recipe) { 'config_unit_test' }
 

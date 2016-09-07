@@ -1,5 +1,4 @@
 require_relative '../spec_helper'
-
 include CernerSplunk::ServiceHelpers, CernerSplunk::RestartHelpers
 
 shared_examples '*start examples' do |action, platform, _, package|
