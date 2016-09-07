@@ -64,7 +64,7 @@ end
 
 def chef_context_block
   proc do
-    let(:chef_run) do
+    cached(:chef_run) do
       ChefSpec::SoloRunner.new({ step_into: [test_resource] }.merge!(runner_params)) do |node|
         node.normal['test_parameters'] = test_params
         node.normal['run_state'].merge!(mock_run_state)
