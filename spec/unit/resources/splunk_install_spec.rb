@@ -8,8 +8,8 @@ describe 'splunk_install' do
   let(:test_recipe) { 'install_unit_test' }
 
   environment_combinations.each do |platform, version, package, expected_url|
-    describe "on #{platform} #{version}" do
-      describe "with package #{package}" do
+    context "on #{platform} #{version}" do
+      context "with package #{package}" do
         let(:runner_params) { { platform: platform, version: version, user: 'root' } }
 
         let(:test_params) { { name: 'splunk', build: 'cae2458f4aef', version: '6.3.4' } }
@@ -29,7 +29,7 @@ describe 'splunk_install' do
           action_stubs
         end
 
-        chef_context 'action :install' do
+        chef_describe 'action :install' do
           let(:action_stubs) do
             allow_any_instance_of(Chef::Resource).to receive(:load_installation_state).and_return false
           end
@@ -102,7 +102,7 @@ describe 'splunk_install' do
           end
         end
 
-        chef_context 'action :uninstall' do
+        chef_describe 'action :uninstall' do
           let(:action_stubs) do
             allow_any_instance_of(Chef::Resource).to receive(:load_installation_state).and_return true
           end

@@ -3,7 +3,7 @@ include CernerSplunk::ConfHelpers, CernerSplunk::ResourceHelpers
 
 shared_examples 'splunk_conf' do |platform, version, package|
   let(:runner_params) { { platform: platform, version: version, user: 'root' } }
-  chef_context 'action :configure' do
+  chef_describe 'action :configure' do
     let(:config) { { a: { 'foo' => 'bar', 'one' => 1 } } }
     let(:existing_config) { { 'a' => { 'foo' => 'bar' } } }
     let(:expected_state_config) { { 'a' => { 'foo' => 'bar', 'one' => 1 } } }
@@ -209,8 +209,8 @@ describe 'splunk_conf' do
   let(:test_recipe) { 'config_unit_test' }
 
   environment_combinations.each do |platform, version, package, _|
-    describe "on #{platform} #{version}" do
-      describe "with package #{package}" do
+    context "on #{platform} #{version}" do
+      context "with package #{package}" do
         include_examples 'splunk_conf', platform, version, package
       end
     end

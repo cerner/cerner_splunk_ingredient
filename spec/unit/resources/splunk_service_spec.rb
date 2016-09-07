@@ -80,8 +80,8 @@ describe 'splunk_service' do
   let(:test_recipe) { 'service_unit_test' }
 
   environment_combinations.each do |platform, version, package, _|
-    describe "on #{platform} #{version}" do
-      describe "with package #{package}" do
+    context "on #{platform} #{version}" do
+      context "with package #{package}" do
         let(:runner_params) { { platform: platform, version: version, user: 'root' } }
         is_windows = platform == 'windows'
 
@@ -120,17 +120,17 @@ describe 'splunk_service' do
           action_stubs
         end
 
-        chef_context 'action :start' do
+        chef_describe 'action :start' do
           let(:test_params) { { name: package.to_s, action: :start } }
           include_examples '*start examples', :start, platform, version, package
         end
 
-        chef_context 'action :restart' do
+        chef_describe 'action :restart' do
           let(:test_params) { { name: package.to_s, action: :restart } }
           include_examples '*start examples', :restart, platform, version, package
         end
 
-        chef_context 'action :stop' do
+        chef_describe 'action :stop' do
           let(:action_stubs) {}
           let(:ftr_scope) { Chef::Provider }
           let(:test_params) { { name: package.to_s, action: :stop } }
