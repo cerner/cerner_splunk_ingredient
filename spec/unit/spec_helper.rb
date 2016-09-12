@@ -1,6 +1,5 @@
 require 'rspec/expectations'
 require 'chefspec'
-require 'compat_resource'
 require 'chefspec/berkshelf'
 require 'chef/application'
 require_relative '../../libraries/path_helpers'
@@ -61,4 +60,28 @@ def environment_combinations
       end
     end
   end
+end
+
+def chef_context_block
+  proc do
+    cached(:chef_run) do
+      ChefSpec::SoloRunner.new({ step_into: [test_resource] }.merge!(runner_params)) do |node|
+        node.normal['test_parameters'] = test_params
+        node.normal['run_state'].merge!(mock_run_state)
+        chef_run_stubs
+      end.converge('cerner_splunk_ingredient_test::' + test_recipe)
+    end
+
+    let(:run_state) { chef_run.node.run_state['splunk_ingredient'] }
+
+    subject { chef_run }
+  end
+end
+
+def chef_context(description, &blk)
+  context(description, &chef_context_block).class_eval(&blk)
+end
+
+def chef_describe(description, &blk)
+  describe(description, &chef_context_block).class_eval(&blk)
 end

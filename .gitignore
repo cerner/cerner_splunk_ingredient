@@ -6,6 +6,8 @@
 *.un~
 pkg/
 
+.vscode
+
 # Berkshelf
 .vagrant
 /cookbooks
