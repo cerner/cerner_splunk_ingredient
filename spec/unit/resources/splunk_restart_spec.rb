@@ -34,14 +34,17 @@ describe 'splunk_restart' do
 
         chef_describe 'action :check' do
           let(:test_params) { { name: package.to_s, action: :check } }
-          let(:action_stubs) do
-            marker = double('marker_path')
-            expect_any_instance_of(Chef::Provider).to receive(:marker_path).and_return(marker)
-            expect(marker).to receive(:exist?).and_return true
-          end
 
-          it 'should notify the Splunk service to restart' do
-            expect(subject.splunk_restart(package.to_s)).to notify("splunk_service[#{package}]").to(:restart).delayed
+          chef_context 'when the marker exists' do
+            let(:action_stubs) do
+              marker = double('marker_path')
+              expect_any_instance_of(Chef::Provider).to receive(:marker_path).and_return(marker)
+              expect(marker).to receive(:exist?).and_return true
+            end
+
+            it 'should notify the Splunk service to restart' do
+              expect(subject.splunk_restart(package.to_s)).to notify("splunk_service[#{package}]").to(:restart).delayed
+            end
           end
 
           chef_context 'when the marker does not exist' do
