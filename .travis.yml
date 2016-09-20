@@ -14,8 +14,7 @@ env:
 matrix:
   exclude:
     - rvm: 2.1.8
-      env:
-        - CHEF_VERSION="~> 12.14" # Chef 12.14+ requires Ruby 2.2
+      env: CHEF_VERSION="~> 12.14" # Chef 12.14+ requires Ruby 2.2
 script:
   - bundle exec rubocop
   - bundle exec foodcritic -f any .
