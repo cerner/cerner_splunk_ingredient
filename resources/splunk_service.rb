@@ -24,13 +24,13 @@ class SplunkService < ChefCompat::Resource
   end
 
   def initialize_service
-    if ftr_pathname(install_dir).exist?
-      cmd = "#{command_prefix} enable boot-start#{user ? ' -user ' + user : ''} --accept-license --no-prompt"
-      executor = Chef::Resource::Execute.new cmd, run_context
-      executor.cwd splunk_bin_path.to_s
-      executor.live_stream true if defined? live_stream
-      executor.run_action :run
-    end
+    return unless ftr_pathname(install_dir).exist?
+
+    cmd = "#{command_prefix} enable boot-start#{user ? ' -user ' + user : ''} --accept-license --no-prompt"
+    executor = Chef::Resource::Execute.new cmd, run_context
+    executor.cwd splunk_bin_path.to_s
+    executor.live_stream true if defined? live_stream
+    executor.run_action :run
   end
 
   action_class do

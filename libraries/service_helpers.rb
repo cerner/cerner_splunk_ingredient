@@ -7,13 +7,13 @@ module CernerSplunk
     # @return [Integer, nil]
     def service_pid
       install_state = node.run_state['splunk_ingredient']['installations'][install_dir]
-      if install_state
-        pid_file = Pathname.new(install_dir).join('var/run/splunk/splunkd.pid')
-        if pid_file.exist?
-          pid = pid_file.readlines.first.to_i
-          return pid > 0 ? pid : nil
-        end
-      end
+      return unless install_state
+
+      pid_file = Pathname.new(install_dir).join('var/run/splunk/splunkd.pid')
+      return unless pid_file.exist?
+
+      pid = pid_file.readlines.first.to_i
+      pid > 0 ? pid : nil
     end
 
     # Reports if the daemon for the current package is running

@@ -6,6 +6,7 @@ shared_examples '*start examples' do |action, platform, _, package|
   let(:action_stubs) do
     expect_any_instance_of(Chef::Provider).not_to receive(:write_initd_ulimit)
     expect_any_instance_of(Chef::Provider).not_to receive(:ensure_restart)
+    expect_any_instance_of(Chef::Provider).to receive(:clear_restart).and_call_original if action == :restart
   end
 
   case action
@@ -20,6 +21,7 @@ shared_examples '*start examples' do |action, platform, _, package|
     let(:action_stubs) do
       expect_any_instance_of(Chef::Provider).not_to receive(:write_initd_ulimit)
       expect_any_instance_of(Chef::Provider).not_to receive(:ensure_restart)
+      expect_any_instance_of(Chef::Provider).to receive(:clear_restart).and_call_original if action == :restart
     end
 
     case action
@@ -39,6 +41,7 @@ shared_examples '*start examples' do |action, platform, _, package|
         expect_any_instance_of(Chef::Provider).to receive(:service_running).and_return(nil) if action == :start
         expect_any_instance_of(Chef::Provider).to receive(:write_initd_ulimit).with(4096)
         expect_any_instance_of(Chef::Provider).not_to receive(:ensure_restart)
+        expect_any_instance_of(Chef::Provider).to receive(:clear_restart).and_call_original if action == :restart
       end
 
       it 'should set the ulimit' do
@@ -49,7 +52,7 @@ shared_examples '*start examples' do |action, platform, _, package|
         let(:action_stubs) do
           expect_any_instance_of(Chef::Provider).to receive(:service_running).at_least(:once).and_return(true)
           expect_any_instance_of(Chef::Provider).to receive(:write_initd_ulimit).with(4096)
-          expect_any_instance_of(Chef::Provider).to receive(:ensure_restart)
+          expect_any_instance_of(Chef::Provider).to receive(:ensure_restart).and_call_original
         end
 
         it 'should ensure a service restart' do
@@ -65,6 +68,7 @@ shared_examples '*start examples' do |action, platform, _, package|
           expect_any_instance_of(Chef::Provider).not_to receive(:service_running)
           expect_any_instance_of(Chef::Provider).not_to receive(:write_initd_ulimit)
           expect_any_instance_of(Chef::Provider).not_to receive(:ensure_restart)
+          expect_any_instance_of(Chef::Provider).to receive(:clear_restart).and_call_original if action == :restart
         end
 
         it 'should not change the ulimit' do
@@ -103,7 +107,7 @@ describe 'splunk_service' do
         let(:init_script_exists) { false }
         let(:ftr_scope) { Chef::Resource }
         let(:common_stubs) do
-          expect_any_instance_of(Chef::Resource).to receive(:check_restart)
+          expect_any_instance_of(Chef::Resource).to receive(:check_restart).and_call_original
           expect_any_instance_of(ftr_scope).to receive(:ftr_pathname).and_return ftr
           expect(ftr).to receive(:exist?).and_return ftr_exists
 

@@ -9,16 +9,21 @@ module CernerSplunk
 
     # Notifies splunk_service to restart and places a marker file to ensure restart next time if this chef run dies.
     def ensure_restart
-      marker_path.open('w', &:close) unless marker_path.exist?
-      notifies :restart, resources(splunk_service: name)
+      @restart_resource ||= Chef::Resource::CernerSplunkIngredientSplunkRestart::SplunkRestart.new name, run_context
+      @restart_resource.package package
+      @restart_resource.run_action :ensure
     end
 
     def check_restart
-      notifies :restart, resources(splunk_service: name) if marker_path.exist?
+      @restart_resource ||= Chef::Resource::CernerSplunkIngredientSplunkRestart::SplunkRestart.new name, run_context
+      @restart_resource.package package
+      @restart_resource.run_action :check
     end
 
     def clear_restart
-      marker_path.delete if marker_path.exist?
+      @restart_resource ||= Chef::Resource::CernerSplunkIngredientSplunkRestart::SplunkRestart.new name, run_context
+      @restart_resource.package package
+      @restart_resource.run_action :clear
     end
   end
 end
