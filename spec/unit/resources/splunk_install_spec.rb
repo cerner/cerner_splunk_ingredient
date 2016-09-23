@@ -15,13 +15,13 @@ describe 'splunk_install' do
         let(:test_params) { { name: 'splunk', build: 'cae2458f4aef', version: '6.3.4' } }
         let(:mock_run_state) { { 'splunk_ingredient' => { 'installations' => {} } } }
 
-        let(:package_name) { package_names[package][runner_params[:platform] == 'windows' ? :windows : :linux] }
-        let(:install_dir) { default_install_dirs[package][runner_params[:platform] == 'windows' ? :windows : :linux] }
+        let(:package_name) { package_names[package][platform == 'windows' ? :windows : :linux] }
+        let(:install_dir) { default_install_dirs[package][platform == 'windows' ? :windows : :linux] }
         let(:windows_opts) { 'LAUNCHSPLUNK=0 INSTALL_SHORTCUT=0 AGREETOLICENSE=Yes' }
-        let(:command_prefix) { runner_params[:platform] == 'windows' ? 'splunk.exe' : './splunk' }
+        let(:command_prefix) { platform == 'windows' ? 'splunk.exe' : './splunk' }
 
         let(:common_stubs) do
-          allow_any_instance_of(Chef::Resource).to receive(:current_owner).and_return('fauxhai')
+          allow_any_instance_of(Chef::Resource).to receive(:current_owner).and_return('root')
         end
 
         let(:chef_run_stubs) do
@@ -67,6 +67,17 @@ describe 'splunk_install' do
               it { is_expected.to create_remote_file(package_path).with(source: base_expected_url) }
             end
           end
+
+          chef_context 'when the user is specified' do
+            let(:test_params) { { name: package.to_s, build: 'cae2458f4aef', version: '6.3.4', user: 'fauxhai' } }
+
+            it { is_expected.to run_execute "chown -R fauxhai:fauxhai #{install_dir}" }
+            chef_context 'when the group is specified' do
+              let(:test_params) { { name: package.to_s, build: 'cae2458f4aef', version: '6.3.4', user: 'fauxhai', group: 'grouphai' } }
+
+              it { is_expected.to run_execute "chown -R fauxhai:grouphai #{install_dir}" }
+            end
+          end if platform != 'windows'
 
           chef_context 'when package is not specified' do
             let(:test_params) { { name: 'hotcakes', build: 'cae2458f4aef', version: '6.3.4' } }

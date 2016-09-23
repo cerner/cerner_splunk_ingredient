@@ -11,6 +11,7 @@ class SplunkConf < ChefCompat::Resource
   property :scope, [:local, :default], desired_state: false, default: :local
   property :config, Hash, required: true
   property :user, [String, nil]
+  property :group, [String, nil], default: lazy { user }
   property :reset, [TrueClass, FalseClass], desired_state: false, default: false
 
   default_action :configure
@@ -52,6 +53,7 @@ class SplunkConf < ChefCompat::Resource
 
   action :configure do
     config_user = user
+    config_group = group
 
     splunk_service 'init_before_config' do
       package new_resource.package
@@ -61,6 +63,7 @@ class SplunkConf < ChefCompat::Resource
     converge_if_changed :config do
       file new_resource.path.to_s do
         owner config_user
+        group config_group
         content merge_config(reset ? {} : existing_config(new_resource.path), config)
       end
     end
