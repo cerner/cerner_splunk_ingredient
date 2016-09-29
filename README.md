@@ -99,7 +99,7 @@ Properties:
 
 | Name    |               Type(s)               | Required | Default                                            | Description                                                                                                                                                                                      |
 |:--------|:-----------------------------------:|:--------:|:---------------------------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| package | `:splunk` or `:universal_forwarder` | **Yes**  |                                                    | Specifies the installed Splunk package. You must specify the package, or name the resource for the package; for example, `package :splunk` or `splunk_install 'universal_forwarder' do ... end`  |
+| package | `:splunk` or `:universal_forwarder` | **Yes**  |                                                    | Specifies the installed Splunk package. You must specify the package, or name the resource for the package; for example, `package :splunk` or `splunk_service 'universal_forwarder' do ... end`  |
 | user    |            String or nil            |    No    | Owner of the specified Splunk installation, if any | User to run Splunk as. This is the user that will be used to run the Splunk service.                                                                                                             |
 | ulimit  |               Integer               |    No    | Start up script ulimit or user ulimit              | Open file ulimit to give Splunk. This sets the ulimit in the start up script (if it exists) and for the given user in `/etc/security/limits.d/`. -1 translates to `'unlimited'`                  |
 
@@ -111,7 +111,7 @@ Properties:
 
 | Name    |               Type(s)               | Required | Default | Description                                                                                                                                                                                      |
 |:--------|:-----------------------------------:|:--------:|:--------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| package | `:splunk` or `:universal_forwarder` | **Yes**  |         | Specifies the installed Splunk package. You must specify the package, or name the resource for the package; for example, `package :splunk` or `splunk_install 'universal_forwarder' do ... end` |
+| package | `:splunk` or `:universal_forwarder` | **Yes**  |         | Specifies the installed Splunk package. You must specify the package, or name the resource for the package; for example, `package :splunk` or `splunk_service 'universal_forwarder' do ... end` |
 
 #### Action *:init*
 
@@ -121,7 +121,7 @@ Properties:
 
 | Name    |               Type(s)               | Required | Default                                            | Description                                                                                                                                                                                      |
 |:--------|:-----------------------------------:|:--------:|:---------------------------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| package | `:splunk` or `:universal_forwarder` | **Yes**  |                                                    | Specifies the installed Splunk package. You must specify the package, or name the resource for the package; for example, `package :splunk` or `splunk_install 'universal_forwarder' do ... end`  |
+| package | `:splunk` or `:universal_forwarder` | **Yes**  |                                                    | Specifies the installed Splunk package. You must specify the package, or name the resource for the package; for example, `package :splunk` or `splunk_service 'universal_forwarder' do ... end`  |
 | user    |            String or nil            |    No    | Owner of the specified Splunk installation, if any | User to initialize Splunk as. This is the user that will be used to run the Splunk service.                                                                                                      |
 
 ### splunk_conf
@@ -223,7 +223,7 @@ Properties:
 
 | Name    |               Type(s)               | Required | Default | Description                                                                                                                                                                                      |
 |:--------|:-----------------------------------:|:--------:|:--------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| package | `:splunk` or `:universal_forwarder` | **Yes**  |         | Specifies the installed Splunk package. You must specify the package, or name the resource for the package; for example, `package :splunk` or `splunk_install 'universal_forwarder' do ... end` |
+| package | `:splunk` or `:universal_forwarder` | **Yes**  |         | Specifies the installed Splunk package. You must specify the package, or name the resource for the package; for example, `package :splunk` or `splunk_restart 'universal_forwarder' do ... end` |
 
 ---
 
