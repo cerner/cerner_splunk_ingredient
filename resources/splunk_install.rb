@@ -85,6 +85,7 @@ class SplunkInstall < ChefCompat::Resource
     user_resource.manage_home true
     user_resource.run_action :create
 
+    # The user is created in a group of the same name, so we can skip this step if the group isn't changed.
     if group != user
       group_resource = Chef::Resource::Group.new(group, run_context)
       group_resource.append true
