@@ -12,6 +12,7 @@ class SplunkInstall < ChefCompat::Resource
   property :version, String, required: true
   property :build, String, required: true
   property :user, String, default: lazy { node['current_user'] || package == :splunk ? 'splunk' : 'splunkforwarder' }
+  property :group, String, default: lazy { user }
   property :base_url, String, default: 'https://download.splunk.com/products'
 
   default_action :install
@@ -74,7 +75,7 @@ class SplunkInstall < ChefCompat::Resource
       ruby_block 'load_version_state' do
         block { load_version_state }
       end
-      execute "chown -R #{user}:#{user} #{install_dir}" unless node['os'] == 'windows' || current_owner == user
+      execute "chown -R #{user}:#{group} #{install_dir}" unless node['os'] == 'windows' || current_owner == user
     end
   end
 
@@ -83,6 +84,14 @@ class SplunkInstall < ChefCompat::Resource
     user_resource.system true
     user_resource.manage_home true
     user_resource.run_action :create
+
+    # The user is created in a group of the same name, so we can skip this step if the group isn't changed.
+    if group != user
+      group_resource = Chef::Resource::Group.new(group, run_context)
+      group_resource.append true
+      group_resource.members user
+      group_resource.run_action :modify
+    end
 
     install_state = node.run_state['splunk_ingredient']['installations'][install_dir]
     raise "Install at #{install_dir} already exists!" if install_state && install_state['name'] != name
