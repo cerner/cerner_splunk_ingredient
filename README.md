@@ -174,6 +174,55 @@ three = 3
 key = value
 ```
 
+##### Advanced Usage
+
+The configuration resource also can evaluate Procs in place of, or within, your config hash.
+This approach is beneficial if you want to write your config based on the current values, or
+you don't know all of your configuration values at compile time but can evaluate them at
+converge time.
+
+There are two approaches you can take to configuring with procs or lambdas: Top-level and Stanza-level.
+
+###### Top-level Evaluation
+
+Top-level evaluation is simple in concept, as you are given the entire existing config as a hash and you
+return the desired config.
+
+In this example, all of the keys and values in the conf file are turned into lowercase strings.
+
+```Ruby
+splunk_conf 'system/test.conf' do
+  config(
+    lambda do |conf|
+      conf.map do |section, props|
+        [section.to_s.downcase, props.map { |k, v| [k.to_s.downcase, v.to_s.downcase] }.to_h]
+      end.to_h
+    end
+  )
+end
+```
+
+###### Stanza-level Evaluation
+
+Stanza-level evaluation allows you to evaluate the config key values for a specific stanza without being
+responsible for regurgitating all of the config you didn't want to modify.
+
+In this example, only a specific stanza's contents are turned into lowercase strings. The rest is
+merged as usual. **Note that the Stanza-level proc receives the section string and a props hash, and expects
+a pair (array) of the desired section string and props hash.**
+
+```Ruby
+splunk_conf 'system/test.conf' do
+  config(
+    testing: {
+      one: 1,
+      four: 4
+    },
+    stanza: ->(section, props) { [section.to_s.downcase, props.map { |k, v| [k.to_s.downcase, v.to_s.downcase] }.to_h] }
+  )
+end
+```
+
 ---
 
 Contributing
