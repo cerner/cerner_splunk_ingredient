@@ -17,6 +17,8 @@ describe 'ConfHelpers' do
   end
 
   describe 'evaluate_config' do
+    subject { evaluate_config(existing_config, config) }
+
     context 'with top-level proc' do
       let(:config) do
         ->(conf) { conf.map { |section, props| [section.upcase, props] }.to_h }
@@ -33,9 +35,7 @@ describe 'ConfHelpers' do
         }
       end
 
-      it 'should evaluate the proc on the entire config hash' do
-        expect(evaluate_config(existing_config, config)).to eq(expected_config)
-      end
+      it { is_expected.to eq(expected_config) }
     end
 
     context 'with stanza-level proc' do
@@ -58,9 +58,7 @@ describe 'ConfHelpers' do
         }
       end
 
-      it 'should evaluate the proc on the entire config hash' do
-        expect(evaluate_config(existing_config, config)).to eq(expected_config)
-      end
+      it { is_expected.to eq(expected_config) }
     end
   end
 
