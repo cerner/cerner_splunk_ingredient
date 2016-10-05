@@ -41,10 +41,10 @@ class SplunkConf < ChefCompat::Resource
     end
 
     desired.path = Pathname.new(install_dir).join('etc').join(real_path.sub(%r{^/}, ''))
-
-    desired.config = stringify_config(desired.config)
-
     current_config = existing_config(desired.path)
+
+    desired.config = stringify_config(evaluate_config(current_config, desired.config))
+
     config reset ? current_config : current_config.select { |key, _| desired.config.keys.include? key.to_s }
 
     user current_owner

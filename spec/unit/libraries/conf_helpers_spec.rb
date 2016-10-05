@@ -4,6 +4,63 @@ describe 'ConfHelpers' do
   include CernerSplunk::ConfHelpers
 
   let(:conf_path) { '/opt/splunk/etc/system/local/test.conf' }
+  let(:existing_config) do
+    {
+      'default' => {
+        'first' => 'true',
+        'second' => 'true'
+      },
+      'other' => {
+        'something' => 'here'
+      }
+    }
+  end
+
+  describe 'evaluate_config' do
+    subject { evaluate_config(existing_config, config) }
+
+    context 'with top-level proc' do
+      let(:config) do
+        ->(conf) { conf.map { |section, props| [section.upcase, props] }.to_h }
+      end
+      let(:expected_config) do
+        {
+          'DEFAULT' => {
+            'first' => 'true',
+            'second' => 'true'
+          },
+          'OTHER' => {
+            'something' => 'here'
+          }
+        }
+      end
+
+      it { is_expected.to eq(expected_config) }
+    end
+
+    context 'with stanza-level proc' do
+      let(:config) do
+        {
+          'default' => {
+            'second' => 'false'
+          },
+          'other' => ->(section, props) { [section.upcase, props] }
+        }
+      end
+      let(:expected_config) do
+        {
+          'default' => {
+            'second' => 'false'
+          },
+          'OTHER' => {
+            'something' => 'here'
+          }
+        }
+      end
+
+      it { is_expected.to eq(expected_config) }
+    end
+  end
 
   describe 'stringify_config' do
     let(:config) do
@@ -72,18 +129,6 @@ describe 'ConfHelpers' do
   end
 
   describe 'merge_config' do
-    let(:existing_config) do
-      {
-        'default' => {
-          'first' => 'true',
-          'second' => 'true'
-        },
-        'other' => {
-          'something' => 'here'
-        }
-      }
-    end
-
     let(:config) do
       {
         'default' => {

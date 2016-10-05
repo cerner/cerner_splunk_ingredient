@@ -1,6 +1,13 @@
 module CernerSplunk
   # Mixin Helper methods for the Splunk Config resource
   module ConfHelpers
+    def evaluate_config(current_config, desired_config)
+      return desired_config.call(current_config) if desired_config.is_a? Proc
+      desired_config.map do |section, props|
+        props.is_a?(Proc) ? props.call(section, current_config[section] || {}) : [section, props]
+      end.to_h
+    end
+
     def stringify_config(config)
       config.map do |section, props|
         [section.to_s, props.map { |k, v| [k.to_s, v.to_s] }.to_h]
