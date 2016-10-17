@@ -120,7 +120,6 @@ end
 ###################################
 ### Platform Specific Providers ###
 ###################################
-# rubocop:disable Documentation
 
 class LinuxInstall < SplunkInstall
   resource_name :splunk_install

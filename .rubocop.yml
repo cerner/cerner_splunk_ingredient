@@ -11,3 +11,6 @@ Metrics/AbcSize:
 
 Metrics/MethodLength:
   Max: 40
+
+Documentation:
+  Enabled: false

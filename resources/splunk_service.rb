@@ -85,7 +85,6 @@ end
 ###################################
 ### Platform Specific Providers ###
 ###################################
-# rubocop:disable Documentation
 
 class LinuxService < SplunkService
   resource_name :splunk_service

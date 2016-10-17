@@ -1,8 +1,6 @@
 require_relative '../spec_helper'
 
 describe 'ConfHelpers' do
-  include CernerSplunk::ConfHelpers
-
   let(:conf_path) { '/opt/splunk/etc/system/local/test.conf' }
   let(:existing_config) do
     {
@@ -17,7 +15,7 @@ describe 'ConfHelpers' do
   end
 
   describe 'evaluate_config' do
-    subject { evaluate_config(existing_config, config) }
+    subject { CernerSplunk::ConfHelpers.evaluate_config(existing_config, config) }
 
     context 'with top-level proc' do
       let(:config) do
@@ -91,7 +89,7 @@ describe 'ConfHelpers' do
     end
 
     it 'should convert section and property keys into strings' do
-      expect(stringify_config(config)).to eq(expected_config)
+      expect(CernerSplunk::ConfHelpers.stringify_config(config)).to eq(expected_config)
     end
   end
 
@@ -108,23 +106,41 @@ describe 'ConfHelpers' do
         }
       }
     end
-    let(:conf_file) { double('Pathname.new(conf_path)') }
 
-    it 'should return the config in a hash' do
-      expect(Pathname).to receive(:new).with(conf_path).and_return(conf_file)
-      expect(conf_file).to receive(:exist?).and_return(true)
-      expect(conf_file).to receive(:readlines).and_return(IO.readlines('spec/reference/read_test.conf'))
+    it 'should call parse_config' do
+      expect(Pathname).to receive(:new).with(conf_path).and_return(Pathname.new('spec/reference/read_test.conf'))
 
-      expect(read_config(conf_path)).to eq(expected_config)
+      expect(CernerSplunk::ConfHelpers.read_config(conf_path)).to eq(expected_config)
     end
 
     context 'when the path does not exist' do
+      let(:conf_file) { double('Pathname.new(conf_path)') }
+
       it 'should return an empty hash' do
         expect(Pathname).to receive(:new).with(conf_path).once.and_return(conf_file)
 
         expect(conf_file).to receive(:exist?).and_return(false)
-        expect(read_config(conf_path)).to eq({})
+        expect(CernerSplunk::ConfHelpers.read_config(conf_path)).to eq({})
       end
+    end
+  end
+
+  describe 'parse_config' do
+    let(:expected_config) do
+      {
+        'default' => {
+          'outside' => 'true',
+          'inside' => 'true'
+        },
+        'spacey! bit?' => {
+          'some thing' => 'is here',
+          'another' => 'one here'
+        }
+      }
+    end
+
+    it 'should return the config in a hash' do
+      expect(CernerSplunk::ConfHelpers.parse_config(IO.read('spec/reference/read_test.conf'))).to eq(expected_config)
     end
   end
 
@@ -142,15 +158,21 @@ describe 'ConfHelpers' do
     let(:expected_config) { IO.read('spec/reference/write_test.conf') }
 
     it 'should write the config with new and old properties' do
-      expect(merge_config(existing_config, config)).to eq expected_config
+      expect(CernerSplunk::ConfHelpers.merge_config(existing_config, config)).to eq expected_config
     end
 
     context 'when current_config is empty' do
       let(:expected_config) { IO.read('spec/reference/write_test_overwrite.conf') }
 
       it 'should write only the given config to the file' do
-        expect(merge_config({}, config)).to eq expected_config
+        expect(CernerSplunk::ConfHelpers.merge_config({}, config)).to eq expected_config
       end
     end
+  end
+end
+
+describe 'confhelpers recipe' do
+  it 'should run the test recipe successfully' do
+    ChefSpec::SoloRunner.new(platform: 'redhat', version: '7.2').converge('cerner_splunk_ingredient_test::conf_helpers')
   end
 end

@@ -3,7 +3,7 @@
 #
 # Resource for managing Splunk configuration files
 class SplunkConf < ChefCompat::Resource
-  include CernerSplunk::ConfHelpers, CernerSplunk::ResourceHelpers
+  include CernerSplunk::ResourceHelpers
   resource_name :splunk_conf
 
   property :path, [String, Pathname], name_property: true, desired_state: false, identity: true
@@ -18,7 +18,7 @@ class SplunkConf < ChefCompat::Resource
 
   def existing_config(path)
     @cache ||= node.run_state['splunk_ingredient']['_cache'] ||= { 'existing_config' => {} }
-    @cache['existing_config'][path.to_s] ||= read_config(path)
+    @cache['existing_config'][path.to_s] ||= CernerSplunk::ConfHelpers.read_config(path)
   end
 
   load_current_value do |desired|
@@ -43,7 +43,8 @@ class SplunkConf < ChefCompat::Resource
     desired.path = Pathname.new(install_dir).join('etc').join(real_path.sub(%r{^/}, ''))
     current_config = existing_config(desired.path)
 
-    desired.config = stringify_config(evaluate_config(current_config, desired.config))
+    evaluated_config = CernerSplunk::ConfHelpers.evaluate_config(current_config, desired.config)
+    desired.config = CernerSplunk::ConfHelpers.stringify_config(evaluated_config)
 
     config reset ? current_config : current_config.select { |key, _| desired.config.keys.include? key.to_s }
 
@@ -64,7 +65,7 @@ class SplunkConf < ChefCompat::Resource
       file new_resource.path.to_s do
         owner config_user
         group config_group
-        content merge_config(reset ? {} : existing_config(new_resource.path), config)
+        content CernerSplunk::ConfHelpers.merge_config(reset ? {} : existing_config(new_resource.path), config)
       end
     end
   end
