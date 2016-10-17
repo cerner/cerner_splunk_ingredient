@@ -23,17 +23,25 @@ describe 'splunk_restart' do
         end
 
         chef_describe 'action :ensure' do
-          let(:test_params) { { name: package.to_s, action: :ensure } }
+          let(:test_params) { { resource_name: package.to_s, action: :ensure } }
           let(:action_stubs) {}
           it { is_expected.to create_file_if_missing(Pathname.new(install_dir).join('restart_on_chef_client').to_s) }
 
           it 'should notify the Splunk service to restart' do
             expect(subject.splunk_restart(package.to_s)).to notify("splunk_service[#{package}]").to(:restart).delayed
           end
+
+          chef_context 'when name is provided' do
+            let(:test_params) { { resource_name: package.to_s, package: package, name: 'splunk service', action: :ensure } }
+
+            it 'should notify the Splunk service to restart' do
+              expect(subject.splunk_restart(package.to_s)).to notify('splunk_service[splunk service]').to(:restart).delayed
+            end
+          end
         end
 
         chef_describe 'action :check' do
-          let(:test_params) { { name: package.to_s, action: :check } }
+          let(:test_params) { { resource_name: package.to_s, action: :check } }
 
           chef_context 'when the marker exists' do
             let(:action_stubs) do
@@ -61,7 +69,7 @@ describe 'splunk_restart' do
         end
 
         chef_describe 'action :clear' do
-          let(:test_params) { { name: package.to_s, action: :clear } }
+          let(:test_params) { { resource_name: package.to_s, action: :clear } }
           let(:action_stubs) {}
 
           it { is_expected.to delete_file(Pathname.new(install_dir).join('restart_on_chef_client').to_s) }

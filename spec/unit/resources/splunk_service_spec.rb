@@ -36,7 +36,7 @@ shared_examples '*start examples' do |action, platform, _, package|
     chef_context 'when the ulimit is specified' do
       let!(:original_stubs) { action_stubs }
 
-      let(:test_params) { { name: package.to_s, action: action, ulimit: 4096 } }
+      let(:test_params) { { resource_name: package.to_s, action: action, ulimit: 4096 } }
       let(:action_stubs) do
         expect_any_instance_of(Chef::Provider).to receive(:service_running).and_return(nil) if action == :start
         expect_any_instance_of(Chef::Provider).to receive(:write_initd_ulimit).with(4096)
@@ -61,7 +61,7 @@ shared_examples '*start examples' do |action, platform, _, package|
       end if action == :start
 
       chef_context 'when the ulimit is the same' do
-        let(:test_params) { { name: package.to_s, action: action, ulimit: 1024 } }
+        let(:test_params) { { resource_name: package.to_s, action: action, ulimit: 1024 } }
         let(:init_script_exists) { true }
         let(:action_stubs) do
           expect(init_script).to receive(:read).and_return(IO.read('spec/reference/splunk_initd'))
@@ -125,19 +125,19 @@ describe 'splunk_service' do
         end
 
         chef_describe 'action :start' do
-          let(:test_params) { { name: package.to_s, action: :start } }
+          let(:test_params) { { resource_name: package.to_s, action: :start } }
           include_examples '*start examples', :start, platform, version, package
         end
 
         chef_describe 'action :restart' do
-          let(:test_params) { { name: package.to_s, action: :restart } }
+          let(:test_params) { { resource_name: package.to_s, action: :restart } }
           include_examples '*start examples', :restart, platform, version, package
         end
 
         chef_describe 'action :stop' do
           let(:action_stubs) {}
           let(:ftr_scope) { Chef::Provider }
-          let(:test_params) { { name: package.to_s, action: :stop } }
+          let(:test_params) { { resource_name: package.to_s, action: :stop } }
 
           it { is_expected.to stop_service(service_name) }
 

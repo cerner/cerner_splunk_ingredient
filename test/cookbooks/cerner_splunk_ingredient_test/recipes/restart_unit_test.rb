@@ -1,11 +1,14 @@
 node.run_state.merge! node['run_state'].to_hash if node['run_state']
 
-params = node['test_parameters']
+params = node['test_parameters'].to_hash
 
-splunk_service params['name'] do
+resource_name = params.delete('resource_name')
+
+splunk_service params['name'] || resource_name do
+  package params['package'] if params['package']
   action :nothing
 end
 
-splunk_restart params['name'] do
+splunk_restart resource_name do
   params.each { |prop, val| send(prop, val) }
 end

@@ -12,7 +12,7 @@ describe 'splunk_install' do
       context "with package #{package}" do
         let(:runner_params) { { platform: platform, version: version, user: 'root' } }
 
-        let(:test_params) { { name: 'splunk', build: 'cae2458f4aef', version: '6.3.4' } }
+        let(:test_params) { { resource_name: 'splunk', build: 'cae2458f4aef', version: '6.3.4' } }
         let(:mock_run_state) { { 'splunk_ingredient' => { 'installations' => {} } } }
 
         let(:package_name) { package_names[package][platform == 'windows' ? :windows : :linux] }
@@ -69,18 +69,18 @@ describe 'splunk_install' do
           end
 
           chef_context 'when the user is specified' do
-            let(:test_params) { { name: package.to_s, build: 'cae2458f4aef', version: '6.3.4', user: 'fauxhai' } }
+            let(:test_params) { { resource_name: package.to_s, build: 'cae2458f4aef', version: '6.3.4', user: 'fauxhai' } }
 
             it { is_expected.to run_execute "chown -R fauxhai:fauxhai #{install_dir}" }
             chef_context 'when the group is specified' do
-              let(:test_params) { { name: package.to_s, build: 'cae2458f4aef', version: '6.3.4', user: 'fauxhai', group: 'grouphai' } }
+              let(:test_params) { { resource_name: package.to_s, build: 'cae2458f4aef', version: '6.3.4', user: 'fauxhai', group: 'grouphai' } }
 
               it { is_expected.to run_execute "chown -R fauxhai:grouphai #{install_dir}" }
             end
           end if platform != 'windows'
 
           chef_context 'when package is not specified' do
-            let(:test_params) { { name: 'hotcakes', build: 'cae2458f4aef', version: '6.3.4' } }
+            let(:test_params) { { resource_name: 'hotcakes', build: 'cae2458f4aef', version: '6.3.4' } }
 
             it 'should fail the Chef run' do
               expect { subject }.to raise_error(RuntimeError, /Package must be specified.*/)
@@ -105,7 +105,7 @@ describe 'splunk_install' do
 
           chef_context 'when platform is not supported' do
             let(:runner_params) { { platform: 'aix', version: '7.1' } }
-            let(:test_params) { { name: 'splunk', build: 'cae2458f4aef', version: '6.3.4' } }
+            let(:test_params) { { resource_name: 'splunk', build: 'cae2458f4aef', version: '6.3.4' } }
 
             it 'should fail the Chef run' do
               expect { subject }.to raise_error(RuntimeError, /Unsupported Combination.*/)
@@ -121,7 +121,7 @@ describe 'splunk_install' do
           include_examples 'standard uninstall', platform, package
 
           chef_context 'when package is not specified' do
-            let(:test_params) { { name: 'hotcakes', action: :uninstall } }
+            let(:test_params) { { resource_name: 'hotcakes', action: :uninstall } }
 
             it 'should fail the Chef run' do
               expect { subject }.to raise_error(RuntimeError, /Package must be specified.*/)
