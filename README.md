@@ -1,4 +1,4 @@
-# cerner_splunk_ingredient Cookbook
+# cerner\_splunk\_ingredient Cookbook
 
 Resource cookbook which provides custom resources for installing and managing Splunk.
 
@@ -22,7 +22,7 @@ also available online at <http://www.splunk.com/en_us/legal/splunk-software-lice
 
 ## Resources
 
-### splunk_install
+### splunk\_install
 
 Manages an installation of Splunk
 
@@ -32,13 +32,14 @@ Installs Splunk or Universal Forwarder.
 
 Properties:
 
-| Name     |               Type(s)               | Required | Default                                                                   | Description                                                                                                                                                                                                                                                            |
-|:---------|:-----------------------------------:|:--------:|:--------------------------------------------------------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| package  | `:splunk` or `:universal_forwarder` | **Yes**  |                                                                           | Specifies the Splunk package to install. You must specify the package, or name the resource for the package; for example, `package :splunk` or `splunk_install 'universal_forwarder' do ... end`                                                                       |
-| version  |               String                | **Yes**  |                                                                           | Version of Splunk to install                                                                                                                                                                                                                                           |
-| build    |               String                | **Yes**  |                                                                           | Build number of the version                                                                                                                                                                                                                                            |
-| user     |               String                |    No    | Current user, or based on the package (`'splunk'` or `'splunkforwarder'`) | User that should own the splunk installation. Make sure you don't use a different user for running Splunk that has insufficient read/write access, or Splunk won't start!                                                                                              |
-| base_url |               String                |    No    | `'https://download.splunk.com/products'`                                  | Base url to pull Splunk packages from. Use this if you are mirroring the downloads for Splunk packages. The resource will append the version, os, and filename to the url like so: `{base_url}/splunk/releases/0.0.0/linux/splunk-0.0.0-a1b2c3d4e5f6-Linux-x86_64.tgz` |
+| Name      |               Type(s)               | Required | Default                                                                   | Description                                                                                                                                                                                                                                                            |
+|:----------|:-----------------------------------:|:--------:|:--------------------------------------------------------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| package   | `:splunk` or `:universal_forwarder` | **Yes**  |                                                                           | Specifies the Splunk package to install. You must specify the package, or name the resource for the package; for example, `package :splunk` or `splunk_install 'universal_forwarder' do ... end`                                                                       |
+| version   |               String                | **Yes**  |                                                                           | Version of Splunk to install                                                                                                                                                                                                                                           |
+| build     |               String                | **Yes**  |                                                                           | Build number of the version                                                                                                                                                                                                                                            |
+| user      |               String                |    No    | Current user, or based on the package (`'splunk'` or `'splunkforwarder'`) | User that should own the splunk installation. Make sure you don't use a different user for running Splunk that has insufficient read/write access, or Splunk won't start!                                                                                              |
+| group     |               String                |    No    | Value of user property                                                    | Group that should own the splunk installation.                                                                                                                                                                                                                         |
+| base\_url |               String                |    No    | `'https://download.splunk.com/products'`                                  | Base url to pull Splunk packages from. Use this if you are mirroring the downloads for Splunk packages. The resource will append the version, os, and filename to the url like so: `{base_url}/splunk/releases/0.0.0/linux/splunk-0.0.0-a1b2c3d4e5f6-Linux-x86_64.tgz` |
 
 #### Action *:uninstall*
 
@@ -80,9 +81,9 @@ node.run_state['splunk_ingredient'] = {
 }
 ```
 
-### splunk_service
+### splunk\_service
 
-Manages an installation of Splunk. Requires splunk_install to be evaluated first.
+Manages an installation of Splunk. Requires splunk\_install to be evaluated first.
 
 **The following actions (start and restart) share the same properties**
 
@@ -97,11 +98,11 @@ Restarts the Splunk daemon, or starts it if not already running.
 
 Properties:
 
-| Name    |               Type(s)               | Required | Default                                            | Description                                                                                                                                                                                      |
-|:--------|:-----------------------------------:|:--------:|:---------------------------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| package | `:splunk` or `:universal_forwarder` | **Yes**  |                                                    | Specifies the installed Splunk package. You must specify the package, or name the resource for the package; for example, `package :splunk` or `splunk_service 'universal_forwarder' do ... end`  |
-| user    |            String or nil            |    No    | Owner of the specified Splunk installation, if any | User to run Splunk as. This is the user that will be used to run the Splunk service.                                                                                                             |
-| ulimit  |               Integer               |    No    | Start up script ulimit or user ulimit              | Open file ulimit to give Splunk. This sets the ulimit in the start up script (if it exists) and for the given user in `/etc/security/limits.d/`. -1 translates to `'unlimited'`                  |
+| Name    |               Type(s)               | Required | Default                                            | Description                                                                                                                                                                                     |
+|:--------|:-----------------------------------:|:--------:|:---------------------------------------------------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| package | `:splunk` or `:universal_forwarder` | **Yes**  |                                                    | Specifies the installed Splunk package. You must specify the package, or name the resource for the package; for example, `package :splunk` or `splunk_service 'universal_forwarder' do ... end` |
+| user    |            String or nil            |    No    | Owner of the specified Splunk installation, if any | User to run Splunk as. This is the user that will be used to run the Splunk service.                                                                                                            |
+| ulimit  |               Integer               |    No    | Start up script ulimit or user ulimit              | Open file ulimit to give Splunk. This sets the ulimit in the start up script (if it exists) and for the given user in `/etc/security/limits.d/`. -1 translates to `'unlimited'`                 |
 
 #### Action *:stop*
 
@@ -109,8 +110,8 @@ Stop the Splunk daemon if it is running.
 
 Properties:
 
-| Name    |               Type(s)               | Required | Default | Description                                                                                                                                                                                      |
-|:--------|:-----------------------------------:|:--------:|:--------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Name    |               Type(s)               | Required | Default | Description                                                                                                                                                                                     |
+|:--------|:-----------------------------------:|:--------:|:--------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | package | `:splunk` or `:universal_forwarder` | **Yes**  |         | Specifies the installed Splunk package. You must specify the package, or name the resource for the package; for example, `package :splunk` or `splunk_service 'universal_forwarder' do ... end` |
 
 #### Action *:init*
@@ -119,14 +120,14 @@ Executes Splunk's first time run, accepting the license agreement if applicable.
 
 Properties:
 
-| Name    |               Type(s)               | Required | Default                                            | Description                                                                                                                                                                                      |
-|:--------|:-----------------------------------:|:--------:|:---------------------------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| package | `:splunk` or `:universal_forwarder` | **Yes**  |                                                    | Specifies the installed Splunk package. You must specify the package, or name the resource for the package; for example, `package :splunk` or `splunk_service 'universal_forwarder' do ... end`  |
-| user    |            String or nil            |    No    | Owner of the specified Splunk installation, if any | User to initialize Splunk as. This is the user that will be used to run the Splunk service.                                                                                                      |
+| Name    |               Type(s)               | Required | Default                                            | Description                                                                                                                                                                                     |
+|:--------|:-----------------------------------:|:--------:|:---------------------------------------------------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| package | `:splunk` or `:universal_forwarder` | **Yes**  |                                                    | Specifies the installed Splunk package. You must specify the package, or name the resource for the package; for example, `package :splunk` or `splunk_service 'universal_forwarder' do ... end` |
+| user    |            String or nil            |    No    | Owner of the specified Splunk installation, if any | User to initialize Splunk as. This is the user that will be used to run the Splunk service.                                                                                                     |
 
-### splunk_conf
+### splunk\_conf
 
-Manages configuration for an installation of Splunk. Requires splunk_install to be evaluated first.
+Manages configuration for an installation of Splunk. Requires splunk\_install to be evaluated first.
 
 #### Action *:configure*
 
@@ -138,14 +139,15 @@ property and specify this path: `system/indexes.conf`. The resource will modify 
 
 Properties:
 
-| Name    |               Type(s)               | Required | Default                                          | Description                                                                                                                                                                                  |
-|:--------|:-----------------------------------:|:--------:|:-------------------------------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| path    |         String or Pathname          | **Yes**  |                                                  | Path of the .conf file from `$SPLUNK_HOME/etc`. The intermediate directory determining scope is optional. Examples: `system/indexes.conf` or `system/local/indexes.conf`.                    |
-| package | `:splunk` or `:universal_forwarder` |    No    | Package of the current install in run state      | Specifies the installed Splunk package. You may specify the package (`:splunk` or `:universal_forwarder`) or the resource will refer to the most recently evaluated splunk_install resource  |
-| scope   |       `:local` or `:default`        |    No    | `:local`                                         | Scope of the configuration to modify. In most circumstances, you should *not* change this.                                                                                                   |
-| config  |                Hash                 | **Yes**  |                                                  | Configuration to apply to the .conf file. This hash is structured as follows: `{ stanza: { key: 'value' } }`. See below for more detailed explanation of the config property.                |
-| user    |            String or nil            |    No    | Owner of the current Splunk installation, if any | User that will be used to write to the .conf files.                                                                                                                                          |
-| reset   |            true or false            |    No    | false                                            | When specified as true, entirely replaces existing config. By default, config is merged into the existing conf file.                                                                         |
+| Name    |               Type(s)               |        Required         | Default                                          | Description                                                                                                                                                                                  |
+|:--------|:-----------------------------------:|:-----------------------:|:-------------------------------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| path    |         String or Pathname          | **Yes (resource name)** |                                                  | Path of the .conf file from `$SPLUNK_HOME/etc`. The intermediate directory determining scope is optional. Examples: `system/indexes.conf` or `system/local/indexes.conf`.                    |
+| package | `:splunk` or `:universal_forwarder` |           No            | Package of the current install in run state      | Specifies the installed Splunk package. You may specify the package (`:splunk` or `:universal_forwarder`) or the resource will refer to the most recently evaluated splunk\_install resource |
+| scope   |       `:local` or `:default`        |           No            | `:local`                                         | Scope of the configuration to modify. In most circumstances, you should *not* change this.                                                                                                   |
+| config  |                Hash                 |         **Yes**         |                                                  | Configuration to apply to the .conf file. This hash is structured as follows: `{ stanza: { key: 'value' } }`. See below for more detailed explanation of the config property.                |
+| user    |            String or nil            |           No            | Owner of the current Splunk installation, if any | User that will be used to write to the .conf files.                                                                                                                                          |
+| group   |            String or nil            |           No            | Group of the current Splunk installation, if any | Group that will be used to write to the .conf files.                                                                                                                                         |
+| reset   |            true or false            |           No            | false                                            | When specified as true, entirely replaces existing config. By default, config is merged into the existing conf file.                                                                         |
 
 #### Configuration
 
@@ -245,10 +247,10 @@ splunk_conf 'system/test.conf' do
 end
 ```
 
-### splunk_restart
+### splunk\_restart
 
 Places a file marker to indicate a pending Splunk restart. Useful when using an unstable cookbook that can crash the Chef run,
-preventing delayed restarts from taking place. If a file marker exists, and the splunk_service resource is referenced in a future
+preventing delayed restarts from taking place. If a file marker exists, and the splunk\_service resource is referenced in a future
 Chef run, it will notify a delayed restart as was intended in the previous run. The marker is removed on a successful restart.
 
 **The following actions all share the same properties**
@@ -270,9 +272,10 @@ Removes the file marker.
 
 Properties:
 
-| Name    |               Type(s)               | Required | Default | Description                                                                                                                                                                                      |
-|:--------|:-----------------------------------:|:--------:|:--------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| package | `:splunk` or `:universal_forwarder` | **Yes**  |         | Specifies the installed Splunk package. You must specify the package, or name the resource for the package; for example, `package :splunk` or `splunk_restart 'universal_forwarder' do ... end` |
+| Name    |               Type(s)               | Required | Default       | Description                                                                                                                                                                                     |
+|:--------|:-----------------------------------:|:--------:|:--------------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| name    |               String                |    No    | Resource Name | Name of the splunk\_service resource to notify when a restart is triggered. By default, this is the name given to this resource.                                                                |
+| package | `:splunk` or `:universal_forwarder` | **Yes**  |               | Specifies the installed Splunk package. You must specify the package, or name the resource for the package; for example, `package :splunk` or `splunk_restart 'universal_forwarder' do ... end` |
 
 ---
 
