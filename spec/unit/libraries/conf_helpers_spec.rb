@@ -170,9 +170,3 @@ describe 'ConfHelpers' do
     end
   end
 end
-
-describe 'confhelpers recipe' do
-  it 'should run the test recipe successfully' do
-    ChefSpec::SoloRunner.new(platform: 'redhat', version: '7.2').converge('cerner_splunk_ingredient_test::conf_helpers')
-  end
-end

@@ -13,7 +13,7 @@ end
 shared_examples 'standard install' do |platform, package, expected_url|
   chef_context "with the '#{package}' package" do
     let(:test_params) { { resource_name: package.to_s, build: 'cae2458f4aef', version: '6.3.4' } }
-    let(:package_path) { "./test/unit/.cache/#{filename_from_url(expected_url)}" }
+    let(:package_path) { "./test/unit/.cache/#{CernerSplunk::PathHelpers.filename_from_url(expected_url)}" }
 
     include_examples 'should install', platform, expected_url
 

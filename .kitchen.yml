@@ -19,11 +19,6 @@ platforms:
       box: opentable/win-2012r2-standard-amd64-nocm
 
 suites:
-  - name: helpers
-    run_list:
-      - recipe[cerner_splunk_ingredient_test::conf_helpers]
-    includes:
-      - centos-7.2
   - name: install
     run_list:
       - recipe[cerner_splunk_ingredient_test::splunk]

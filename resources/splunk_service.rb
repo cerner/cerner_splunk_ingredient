@@ -24,7 +24,7 @@ class SplunkService < ChefCompat::Resource
   end
 
   def initialize_service
-    return unless ftr_pathname(install_dir).exist?
+    return unless CernerSplunk::PathHelpers.ftr_pathname(install_dir).exist?
 
     cmd = "#{command_prefix} enable boot-start#{user ? ' -user ' + user : ''} --accept-license --no-prompt"
     executor = Chef::Resource::Execute.new cmd, run_context
@@ -68,7 +68,7 @@ class SplunkService < ChefCompat::Resource
   end
 
   action :stop do
-    service_action :stop unless ftr_pathname(install_dir).exist?
+    service_action :stop unless CernerSplunk::PathHelpers.ftr_pathname(install_dir).exist?
   end
 
   action :restart do

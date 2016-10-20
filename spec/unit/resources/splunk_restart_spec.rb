@@ -10,7 +10,7 @@ describe 'splunk_restart' do
       context "with package #{package}" do
         let(:runner_params) { { platform: platform, version: version, user: 'root' } }
 
-        let(:install_dir) { default_install_dirs[package][platform == 'windows' ? :windows : :linux] }
+        let(:install_dir) { CernerSplunk::PathHelpers.default_install_dirs[package][platform == 'windows' ? :windows : :linux] }
         let(:mock_run_state) { { 'splunk_ingredient' => { 'installations' => {} } } }
 
         let(:common_stubs) do

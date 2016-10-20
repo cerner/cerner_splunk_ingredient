@@ -11,7 +11,7 @@ shared_examples 'splunk_conf' do |platform, version, package|
     let(:expected_config) { { 'a' => { 'foo' => 'bar', 'one' => '1' } } }
     let(:action) { :configure }
 
-    let(:install_dir) { default_install_dirs[package][platform == 'windows' ? :windows : :linux] }
+    let(:install_dir) { CernerSplunk::PathHelpers.default_install_dirs[package][platform == 'windows' ? :windows : :linux] }
     let(:mock_run_state) do
       install = {
         name: package.to_s,

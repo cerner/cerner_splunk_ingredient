@@ -44,7 +44,7 @@ class SplunkInstall < ChefCompat::Resource
   end
 
   def package_path
-    @package_path ||= Pathname.new(Chef::Config['file_cache_path']) + filename_from_url(package_url)
+    @package_path ||= Pathname.new(Chef::Config['file_cache_path']) + CernerSplunk::PathHelpers.filename_from_url(package_url)
   end
 
   ### Inherited Actions

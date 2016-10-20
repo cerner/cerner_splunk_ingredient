@@ -105,10 +105,9 @@ describe 'splunk_service' do
 
         let(:ftr_exists) { false }
         let(:init_script_exists) { false }
-        let(:ftr_scope) { Chef::Resource }
         let(:common_stubs) do
           expect_any_instance_of(Chef::Resource).to receive(:check_restart).and_call_original
-          expect_any_instance_of(ftr_scope).to receive(:ftr_pathname).and_return ftr
+          expect(CernerSplunk::PathHelpers).to receive(:ftr_pathname).and_return ftr
           expect(ftr).to receive(:exist?).and_return ftr_exists
 
           expect_any_instance_of(Chef::Resource).to receive(:current_owner).and_return(is_windows ? nil : 'fauxhai')
@@ -136,7 +135,6 @@ describe 'splunk_service' do
 
         chef_describe 'action :stop' do
           let(:action_stubs) {}
-          let(:ftr_scope) { Chef::Provider }
           let(:test_params) { { resource_name: package.to_s, action: :stop } }
 
           it { is_expected.to stop_service(service_name) }
