@@ -1,5 +1,4 @@
 require_relative '../spec_helper'
-# require_relative '../../../libraries/conf_helpers'
 include CernerSplunk::ResourceHelpers
 
 shared_examples 'splunk_conf' do |platform, version, package|
