@@ -1,5 +1,5 @@
 require_relative '../spec_helper'
-include CernerSplunk::ConfHelpers, CernerSplunk::ResourceHelpers
+include CernerSplunk::ResourceHelpers
 
 shared_examples 'splunk_conf' do |platform, version, package|
   let(:runner_params) { { platform: platform, version: version, user: 'root' } }
@@ -10,7 +10,7 @@ shared_examples 'splunk_conf' do |platform, version, package|
     let(:expected_config) { { 'a' => { 'foo' => 'bar', 'one' => '1' } } }
     let(:action) { :configure }
 
-    let(:install_dir) { default_install_dirs[package][platform == 'windows' ? :windows : :linux] }
+    let(:install_dir) { CernerSplunk::PathHelpers.default_install_dirs[package][platform == 'windows' ? :windows : :linux] }
     let(:mock_run_state) do
       install = {
         name: package.to_s,
@@ -31,8 +31,8 @@ shared_examples 'splunk_conf' do |platform, version, package|
 
     let(:chef_run_stubs) do
       expect_any_instance_of(Chef::Resource).to receive(:load_installation_state).and_return true
-      expect_any_instance_of(Chef::Resource).to receive(:read_config).with(conf_path).and_return(existing_config)
-      expect_any_instance_of(Chef::Resource).to receive(:merge_config).with(existing_config, expected_config).and_return 'merged config'
+      expect(CernerSplunk::ConfHelpers).to receive(:read_config).with(conf_path).and_return(existing_config)
+      expect(CernerSplunk::ConfHelpers).to receive(:merge_config).with(existing_config, expected_config).and_return 'merged config'
       expect_any_instance_of(Chef::Resource).to receive(:current_owner).and_return(platform == 'windows' ? nil : 'fauxhai')
     end
 
@@ -193,8 +193,8 @@ shared_examples 'splunk_conf' do |platform, version, package|
       end
       let(:chef_run_stubs) do
         expect_any_instance_of(Chef::Resource).to receive(:load_installation_state).and_return true
-        expect_any_instance_of(Chef::Resource).to receive(:read_config).with(conf_path).and_return(existing_config)
-        expect_any_instance_of(Chef::Resource).to receive(:merge_config).with({}, expected_config).and_return 'just my config'
+        expect(CernerSplunk::ConfHelpers).to receive(:read_config).with(conf_path).and_return(existing_config)
+        expect(CernerSplunk::ConfHelpers).to receive(:merge_config).with({}, expected_config).and_return 'just my config'
         expect_any_instance_of(Chef::Resource).to receive(:current_owner).and_return(platform == 'windows' ? nil : 'fauxhai')
       end
 

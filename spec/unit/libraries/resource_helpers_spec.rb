@@ -27,7 +27,7 @@ describe 'ResourceHelpers' do
       version_double = double('splunk.version double')
       allow(version_double).to receive(:exist?).and_return(true)
       allow(version_double).to receive(:read).and_return("VERSION=6.3.4\nBUILD=cae2458f4aef")
-      allow_any_instance_of(CernerSplunk::PathHelpers).to receive(:version_pathname).with(install_dir).and_return(version_double)
+      allow(CernerSplunk::PathHelpers).to receive(:version_pathname).with(install_dir).and_return(version_double)
     end
 
     it 'should load the existing installation into run_state' do

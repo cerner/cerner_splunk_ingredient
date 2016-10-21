@@ -2,7 +2,7 @@ require_relative '../spec_helper'
 require_relative 'install_examples'
 
 describe 'splunk_install' do
-  include CernerSplunk::PathHelpers, CernerSplunk::PlatformHelpers
+  include CernerSplunk::PlatformHelpers
 
   let(:test_resource) { 'splunk_install' }
   let(:test_recipe) { 'install_unit_test' }
@@ -12,11 +12,11 @@ describe 'splunk_install' do
       context "with package #{package}" do
         let(:runner_params) { { platform: platform, version: version, user: 'root' } }
 
-        let(:test_params) { { name: 'splunk', build: 'cae2458f4aef', version: '6.3.4' } }
+        let(:test_params) { { resource_name: 'splunk', build: 'cae2458f4aef', version: '6.3.4' } }
         let(:mock_run_state) { { 'splunk_ingredient' => { 'installations' => {} } } }
 
         let(:package_name) { package_names[package][platform == 'windows' ? :windows : :linux] }
-        let(:install_dir) { default_install_dirs[package][platform == 'windows' ? :windows : :linux] }
+        let(:install_dir) { CernerSplunk::PathHelpers.default_install_dirs[package][platform == 'windows' ? :windows : :linux] }
         let(:windows_opts) { 'LAUNCHSPLUNK=0 INSTALL_SHORTCUT=0 AGREETOLICENSE=Yes' }
         let(:command_prefix) { platform == 'windows' ? 'splunk.exe' : './splunk' }
 
@@ -62,25 +62,25 @@ describe 'splunk_install' do
               let(:base_expected_url) do
                 'https://repo.internet.website/splunk/universalforwarder/releases/6.3.4/linux/splunkforwarder-6.3.4-cae2458f4aef-linux-2.6-x86_64.rpm'
               end
-              let(:package_path) { "./test/unit/.cache/#{filename_from_url(expected_url)}" }
+              let(:package_path) { "./test/unit/.cache/#{CernerSplunk::PathHelpers.filename_from_url(expected_url)}" }
 
               it { is_expected.to create_remote_file(package_path).with(source: base_expected_url) }
             end
           end
 
           chef_context 'when the user is specified' do
-            let(:test_params) { { name: package.to_s, build: 'cae2458f4aef', version: '6.3.4', user: 'fauxhai' } }
+            let(:test_params) { { resource_name: package.to_s, build: 'cae2458f4aef', version: '6.3.4', user: 'fauxhai' } }
 
             it { is_expected.to run_execute "chown -R fauxhai:fauxhai #{install_dir}" }
             chef_context 'when the group is specified' do
-              let(:test_params) { { name: package.to_s, build: 'cae2458f4aef', version: '6.3.4', user: 'fauxhai', group: 'grouphai' } }
+              let(:test_params) { { resource_name: package.to_s, build: 'cae2458f4aef', version: '6.3.4', user: 'fauxhai', group: 'grouphai' } }
 
               it { is_expected.to run_execute "chown -R fauxhai:grouphai #{install_dir}" }
             end
           end if platform != 'windows'
 
           chef_context 'when package is not specified' do
-            let(:test_params) { { name: 'hotcakes', build: 'cae2458f4aef', version: '6.3.4' } }
+            let(:test_params) { { resource_name: 'hotcakes', build: 'cae2458f4aef', version: '6.3.4' } }
 
             it 'should fail the Chef run' do
               expect { subject }.to raise_error(RuntimeError, /Package must be specified.*/)
@@ -105,7 +105,7 @@ describe 'splunk_install' do
 
           chef_context 'when platform is not supported' do
             let(:runner_params) { { platform: 'aix', version: '7.1' } }
-            let(:test_params) { { name: 'splunk', build: 'cae2458f4aef', version: '6.3.4' } }
+            let(:test_params) { { resource_name: 'splunk', build: 'cae2458f4aef', version: '6.3.4' } }
 
             it 'should fail the Chef run' do
               expect { subject }.to raise_error(RuntimeError, /Unsupported Combination.*/)
@@ -121,7 +121,7 @@ describe 'splunk_install' do
           include_examples 'standard uninstall', platform, package
 
           chef_context 'when package is not specified' do
-            let(:test_params) { { name: 'hotcakes', action: :uninstall } }
+            let(:test_params) { { resource_name: 'hotcakes', action: :uninstall } }
 
             it 'should fail the Chef run' do
               expect { subject }.to raise_error(RuntimeError, /Package must be specified.*/)

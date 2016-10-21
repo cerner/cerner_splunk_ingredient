@@ -6,7 +6,7 @@ module CernerSplunk
     # the default directory for Splunk on Linux.
     #
     # @return [Hash] an index of default install directories for Splunk and the Universal Forwarder
-    def default_install_dirs
+    def self.default_install_dirs
       {
         splunk: {
           linux: '/opt/splunk',
@@ -23,7 +23,7 @@ module CernerSplunk
     #
     # @param url [String]
     # @return [String] the filename at the end of the URL
-    def filename_from_url(url)
+    def self.filename_from_url(url)
       Pathname.new(URI.parse(url).path).basename.to_s
     end
 
@@ -31,7 +31,7 @@ module CernerSplunk
     #
     # @param splunk_home [String] the absolute path to Splunk's home directory
     # @return [Pathname] the absolute path to Splunk's version file
-    def version_pathname(splunk_home)
+    def self.version_pathname(splunk_home)
       Pathname.new(splunk_home).join('etc/splunk.version')
     end
 
@@ -39,8 +39,8 @@ module CernerSplunk
     #
     # @param splunk_home [String] the absolute path to Splunk's home directory
     # @return [Pathname] the absolute path to Splunk's first-time-run marker file
-    def ftr_pathname(splunk_home)
+    def self.ftr_pathname(splunk_home)
       Pathname.new(splunk_home).join('ftr')
     end
-  end
+  end unless defined?(PathHelpers)
 end

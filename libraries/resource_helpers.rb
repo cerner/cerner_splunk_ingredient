@@ -1,14 +1,14 @@
 module CernerSplunk
   # Mixin Helper methods for Splunk Ingredient resources
   module ResourceHelpers
-    include PathHelpers, PlatformHelpers
+    include PlatformHelpers
 
     # Determines the correct install directory in the context of a Splunk resource.
     # Expects `package` to be in the context of the current resource.
     #
     # @return [String] the install directory for the current Splunk resource
     def install_dir
-      @install_dir ||= default_install_dirs[package][node['os'].to_sym]
+      @install_dir ||= CernerSplunk::PathHelpers.default_install_dirs[package][node['os'].to_sym]
       raise "Unsupported Combination: #{package} + #{node['os']}" unless @install_dir
       @install_dir
     end
@@ -57,7 +57,7 @@ module CernerSplunk
     def load_version_state
       install_state = node.run_state['splunk_ingredient']['installations'][install_dir]
       if install_state
-        version_file = version_pathname(install_dir)
+        version_file = CernerSplunk::PathHelpers.version_pathname(install_dir)
         raise 'Installation seems to exist, but splunk.version not found!' unless version_file.exist?
 
         version_data = version_file.read
