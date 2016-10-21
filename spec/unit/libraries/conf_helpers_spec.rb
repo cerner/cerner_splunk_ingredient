@@ -107,9 +107,8 @@ describe 'ConfHelpers' do
       }
     end
 
-    it 'should call parse_config' do
+    it 'should read and parse the config from a given pathname' do
       expect(Pathname).to receive(:new).with(conf_path).and_return(Pathname.new('spec/reference/read_test.conf'))
-
       expect(CernerSplunk::ConfHelpers.read_config(conf_path)).to eq(expected_config)
     end
 
