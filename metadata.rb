@@ -2,7 +2,7 @@ name             'cerner_splunk_ingredient'
 maintainer       'Cerner Innovation, Inc.'
 maintainer_email 'splunk@cerner.com'
 license          'Apache 2.0'
-description      'Installs Splunk'
+description      'Installs and configures Splunk'
 long_description IO.read(File.join(File.dirname(__FILE__), 'README.md'))
 version          '0.1.0'
 
@@ -13,5 +13,5 @@ supports         'redhat', '>= 5.5'
 supports         'ubuntu', '>= 12.04'
 supports         'windows', '>= 6.1'
 
-depends          'tar', '~> 0.7'
+depends          'poise-archive', '~> 1.3.0'
 depends          'compat_resource' # Chef <12.5 Compatability

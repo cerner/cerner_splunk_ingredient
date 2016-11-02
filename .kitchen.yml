@@ -33,6 +33,13 @@ suites:
     run_list:
       - recipe[cerner_splunk_ingredient_test::universal_forwarder]
       - recipe[cerner_splunk_ingredient_test::uninstall_universal_forwarder]
+  - name: archive_install
+    run_list:
+      - recipe[cerner_splunk_ingredient_test::splunk_archive]
+  - name: archive_uninstall
+    run_list:
+      - recipe[cerner_splunk_ingredient_test::splunk_archive]
+      - recipe[cerner_splunk_ingredient_test::uninstall_splunk_archive]
 
 verifier:
   name: inspec

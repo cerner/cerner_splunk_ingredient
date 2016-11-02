@@ -2,26 +2,43 @@
 # Resource:: splunk_restart
 #
 # Resource for managing ensured restarts of the Splunk service
+
 class SplunkRestart < ChefCompat::Resource
   include CernerSplunk::RestartHelpers
 
   resource_name :splunk_restart
 
   property :name, String, name_property: true, desired_state: false, identity: true
+  property :install_dir, String, required: true, desired_state: false
   property :package, [:splunk, :universal_forwarder], required: true
 
   default_action :check
 
   def after_created
-    package_from_name unless property_is_set? :package
+    package_from_name unless property_is_set?(:package) || property_is_set?(:install_dir)
+  end
+
+  def install_state
+    unless @install_exists
+      raise 'Attempted to reference service for Splunk installation that does not exist' unless load_installation_state
+      @install_exists = true
+    end
+
+    node.run_state['splunk_ingredient']['installations'][install_dir]
   end
 
   ### Inherited Actions
 
   load_current_value do |desired|
-    package desired.package
+    if property_is_set? :install_dir
+      install_dir desired.install_dir
+      package desired.package = install_state['package']
+    else
+      package desired.package
+      install_dir default_install_dir
+      install_state
+    end
 
-    raise 'Attempted to reference service for Splunk installation that does not exist' unless load_installation_state
     raise 'Attempted to reference resource for Splunk service that does not exist' unless resources(splunk_service: name)
   end
 

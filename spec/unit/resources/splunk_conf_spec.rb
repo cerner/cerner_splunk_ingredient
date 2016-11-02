@@ -66,6 +66,62 @@ shared_examples 'splunk_conf' do |platform, version, package|
       it { is_expected.to init_splunk_service('init_before_config') }
     end
 
+    chef_context 'when install_dir is provided' do
+      let(:install_dir) { platform == 'windows' ? 'C:\\Splunk' : '/etc/splunk' }
+      let(:conf_path) { Pathname.new(install_dir) + 'etc/system/default/test.conf' }
+
+      let(:test_params) do
+        {
+          path: 'system/test.conf',
+          package: package,
+          scope: :default,
+          config: config,
+          install_dir: install_dir,
+          user: package.to_s,
+          action: action
+        }
+      end
+
+      let(:expected_params) do
+        {
+          path: conf_path,
+          package: package,
+          scope: :default,
+          install_dir: install_dir,
+          config: expected_config,
+          user: package.to_s
+        }
+      end
+
+      it { is_expected.to configure_splunk('system/test.conf').with expected_params }
+
+      chef_context 'without package' do
+        let(:test_params) do
+          {
+            path: 'system/test.conf',
+            scope: :default,
+            config: config,
+            install_dir: install_dir,
+            user: package.to_s,
+            action: action
+          }
+        end
+
+        let(:expected_params) do
+          {
+            path: conf_path,
+            package: package,
+            scope: :default,
+            install_dir: install_dir,
+            config: expected_config,
+            user: package.to_s
+          }
+        end
+
+        it { is_expected.to configure_splunk('system/test.conf').with expected_params }
+      end
+    end
+
     chef_context 'when scope is not provided' do
       let(:test_params) do
         {

@@ -6,6 +6,7 @@ resource_name = params.delete('resource_name')
 
 splunk_service params['name'] || resource_name do
   package params['package'] if params['package']
+  install_dir params['install_dir'] if params['install_dir']
   action :nothing
 end
 

@@ -1,4 +1,4 @@
-splunk_install 'universal_forwarder' do
+splunk_install_archive 'splunk' do
   install_dir node['splunk']['install_dir']
   action :uninstall
 end

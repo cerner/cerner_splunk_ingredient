@@ -2,11 +2,13 @@
 # Resource:: splunk_conf
 #
 # Resource for managing Splunk configuration files
+
 class SplunkConf < ChefCompat::Resource
   include CernerSplunk::ResourceHelpers
   resource_name :splunk_conf
 
   property :path, [String, Pathname], name_property: true, desired_state: false, identity: true
+  property :install_dir, String, required: true, desired_state: false
   property :package, [:splunk, :universal_forwarder], required: true, desired_state: false
   property :scope, [:local, :default], desired_state: false, default: :local
   property :config, Hash, required: true
@@ -16,18 +18,31 @@ class SplunkConf < ChefCompat::Resource
 
   default_action :configure
 
+  def install_state
+    unless @install_exists
+      raise 'Attempted to reference service for Splunk installation that does not exist' unless load_installation_state
+      @install_exists = true
+    end
+
+    node.run_state['splunk_ingredient']['installations'][install_dir]
+  end
+
   def existing_config(path)
     @cache ||= node.run_state['splunk_ingredient']['_cache'] ||= { 'existing_config' => {} }
     @cache['existing_config'][path.to_s] ||= CernerSplunk::ConfHelpers.read_config(path)
   end
 
   load_current_value do |desired|
-    install_state = node.run_state['splunk_ingredient']['current_installation'] || {}
-
-    desired.package = install_state['package'] unless property_is_set? :package
-    package desired.package
-
-    raise 'Attempted to reference Splunk installation that does not exist' unless load_installation_state
+    if property_is_set? :install_dir
+      install_dir desired.install_dir
+      package desired.package = install_state['package']
+    else
+      current_state = node.run_state['splunk_ingredient']['current_installation'] || {}
+      desired.package = current_state['package'] unless property_is_set? :package
+      package desired.package
+      install_dir desired.install_dir = default_install_dir
+      install_state
+    end
 
     real_path = Pathname.new(path)
 
@@ -57,7 +72,7 @@ class SplunkConf < ChefCompat::Resource
     config_group = group
 
     splunk_service 'init_before_config' do
-      package new_resource.package
+      install_dir new_resource.install_dir
       action :init
     end
 

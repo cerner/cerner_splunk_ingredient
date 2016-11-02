@@ -7,7 +7,7 @@ module CernerSplunk
     # Expects `package` to be in the context of the current resource.
     #
     # @return [String] the install directory for the current Splunk resource
-    def install_dir
+    def default_install_dir
       @install_dir ||= CernerSplunk::PathHelpers.default_install_dirs[package][node['os'].to_sym]
       raise "Unsupported Combination: #{package} + #{node['os']}" unless @install_dir
       @install_dir
