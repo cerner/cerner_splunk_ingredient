@@ -69,16 +69,18 @@ describe 'splunk_install' do
             end
           end
 
-          chef_context 'when the user is specified' do
-            let(:test_params) { { resource_name: package.to_s, build: 'cae2458f4aef', version: '6.3.4', user: 'fauxhai' } }
+          if platform != 'windows'
+            chef_context 'when the user is specified' do
+              let(:test_params) { { resource_name: package.to_s, build: 'cae2458f4aef', version: '6.3.4', user: 'fauxhai' } }
 
-            it { is_expected.to run_execute "chown -R fauxhai:fauxhai #{install_dir}" }
-            chef_context 'when the group is specified' do
-              let(:test_params) { { resource_name: package.to_s, build: 'cae2458f4aef', version: '6.3.4', user: 'fauxhai', group: 'grouphai' } }
+              it { is_expected.to run_execute "chown -R fauxhai:fauxhai #{install_dir}" }
+              chef_context 'when the group is specified' do
+                let(:test_params) { { resource_name: package.to_s, build: 'cae2458f4aef', version: '6.3.4', user: 'fauxhai', group: 'grouphai' } }
 
-              it { is_expected.to run_execute "chown -R fauxhai:grouphai #{install_dir}" }
+                it { is_expected.to run_execute "chown -R fauxhai:grouphai #{install_dir}" }
+              end
             end
-          end if platform != 'windows'
+          end
 
           chef_context 'when package is not specified' do
             let(:test_params) { { resource_name: 'hotcakes', build: 'cae2458f4aef', version: '6.3.4' } }

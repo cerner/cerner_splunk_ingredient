@@ -54,17 +54,19 @@ shared_examples '*start examples' do |action, platform, _, package|
         subject
       end
 
-      chef_context 'when the service is running' do
-        let(:action_stubs) do
-          expect_any_instance_of(Chef::Provider).to receive(:service_running).at_least(:once).and_return(true)
-          expect_any_instance_of(Chef::Provider).to receive(:write_initd_ulimit).with(4096)
-          expect_any_instance_of(Chef::Provider).to receive(:ensure_restart).and_call_original
-        end
+      if action == :start
+        chef_context 'when the service is running' do
+          let(:action_stubs) do
+            expect_any_instance_of(Chef::Provider).to receive(:service_running).at_least(:once).and_return(true)
+            expect_any_instance_of(Chef::Provider).to receive(:write_initd_ulimit).with(4096)
+            expect_any_instance_of(Chef::Provider).to receive(:ensure_restart).and_call_original
+          end
 
-        it 'should ensure a service restart' do
-          subject
+          it 'should ensure a service restart' do
+            subject
+          end
         end
-      end if action == :start
+      end
 
       chef_context 'when the ulimit is the same' do
         let(:test_params) { { resource_name: package.to_s, action: action, ulimit: 1024 } }
