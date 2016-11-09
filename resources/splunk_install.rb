@@ -55,7 +55,7 @@ class SplunkInstall < ChefCompat::Resource
   ### Inherited Actions
 
   load_current_value do |desired|
-    raise 'Property install_dir is only available for splunk_install_archive' if @resource_name != :splunk_install_archive && property_is_set?(:install_dir)
+    raise 'Property install_dir is only available for splunk_install_archive' if resource_name != :splunk_install_archive && property_is_set?(:install_dir)
     if property_is_set? :install_dir
       desired.package = install_state['package'] if @action.first == :uninstall
       package desired.package
