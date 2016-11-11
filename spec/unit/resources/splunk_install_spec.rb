@@ -187,7 +187,7 @@ describe 'splunk_install' do
               end
             end
           end
-          
+
           chef_describe 'action :uninstall' do
             chef_context 'when install_dir is provided without package' do
               let(:mock_run_state) do
