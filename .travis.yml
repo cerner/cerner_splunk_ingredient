@@ -9,13 +9,21 @@ rvm:
   - 2.1.8
   - 2.3.1
 env:
-  - CHEF_VERSION="<= 12.13.37"
-  - CHEF_VERSION="~> 12.14"
+  - TEST_GROUP=1,2 CHEF_VERSION="<= 12.13.37"
+  - TEST_GROUP=3,4 CHEF_VERSION="<= 12.13.37"
+  - TEST_GROUP=5,6 CHEF_VERSION="<= 12.13.37"
+  - TEST_GROUP=1,2 CHEF_VERSION="~> 12.14"
+  - TEST_GROUP=3,4 CHEF_VERSION="~> 12.14"
+  - TEST_GROUP=5,6 CHEF_VERSION="~> 12.14"
 matrix:
   exclude:
     - rvm: 2.1.8
-      env: CHEF_VERSION="~> 12.14" # Chef 12.14+ requires Ruby 2.2
+      env: TEST_GROUP=1,2 CHEF_VERSION="~> 12.14" # Chef 12.14+ requires Ruby 2.2
+    - rvm: 2.1.8
+      env: TEST_GROUP=3,4 CHEF_VERSION="~> 12.14" # Chef 12.14+ requires Ruby 2.2
+    - rvm: 2.1.8
+      env: TEST_GROUP=5,6 CHEF_VERSION="~> 12.14" # Chef 12.14+ requires Ruby 2.2
 script:
   - bundle exec rubocop
   - bundle exec foodcritic -f any .
-  - bundle exec rspec
+  - bundle exec parallel_test spec/unit/ -n 6 --only-group $TEST_GROUP --group-by filesize --type rspec

@@ -7,6 +7,7 @@ gem 'foodcritic', '~> 6.0'
 gem 'chefspec', '~> 5.0'
 gem 'fauxhai', '~> 3.9.0'
 gem 'hashie', '~> 3.4.6'
+gem 'parallel_tests'
 
 group :local do
   gem 'test-kitchen', '~> 1.10'
