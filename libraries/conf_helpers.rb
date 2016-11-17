@@ -1,6 +1,4 @@
 module CernerSplunk
-  return if defined?(ConfHelpers)
-
   # Helper methods for reading and evaluating Splunk config
   module ConfHelpers
     def self.evaluate_config(current_config, desired_config)
@@ -54,5 +52,5 @@ module CernerSplunk
       end
       stream.string
     end
-  end
+  end unless defined?(ConfHelpers)
 end

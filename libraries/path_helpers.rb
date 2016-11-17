@@ -1,6 +1,4 @@
 module CernerSplunk
-  return if defined? PathHelpers
-
   # Helper methods for Splunk-related file and URL paths
   module PathHelpers
     # Provides constant defaults for Splunk's various default install directories based on platform and package.
@@ -44,5 +42,5 @@ module CernerSplunk
     def self.ftr_pathname(splunk_home)
       Pathname.new(splunk_home).join('ftr')
     end
-  end
+  end unless defined? PathHelpers
 end
