@@ -1,6 +1,6 @@
 module CernerSplunk
   return if defined? PathHelpers
-  
+
   # Helper methods for Splunk-related file and URL paths
   module PathHelpers
     # Provides constant defaults for Splunk's various default install directories based on platform and package.
