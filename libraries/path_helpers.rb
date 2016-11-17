@@ -42,5 +42,5 @@ module CernerSplunk
     def self.ftr_pathname(splunk_home)
       Pathname.new(splunk_home).join('ftr')
     end
-  end unless defined?(PathHelpers)
+  end unless defined? PathHelpers
 end

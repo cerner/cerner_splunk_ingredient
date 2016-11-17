@@ -5,7 +5,9 @@ gem 'chef', '~> 12.4', ENV['CHEF_VERSION'] || '<= 12.13.37' # Chef 12.14+ requir
 gem 'rubocop', '~> 0.41'
 gem 'foodcritic', '~> 6.0'
 gem 'chefspec', '~> 5.0'
+gem 'fauxhai', '~> 3.9.0'
 gem 'hashie', '~> 3.4.6'
+gem 'parallel_tests'
 
 group :local do
   gem 'test-kitchen', '~> 1.10'

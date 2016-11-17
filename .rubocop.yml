@@ -15,5 +15,8 @@ Metrics/AbcSize:
 Metrics/MethodLength:
   Max: 40
 
+Style/MultilineIfModifier:
+  Enabled: false
+
 Documentation:
   Enabled: false

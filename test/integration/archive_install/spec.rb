@@ -1,11 +1,6 @@
 windows = os.windows?
-splunk_path = windows ? 'c:\Program Files\Splunk' : '/opt/splunk'
+splunk_path = windows ? 'c:\splunk' : '/etc/splunk'
 splunk_command = windows ? "& \"#{splunk_path}\\bin\\splunk.exe\"" : "#{splunk_path}/bin/splunk"
-
-describe package(windows ? 'Splunk Enterprise' : 'splunk') do
-  it { is_expected.to be_installed }
-  its('version') { is_expected.to match(/6\.3\.4(\.0)?(-cae2458f4aef)?/) }
-end
 
 describe service(windows ? 'splunkd' : 'splunk') do
   it { is_expected.to be_installed }

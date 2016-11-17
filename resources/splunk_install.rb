@@ -2,6 +2,7 @@
 # Resource:: splunk_install
 #
 # Resource for managing the installation of Splunk
+
 class SplunkInstall < ChefCompat::Resource
   include CernerSplunk::PlatformHelpers, CernerSplunk::PathHelpers, CernerSplunk::ResourceHelpers
 
@@ -11,6 +12,7 @@ class SplunkInstall < ChefCompat::Resource
   property :package, [:splunk, :universal_forwarder], required: true
   property :version, String, required: true
   property :build, String, required: true
+  property :install_dir, String, required: true, desired_state: false
   property :user, String, default: lazy { node['current_user'] || package == :splunk ? 'splunk' : 'splunkforwarder' }
   property :group, String, default: lazy { user }
   property :base_url, String, default: 'https://download.splunk.com/products'
@@ -18,11 +20,14 @@ class SplunkInstall < ChefCompat::Resource
   default_action :install
 
   def after_created
-    package_from_name unless property_is_set? :package
-    load_installation_state
+    package_from_name unless property_is_set?(:package) || (@action.include?(:uninstall) && property_is_set?(:install_dir))
   end
 
   ### Inherited Methods
+
+  def install_state
+    load_installation_state && node.run_state['splunk_ingredient']['installations'][install_dir] || {}
+  end
 
   # Must be overridden by a platform provider
   def kernel_string
@@ -50,10 +55,17 @@ class SplunkInstall < ChefCompat::Resource
   ### Inherited Actions
 
   load_current_value do |desired|
-    package desired.package
+    raise 'Property install_dir is only available for splunk_install_archive' if resource_name != :splunk_install_archive && property_is_set?(:install_dir)
+    if property_is_set? :install_dir
+      desired.package = install_state['package'] if @action.first == :uninstall
+      package desired.package
+    else
+      package desired.package
+      install_dir desired.install_dir = default_install_dir
+    end
 
-    install_state = node.run_state['splunk_ingredient']['installations'][install_dir]
-    current_value_does_not_exist! unless install_state
+    current_value_does_not_exist! if install_state.empty?
+
     version install_state['version']
     build install_state['build']
   end
@@ -61,7 +73,7 @@ class SplunkInstall < ChefCompat::Resource
   action_class do
     def remove_service
       splunk_service new_resource.name do
-        package new_resource.package
+        install_dir new_resource.install_dir
         action :stop
       end
 
@@ -93,8 +105,7 @@ class SplunkInstall < ChefCompat::Resource
       group_resource.run_action :modify
     end
 
-    install_state = node.run_state['splunk_ingredient']['installations'][install_dir]
-    raise "Install at #{install_dir} already exists!" if install_state && install_state['name'] != name
+    raise "Install at #{install_dir} already exists!" unless install_state.empty? || install_state['name'] == name
 
     converge_if_changed :version, :build do
       remote_file package_path.to_s do
@@ -118,24 +129,26 @@ class SplunkInstall < ChefCompat::Resource
 end
 
 ###################################
-### Platform Specific Providers ###
+### Platform Specific Resources ###
 ###################################
 
-class LinuxInstall < SplunkInstall
-  resource_name :splunk_install
-  provides :splunk_install, os: 'linux'
+class ArchiveInstall < SplunkInstall
+  resource_name :splunk_install_archive
+  provides :splunk_install, os: %w(linux windows)
 
   def kernel_string
-    x64_support ? 'Linux-x86_64.tgz' : 'Linux-i686.tgz'
+    case node['os']
+    when 'linux' then x64_support ? 'Linux-x86_64.tgz' : 'Linux-i686.tgz'
+    when 'windows' then x64_support ? 'windows-64.zip' : 'windows-32.zip'
+    end
   end
 
   action :install do
     super()
 
     converge_if_changed :version, :build do
-      tar_extract package_path do
-        action :extract_local
-        target_dir install_dir
+      poise_archive package_path do
+        destination install_dir
       end
     end
 
@@ -149,7 +162,7 @@ class LinuxInstall < SplunkInstall
 end
 
 class RedhatInstall < SplunkInstall
-  resource_name :splunk_install
+  resource_name :splunk_install_redhat
   provides :splunk_install, platform_family: 'rhel'
 
   def kernel_string
@@ -180,7 +193,7 @@ class RedhatInstall < SplunkInstall
 end
 
 class DebianInstall < SplunkInstall
-  resource_name :splunk_install
+  resource_name :splunk_install_debian
   provides :splunk_install, platform_family: 'debian'
 
   def kernel_string
@@ -211,8 +224,8 @@ class DebianInstall < SplunkInstall
 end
 
 class WindowsInstall < SplunkInstall
-  resource_name :splunk_install
-  provides :splunk_install, os: 'windows'
+  resource_name :splunk_install_windows
+  provides :splunk_install, platform_family: 'windows'
 
   def kernel_string
     x64_support ? 'x64-release.msi' : 'x86-release.msi'

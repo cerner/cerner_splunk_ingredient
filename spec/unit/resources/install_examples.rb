@@ -6,18 +6,21 @@ shared_examples 'should install' do |platform, expected_url|
   when 'redhat' then it { is_expected.to install_rpm_package(package_name).with(source: package_path) }
   when 'ubuntu' then it { is_expected.to install_dpkg_package(package_name).with(source: package_path) }
   when 'windows' then it { is_expected.to install_windows_package(package_name).with(options: windows_opts) }
-  else it { is_expected.to extract_local_tar_extract(package_path).with(target_dir: install_dir) }
+  else it { is_expected.to unpack_poise_archive(package_path).with(destination: install_dir) }
   end
 end
 
 shared_examples 'standard install' do |platform, package, expected_url|
   chef_context "with the '#{package}' package" do
     let(:test_params) { { resource_name: package.to_s, build: 'cae2458f4aef', version: '6.3.4' } }
-    let(:package_path) { "./test/unit/.cache/#{CernerSplunk::PathHelpers.filename_from_url(expected_url)}" }
 
     include_examples 'should install', platform, expected_url
 
     chef_context 'when already installed' do
+      let(:action_stubs) do
+        allow_any_instance_of(Chef::Resource).to receive(:load_installation_state).and_return true
+      end
+
       let(:install) do
         {
           name: package.to_s,
@@ -53,13 +56,13 @@ shared_examples 'standard install' do |platform, package, expected_url|
       end
 
       chef_context 'with the same version' do
-        it { is_expected.not_to create_remote_file(package_path).with(source: expected_url) }
+        it { is_expected.not_to create_remote_file(package_path) }
 
         case platform
         when 'redhat' then it { is_expected.not_to install_rpm_package(package_name) }
         when 'ubuntu' then it { is_expected.not_to install_dpkg_package(package_name) }
         when 'windows' then it { is_expected.not_to install_windows_package(package_name) }
-        else it { is_expected.not_to extract_local_tar_extract(package_path) }
+        else it { is_expected.not_to unpack_poise_archive(package_path) }
         end
       end
     end

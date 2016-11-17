@@ -2,17 +2,13 @@ require 'rspec/expectations'
 require 'chefspec'
 require 'chefspec/berkshelf'
 require 'chef/application'
-require_relative '../../libraries/path_helpers'
-require_relative '../../libraries/platform_helpers'
-require_relative '../../libraries/resource_helpers'
-require_relative '../../libraries/restart_helpers'
-require_relative '../../libraries/service_helpers'
-require_relative '../../libraries/conf_helpers'
+%w(path platform resource restart service conf).each { |helper| require_relative "../../libraries/#{helper}_helpers" }
 
 RSpec.configure do |config|
   config.extend(ChefSpec::Cacher)
   config.color = true
   config.formatter = 'documentation'
+  config.order = 'rand'
 
   # Specify the path for Chef Solo file cache path (default: nil)
   config.file_cache_path = './test/unit/.cache'
@@ -21,32 +17,41 @@ RSpec.configure do |config|
   config.log_level = :warn
 end
 
-def platform_package_matrix
+def platform_package_urls
   {
-    'redhat' => {
-      '7.1' => {
+    linux: {
+      archive: {
+        splunk: 'https://download.splunk.com/products/splunk/releases/6.3.4/linux/splunk-6.3.4-cae2458f4aef-Linux-x86_64.tgz',
+        universal_forwarder: 'https://download.splunk.com/products/universalforwarder/releases/6.3.4/linux/splunkforwarder-6.3.4-cae2458f4aef-Linux-x86_64.tgz'
+      },
+      redhat: {
         splunk: 'https://download.splunk.com/products/splunk/releases/6.3.4/linux/splunk-6.3.4-cae2458f4aef-linux-2.6-x86_64.rpm',
         universal_forwarder: 'https://download.splunk.com/products/universalforwarder/releases/6.3.4/linux/splunkforwarder-6.3.4-cae2458f4aef-linux-2.6-x86_64.rpm'
-      }
-    },
-    'ubuntu' => {
-      '16.04' => {
+      },
+      debian: {
         splunk: 'https://download.splunk.com/products/splunk/releases/6.3.4/linux/splunk-6.3.4-cae2458f4aef-linux-2.6-amd64.deb',
         universal_forwarder: 'https://download.splunk.com/products/universalforwarder/releases/6.3.4/linux/splunkforwarder-6.3.4-cae2458f4aef-linux-2.6-amd64.deb'
       }
     },
-    'windows' => {
-      '2012R2' => {
+    windows: {
+      archive: {
+        splunk: 'https://download.splunk.com/products/splunk/releases/6.3.4/windows/splunk-6.3.4-cae2458f4aef-windows-64.zip',
+        universal_forwarder: 'https://download.splunk.com/products/universalforwarder/releases/6.3.4/windows/splunkforwarder-6.3.4-cae2458f4aef-windows-64.zip'
+      },
+      msi: {
         splunk: 'https://download.splunk.com/products/splunk/releases/6.3.4/windows/splunk-6.3.4-cae2458f4aef-x64-release.msi',
         universal_forwarder: 'https://download.splunk.com/products/universalforwarder/releases/6.3.4/windows/splunkforwarder-6.3.4-cae2458f4aef-x64-release.msi'
       }
-    },
-    'suse' => { # Generic Linux
-      '12.0' => {
-        splunk: 'https://download.splunk.com/products/splunk/releases/6.3.4/linux/splunk-6.3.4-cae2458f4aef-Linux-x86_64.tgz',
-        universal_forwarder: 'https://download.splunk.com/products/universalforwarder/releases/6.3.4/linux/splunkforwarder-6.3.4-cae2458f4aef-Linux-x86_64.tgz'
-      }
     }
+  }
+end
+
+def platform_package_matrix
+  {
+    'redhat'  => { '7.1'    => platform_package_urls[:linux][:redhat]  },
+    'ubuntu'  => { '16.04'  => platform_package_urls[:linux][:debian]  },
+    'windows' => { '2012R2' => platform_package_urls[:windows][:msi]   },
+    'suse'    => { '12.0'   => platform_package_urls[:linux][:archive] }
   }
 end
 

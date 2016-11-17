@@ -2,6 +2,7 @@
 # Resource:: splunk_service
 #
 # Resource for managing Splunk as a system service
+
 class SplunkService < ChefCompat::Resource
   include CernerSplunk::PlatformHelpers, CernerSplunk::ResourceHelpers,
           CernerSplunk::ServiceHelpers, CernerSplunk::RestartHelpers
@@ -9,6 +10,7 @@ class SplunkService < ChefCompat::Resource
   resource_name :splunk_service
 
   property :name, String, name_property: true, desired_state: false, identity: true
+  property :install_dir, String, required: true, desired_state: false
   property :package, [:splunk, :universal_forwarder], required: true
   property :user, [String, nil]
   property :ulimit, Integer
@@ -16,11 +18,20 @@ class SplunkService < ChefCompat::Resource
   default_action :start
 
   def after_created
-    package_from_name unless property_is_set? :package
+    package_from_name unless property_is_set?(:package) || property_is_set?(:install_dir)
   end
 
   def service_name
     @service_name ||= service_names[package][node['os'].to_sym]
+  end
+
+  def install_state
+    unless @install_exists
+      raise 'Attempted to reference service for Splunk installation that does not exist' unless load_installation_state
+      @install_exists = true
+    end
+
+    node.run_state['splunk_ingredient']['installations'][install_dir]
   end
 
   def initialize_service
@@ -46,9 +57,15 @@ class SplunkService < ChefCompat::Resource
   ### Inherited Actions
 
   load_current_value do |desired|
-    package desired.package
+    if property_is_set? :install_dir
+      install_dir desired.install_dir
+      package desired.package = install_state['package']
+    else
+      package desired.package
+      install_dir desired.install_dir = default_install_dir
+      install_state
+    end
 
-    raise 'Attempted to reference service for Splunk installation that does not exist' unless load_installation_state
     check_restart unless defined?(performed_actions) && !performed_actions.empty?
 
     unless node['os'] == 'windows'

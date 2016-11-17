@@ -1,9 +1,5 @@
 windows = os.windows?
 
-describe package(windows ? 'Splunk Enterprise' : 'splunk') do
-  it { is_expected.not_to be_installed }
-end
-
 describe service(windows ? 'splunkd' : 'splunk') do
   it { is_expected.not_to be_running }
   it { is_expected.not_to be_enabled }
