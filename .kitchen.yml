@@ -16,8 +16,8 @@ platforms:
   - name: debian-8.4
   - name: windows
     driver:
-      box: mwrock/Windows2012r2
-      gui: false # This box apparently defaults to using a GUI.
+      box: mwrock/Windows2012R2
+      gui: false # The default is true because consumers of this box generally use the GUI.
 
 suites:
   - name: install
