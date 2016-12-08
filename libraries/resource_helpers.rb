@@ -21,6 +21,7 @@ module CernerSplunk
       node['os'] == 'windows' ? 'splunk.exe' : './splunk'
     end
 
+    # Get the owner of the install directory (first creating it, if it doesn't exist)
     def current_owner
       dir = Chef::Resource::Directory.new(install_dir, run_context)
       dir.run_action(:create)

@@ -67,6 +67,10 @@ class SplunkConf < ChefCompat::Resource
     desired.user ||= user
   end
 
+  action_class do
+    include CernerSplunk::ProviderHelpers
+  end
+
   action :configure do
     config_user = user
     config_group = group
@@ -76,12 +80,11 @@ class SplunkConf < ChefCompat::Resource
       action :init
     end
 
-    converge_if_changed :config do
-      file new_resource.path.to_s do
-        owner config_user
-        group config_group
-        content CernerSplunk::ConfHelpers.merge_config(reset ? {} : existing_config(new_resource.path), config)
-      end
+    file new_resource.path.to_s do
+      owner config_user
+      group config_group
+      content CernerSplunk::ConfHelpers.merge_config(reset ? {} : existing_config(new_resource.path), config)
+      only_if { changed? :config }
     end
   end
 end

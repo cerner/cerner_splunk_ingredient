@@ -25,7 +25,7 @@ describe file(Pathname.new(splunk_path).join('etc/system/local/server.conf').to_
   it { is_expected.to be_file }
   it { is_expected.to be_owned_by 'splunkforwarder' } unless windows
   its('content') { is_expected.to match '[general]' }
-  its('content') { is_expected.to match 'serverName = test-forwarder' }
+  its('content') { is_expected.to match 'invalid = test-forwarder' }
   its('content') { is_expected.to match '[sslConfig]' }
   its('content') { is_expected.to match(/sslKeysfilePassword = .+/) }
 end

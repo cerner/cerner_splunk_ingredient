@@ -71,6 +71,8 @@ class SplunkInstall < ChefCompat::Resource
   end
 
   action_class do
+    include CernerSplunk::ProviderHelpers
+
     def remove_service
       splunk_service new_resource.name do
         install_dir new_resource.install_dir
@@ -86,33 +88,38 @@ class SplunkInstall < ChefCompat::Resource
     def post_install
       ruby_block 'load_version_state' do
         block { load_version_state }
+        only_if { changed? }
       end
-      execute "chown -R #{user}:#{group} #{install_dir}" unless node['os'] == 'windows' || current_owner == user
+
+      execute "chown -R #{user}:#{group} #{install_dir}" do
+        not_if { node['os'] == 'windows' || current_owner == user }
+      end
     end
   end
 
   action :install do
-    user_resource = Chef::Resource::User.new(user, run_context)
-    user_resource.system true
-    user_resource.manage_home true
-    user_resource.run_action :create
-
-    # The user is created in a group of the same name, so we can skip this step if the group isn't changed.
-    if group != user
-      group_resource = Chef::Resource::Group.new(group, run_context)
-      group_resource.append true
-      group_resource.members user
-      group_resource.run_action :modify
-    end
-
     raise "Install at #{install_dir} already exists!" unless install_state.empty? || install_state['name'] == name
 
-    converge_if_changed :version, :build do
-      remote_file package_path.to_s do
-        source package_url
-        show_progress true if defined? show_progress # Chef 12.9 feature
-        notifies :delete, "remote_file[#{package_path}]", :delayed
-      end
+    return unless changed? :version, :build
+
+    declare_resource(:user, user) do
+      system true
+      manage_home true
+      action :create
+    end
+
+    declare_resource(:group, group) do
+      append true
+      members user
+      action :create
+      # The user is created in a group of the same name, so we can skip this step if the group isn't changed.
+      only_if { group != user }
+    end
+
+    remote_file package_path.to_s do
+      source package_url
+      show_progress true if defined? show_progress # Chef 12.9 feature
+      notifies :delete, "remote_file[#{package_path}]", :delayed
     end
   end
 
@@ -146,10 +153,9 @@ class ArchiveInstall < SplunkInstall
   action :install do
     super()
 
-    converge_if_changed :version, :build do
-      poise_archive package_path do
-        destination install_dir
-      end
+    poise_archive package_path do
+      destination install_dir
+      only_if { changed? :version, :build }
     end
 
     post_install
@@ -172,11 +178,10 @@ class RedhatInstall < SplunkInstall
   action :install do
     super()
 
-    converge_if_changed :version, :build do
-      rpm_package package_name do
-        source package_path.to_s
-        action :install
-      end
+    rpm_package package_name do
+      source package_path.to_s
+      action :install
+      only_if { changed? :version, :build }
     end
 
     post_install
@@ -203,11 +208,10 @@ class DebianInstall < SplunkInstall
   action :install do
     super()
 
-    converge_if_changed :version, :build do
-      dpkg_package package_name do
-        source package_path.to_s
-        action :install
-      end
+    dpkg_package package_name do
+      source package_path.to_s
+      action :install
+      only_if { changed? :version, :build }
     end
 
     post_install
@@ -234,12 +238,11 @@ class WindowsInstall < SplunkInstall
   action :install do
     super()
 
-    converge_if_changed :version, :build do
-      windows_package package_name do
-        source package_path.to_s
-        action :install
-        options 'LAUNCHSPLUNK=0 INSTALL_SHORTCUT=0 AGREETOLICENSE=Yes'
-      end
+    windows_package package_name do
+      source package_path.to_s
+      action :install
+      options 'LAUNCHSPLUNK=0 INSTALL_SHORTCUT=0 AGREETOLICENSE=Yes'
+      only_if { changed? :version, :build }
     end
 
     post_install

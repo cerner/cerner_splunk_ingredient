@@ -7,7 +7,7 @@ end
 splunk_conf 'system/server.conf' do
   config(
     general: {
-      serverName: 'test-forwarder'
+      invalid: 'test-forwarder'
     }
   )
 end

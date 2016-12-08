@@ -22,6 +22,13 @@ shared_examples '*start examples' do |action, platform, _, package|
       expect_any_instance_of(Chef::Provider).to receive(:clear_restart).and_call_original if action == :restart
     end
 
+    it { is_expected.to run_execute("#{cmd_prefix} enable boot-start#{is_windows ? '' : ' -user fauxhai'} --accept-license --no-prompt").with(cwd: "#{install_dir}/bin") }
+
+    chef_context 'when user is provided' do
+      let(:test_params) { { resource_name: package.to_s, action: :restart, user: 'fauxhai' } }
+      it { is_expected.to run_execute("#{cmd_prefix} enable boot-start -user fauxhai --accept-license --no-prompt").with(cwd: "#{install_dir}/bin") }
+    end
+
     case action
     when :start then it { is_expected.to start_service(service_name) }
     when :restart then it { is_expected.to restart_service(service_name) }

@@ -77,6 +77,7 @@ describe 'splunk_install' do
               chef_context 'when the group is specified' do
                 let(:test_params) { { resource_name: package.to_s, build: 'cae2458f4aef', version: '6.3.4', user: 'fauxhai', group: 'grouphai' } }
 
+                it { is_expected.to create_group('grouphai').with(append: true, members: ['fauxhai']) }
                 it { is_expected.to run_execute "chown -R fauxhai:grouphai #{install_dir}" }
               end
             end
