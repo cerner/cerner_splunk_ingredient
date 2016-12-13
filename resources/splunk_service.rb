@@ -74,7 +74,7 @@ class SplunkService < ChefCompat::Resource
       return unless CernerSplunk::PathHelpers.ftr_pathname(install_dir).exist?
 
       cmd = "#{command_prefix} enable boot-start#{user ? ' -user ' + user : ''} --accept-license --no-prompt"
-      declare_resource(:execute, cmd) do
+      execute cmd do
         cwd splunk_bin_path.to_s
         live_stream true if defined? live_stream
       end

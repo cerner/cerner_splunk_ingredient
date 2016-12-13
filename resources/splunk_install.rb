@@ -88,8 +88,7 @@ class SplunkInstall < ChefCompat::Resource
     def post_install
       ruby_block 'load_version_state' do
         block { load_version_state }
-        only_if { changed? }
-      end
+      end if changed?
 
       execute "chown -R #{user}:#{group} #{install_dir}" do
         not_if { node['os'] == 'windows' || current_owner == user }
@@ -155,8 +154,7 @@ class ArchiveInstall < SplunkInstall
 
     poise_archive package_path do
       destination install_dir
-      only_if { changed? :version, :build }
-    end
+    end if changed? :version, :build
 
     post_install
   end
@@ -181,8 +179,7 @@ class RedhatInstall < SplunkInstall
     rpm_package package_name do
       source package_path.to_s
       action :install
-      only_if { changed? :version, :build }
-    end
+    end if changed? :version, :build
 
     post_install
   end
@@ -211,8 +208,7 @@ class DebianInstall < SplunkInstall
     dpkg_package package_name do
       source package_path.to_s
       action :install
-      only_if { changed? :version, :build }
-    end
+    end if changed? :version, :build
 
     post_install
   end
@@ -242,8 +238,7 @@ class WindowsInstall < SplunkInstall
       source package_path.to_s
       action :install
       options 'LAUNCHSPLUNK=0 INSTALL_SHORTCUT=0 AGREETOLICENSE=Yes'
-      only_if { changed? :version, :build }
-    end
+    end if changed? :version, :build
 
     post_install
   end

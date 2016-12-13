@@ -27,6 +27,11 @@ class SplunkConf < ChefCompat::Resource
     node.run_state['splunk_ingredient']['installations'][install_dir]
   end
 
+  def release_config_cache(path)
+    @cache ||= node.run_state['splunk_ingredient']['_cache'] ||= { 'existing_config' => {} }
+    @cache['existing_config'].delete(path.to_s)
+  end
+
   def existing_config(path)
     @cache ||= node.run_state['splunk_ingredient']['_cache'] ||= { 'existing_config' => {} }
     @cache['existing_config'][path.to_s] ||= CernerSplunk::ConfHelpers.read_config(path)
@@ -78,13 +83,20 @@ class SplunkConf < ChefCompat::Resource
     splunk_service 'init_before_config' do
       install_dir new_resource.install_dir
       action :init
+      notifies :run, 'ruby_block[Wipe cache after initialization]', :immediately
+    end
+
+    ruby_block 'Wipe cache after initialization' do
+      block do
+        release_config_cache(path)
+      end
+      action :nothing
     end
 
     file new_resource.path.to_s do
       owner config_user
       group config_group
       content CernerSplunk::ConfHelpers.merge_config(reset ? {} : existing_config(new_resource.path), config)
-      only_if { changed? :config }
-    end
+    end if changed?(:config)
   end
 end
