@@ -34,26 +34,6 @@ class SplunkService < ChefCompat::Resource
     node.run_state['splunk_ingredient']['installations'][install_dir]
   end
 
-  def initialize_service
-    return unless CernerSplunk::PathHelpers.ftr_pathname(install_dir).exist?
-
-    cmd = "#{command_prefix} enable boot-start#{user ? ' -user ' + user : ''} --accept-license --no-prompt"
-    executor = Chef::Resource::Execute.new cmd, run_context
-    executor.cwd splunk_bin_path.to_s
-    executor.live_stream true if defined? live_stream
-    executor.run_action :run
-  end
-
-  action_class do
-    def service_action(desired_action)
-      service service_name do
-        provider Chef::Provider::Service::Systemd if systemd_is_init?
-        supports start: true, stop: true, restart: true, status: true
-        action desired_action
-      end
-    end
-  end
-
   ### Inherited Actions
 
   load_current_value do |desired|
@@ -77,6 +57,28 @@ class SplunkService < ChefCompat::Resource
 
     user current_owner
     desired.user ||= user
+  end
+
+  action_class do
+    include CernerSplunk::ProviderHelpers
+
+    def service_action(desired_action)
+      service service_name do
+        provider Chef::Provider::Service::Systemd if systemd_is_init?
+        supports start: true, stop: true, restart: true, status: true
+        action desired_action
+      end
+    end
+
+    def initialize_service
+      return unless CernerSplunk::PathHelpers.ftr_pathname(install_dir).exist?
+
+      cmd = "#{command_prefix} enable boot-start#{user ? ' -user ' + user : ''} --accept-license --no-prompt"
+      execute cmd do
+        cwd splunk_bin_path.to_s
+        live_stream true if defined? live_stream
+      end
+    end
   end
 
   action :start do
@@ -110,7 +112,7 @@ class LinuxService < SplunkService
   action :start do
     initialize_service
 
-    converge_if_changed :ulimit do
+    if changed? :ulimit
       write_initd_ulimit ulimit
       ensure_restart if service_running
     end
@@ -121,9 +123,7 @@ class LinuxService < SplunkService
   action :restart do
     initialize_service
 
-    converge_if_changed :ulimit do
-      write_initd_ulimit ulimit
-    end
+    write_initd_ulimit ulimit if changed? :ulimit
 
     service_action :restart
     clear_restart

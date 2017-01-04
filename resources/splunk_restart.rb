@@ -42,6 +42,10 @@ class SplunkRestart < ChefCompat::Resource
     raise 'Attempted to reference resource for Splunk service that does not exist' unless resources(splunk_service: name)
   end
 
+  action_class do
+    include CernerSplunk::ProviderHelpers
+  end
+
   action :ensure do
     file marker_path.to_s do
       action :create_if_missing
