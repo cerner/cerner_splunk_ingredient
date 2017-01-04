@@ -9,8 +9,8 @@ These resources can:
 
 ## Requirements
 
-Chef >= 12.4
-Ruby >= 2.1.8
+Chef >= 12.13.37
+Ruby >= 2.3.1
 
 Supports Linux and Windows based systems with package support for Debian, Redhat,
 and Windows.
