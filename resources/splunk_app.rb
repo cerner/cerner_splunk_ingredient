@@ -42,11 +42,6 @@ class SplunkApp < ChefCompat::Resource
     "read : [ #{access_read} ], write : [ #{access_write} ]"
   end
 
-  # Must be overridden by sub-resources
-  def perform_upgrade
-    raise "No upgrade implementation for current install scheme (#{resource_name})"
-  end
-
   ### Inherited Actions
 
   load_current_value do |desired|
@@ -94,33 +89,6 @@ class SplunkApp < ChefCompat::Resource
       end
     end
   end
-
-  # action :install do
-  #   return unless changed? :version
-
-  #   # Upgrade the app (unused until next sub-resource impl)
-  #   app_cache_path = Pathname.new(Chef::Config['file_cache_path']).join('splunk_ingredient/old_apps')
-  #   directory app_cache_path.to_s do
-  #     recursive true
-  #     action :create
-  #   end
-
-  #   execute "mv #{app_path} #{app_cache_path + name}" do
-  #     live_stream true
-  #   end
-
-  #   perform_upgrade
-
-  #   # Keep Existing strategy
-  #   # TODO: Replace with deep copy
-  #   execute "\\cp -r #{app_cache_path + name + 'local/*'} #{app_path + 'local'}" do
-  #     live_stream true
-  #   end
-
-  #   execute "\\cp -r #{app_cache_path + name + 'metadata/local.meta'} #{app_path + 'metadata/local.meta'}" do
-  #     live_stream true
-  #   end
-  # end
 
   action :uninstall do
     directory app_path.to_s do
