@@ -4,6 +4,24 @@ include CernerSplunk::ResourceHelpers
 describe 'splunk_app' do
   let(:runner_params) { { platform: 'redhat', version: '7.1', user: 'root' } }
   let(:install_dir) { CernerSplunk::PathHelpers.default_install_dirs[:splunk][:linux] }
+  let(:app_path) { "#{install_dir}/etc/apps/test_app" }
+  let(:mock_run_state) do
+    install = {
+      name: 'splunk',
+      package: :splunk,
+      version: '6.3.4',
+      build: 'cae2458f4aef',
+      x64: true
+    }
+    {
+      'splunk_ingredient' => {
+        'installations' => {
+          install_dir => install
+        },
+        'current_installation' => install
+      }
+    }
+  end
 
   # %w(splunk_app_custom splunk_app_package splunk_app_git).each do |resource, test|
   %w(splunk_app_custom).each do |resource|
@@ -11,26 +29,8 @@ describe 'splunk_app' do
       let(:test_resource) { resource }
       let(:test_recipe) { 'app_unit_test' }
 
-      describe 'action :install' do
+      chef_describe 'action :install' do
         let(:action) { :install }
-
-        let(:mock_run_state) do
-          install = {
-            name: 'splunk',
-            package: :splunk,
-            version: '6.3.4',
-            build: 'cae2458f4aef',
-            x64: true
-          }
-          {
-            'splunk_ingredient' => {
-              'installations' => {
-                install_dir => install
-              },
-              'current_installation' => install
-            }
-          }
-        end
 
         let(:meta_conf) do
           {
@@ -92,8 +92,6 @@ describe 'splunk_app' do
           }
         end
 
-        let(:app_path) { "#{install_dir}/etc/apps/test_app" }
-
         shared_examples 'app_install' do
           let(:scope) { 'local' }
           case resource
@@ -127,6 +125,8 @@ describe 'splunk_app' do
           it { is_expected.not_to configure_splunk("#{app_path}/metadata/#{scope}.meta") }
         end
 
+        include_examples 'app_install'
+
         chef_context 'when install_dir is provided' do
           let(:install_dir) { '/etc/splunk' }
           let(:test_params) do
@@ -156,6 +156,64 @@ describe 'splunk_app' do
           end
 
           include_examples 'app_install'
+        end
+
+        chef_context 'without a prior install' do
+          let(:mock_run_state) do
+            install = {
+              name: 'splunk',
+              package: :splunk,
+              version: '6.3.4',
+              build: 'cae2458f4aef',
+              x64: true
+            }
+            {
+              'splunk_ingredient' => {
+                'installations' => {
+                  install_dir => install
+                }
+              }
+            }
+          end
+
+          chef_context 'without install_dir or package' do
+            let(:chef_run_stubs) {}
+
+            it 'should fail the chef run' do
+              expect { subject }.to raise_error Chef::Exceptions::ValidationFailed, /package is required$/
+            end
+          end
+
+          chef_context 'when install_dir is provided' do
+            let(:install_dir) { '/etc/splunk' }
+            let(:test_params) do
+              {
+                name: 'test_app',
+                install_dir: install_dir,
+                configs: configs_proc,
+                files: files_proc,
+                metadata: meta_conf,
+                action: action
+              }
+            end
+
+            include_examples 'app_install'
+          end
+
+          chef_context 'when package is provided' do
+            let(:test_params) do
+              {
+                name: 'test_app',
+                package: :splunk,
+                configs: configs_proc,
+                files: files_proc,
+                metadata: meta_conf,
+                action: action
+              }
+            end
+
+            include_examples 'app_install'
+          end
         end
 
         chef_context 'when app.conf provides a version' do
@@ -208,9 +266,46 @@ describe 'splunk_app' do
             include_examples 'app_install'
           end
         end
+      end
+
+      chef_describe 'action :uninstall' do
+        let(:action) { :uninstall }
+        let(:chef_run_stubs) { {} }
+        let(:test_params) do
+          {
+            name: 'test_app',
+            action: action
+          }
+        end
+
+        it { is_expected.to delete_directory(app_path) }
+
+        chef_context 'when install_dir is provided' do
+          let(:install_dir) { '/etc/splunk' }
+          let(:test_params) do
+            {
+              name: 'test_app',
+              install_dir: install_dir,
+              action: action
+            }
+          end
+
+          it { is_expected.to delete_directory(app_path) }
+        end
+
+        chef_context 'when package is provided' do
+          let(:test_params) do
+            {
+              name: 'test_app',
+              package: :splunk,
+              action: action
+            }
+          end
+
+          it { is_expected.to delete_directory(app_path) }
+        end
 
         chef_context 'without a prior install' do
-          let(:chef_run_stubs) {}
           let(:mock_run_state) do
             install = {
               name: 'splunk',
@@ -228,8 +323,35 @@ describe 'splunk_app' do
             }
           end
 
-          it 'should fail the chef run' do
-            expect { subject }.to raise_error Chef::Exceptions::ValidationFailed, /package is required$/
+          chef_context 'without install_dir or package' do
+            it 'should fail the chef run' do
+              expect { subject }.to raise_error Chef::Exceptions::ValidationFailed, /package is required$/
+            end
+          end
+
+          chef_context 'when install_dir is provided' do
+            let(:install_dir) { '/etc/splunk' }
+            let(:test_params) do
+              {
+                name: 'test_app',
+                install_dir: install_dir,
+                action: action
+              }
+            end
+
+            it { is_expected.to delete_directory(app_path) }
+          end
+
+          chef_context 'when package is provided' do
+            let(:test_params) do
+              {
+                name: 'test_app',
+                package: :splunk,
+                action: action
+              }
+            end
+
+            it { is_expected.to delete_directory(app_path) }
           end
         end
       end
