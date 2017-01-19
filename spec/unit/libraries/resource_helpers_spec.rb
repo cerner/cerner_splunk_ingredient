@@ -35,6 +35,7 @@ describe 'ResourceHelpers' do
       expect(node.run_state['splunk_ingredient']['installations']).to eq(
         '/opt/splunk' => {
           'name' => 'splunk',
+          'path' => install_dir,
           'package' => :splunk,
           'version' => '6.3.4',
           'build' => 'cae2458f4aef',
@@ -50,6 +51,7 @@ describe 'ResourceHelpers' do
         expect(node.run_state['splunk_ingredient']['installations']).to eq(
           '/opt/splunk' => {
             'name' => 'splunk',
+            'path' => install_dir,
             'package' => :universal_forwarder,
             'version' => '6.3.4',
             'build' => 'cae2458f4aef',
@@ -64,6 +66,7 @@ describe 'ResourceHelpers' do
         node.run_state['splunk_ingredient'] = self_state = { 'installations' => {} }
         self_state['installations']['/opt/splunk'] = {
           'name' => 'splunk',
+          'path' => install_dir,
           'package' => :splunk,
           'version' => '6.3.4',
           'build' => 'cae2458f4aef',

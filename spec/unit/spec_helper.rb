@@ -72,6 +72,7 @@ def chef_context_block
     cached(:chef_run) do
       ChefSpec::SoloRunner.new({ step_into: [test_resource] }.merge!(runner_params)) do |node|
         node.normal['test_parameters'] = test_params
+        node.normal['test_resource'] = test_resource
         node.normal['run_state'].merge!(mock_run_state)
         chef_run_stubs
       end.converge('cerner_splunk_ingredient_test::' + test_recipe)
