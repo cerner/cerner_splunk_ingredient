@@ -79,7 +79,7 @@ class SplunkApp < ChefCompat::Resource
       files.call app_path.to_s
 
       metadata.each do |_, props|
-        props['access'] = parse_meta_access(props.delete(:access) || props.delete('access'))
+        props['access'] = parse_meta_access(props.delete(:access) || props.delete('access')) if props['access'].is_a? Hash
       end
 
       splunk_conf app_path.join("metadata/#{config_scope}.meta").to_s do

@@ -92,8 +92,9 @@ describe 'splunk_app' do
           }
         end
 
+        let(:scope) { resource == 'splunk_app_custom' ? 'default' : 'local' }
+
         shared_examples 'app_install' do
-          let(:scope) { 'local' }
           case resource
           when 'splunk_app_custom'
             let(:directory_params) { { owner: 'splunk', group: 'splunk' } }
@@ -102,14 +103,12 @@ describe 'splunk_app' do
             it { is_expected.to create_directory("#{app_path}/local").with(directory_params) }
             it { is_expected.to create_directory("#{app_path}/lookups").with(directory_params) }
             it { is_expected.to create_directory("#{app_path}/metadata").with(directory_params) }
-            let(:scope) { 'default' }
           end
 
           it { is_expected.to configure_splunk("#{app_path}/metadata/#{scope}.meta").with(scope: :none, config: expected_meta_conf, reset: true) }
         end
 
         shared_examples 'app_no_install' do
-          let(:scope) { 'local' }
           let(:proc_stubs) {}
 
           case resource
@@ -119,13 +118,79 @@ describe 'splunk_app' do
             it { is_expected.not_to create_directory("#{app_path}/local") }
             it { is_expected.not_to create_directory("#{app_path}/lookups") }
             it { is_expected.not_to create_directory("#{app_path}/metadata") }
-            let(:scope) { 'default' }
           end
 
           it { is_expected.not_to configure_splunk("#{app_path}/metadata/#{scope}.meta") }
         end
 
         include_examples 'app_install'
+
+        chef_context 'when metadata[:access] does not exist' do
+          let(:meta_conf) do
+            {
+              'default' => {
+                'owner' => 'admin',
+                'access' => { 'read' => '*', 'write' => 'admin' }
+              },
+              'views' => {
+                'owner' => 'admin'
+              }
+            }
+          end
+          let(:expected_meta_conf) do
+            {
+              'default' => {
+                'owner' => 'admin',
+                'access' => 'read : [ * ], write : [ admin ]'
+              },
+              'views' => {
+                'owner' => 'admin'
+              }
+            }
+          end
+
+          it { is_expected.to configure_splunk("#{app_path}/metadata/#{scope}.meta").with(scope: :none, config: expected_meta_conf, reset: true) }
+        end
+
+        chef_context 'when metadata[:access] is not a hash' do
+          let(:meta_conf) do
+            {
+              'default' => {
+                'owner' => 'admin',
+                'access' => 'read : [ * ], write : [ admin ]'
+              },
+              'views' => {
+                'owner' => 'admin'
+              }
+            }
+          end
+          let(:expected_meta_conf) do
+            {
+              'default' => {
+                'owner' => 'admin',
+                'access' => 'read : [ * ], write : [ admin ]'
+              },
+              'views' => {
+                'owner' => 'admin'
+              }
+            }
+          end
+
+          it { is_expected.to configure_splunk("#{app_path}/metadata/#{scope}.meta").with(scope: :none, config: expected_meta_conf, reset: true) }
+        end
+
+        chef_context 'when metadata is not given' do
+          let(:test_params) do
+            {
+              name: 'test_app',
+              configs: configs_proc,
+              files: files_proc,
+              action: action
+            }
+          end
+
+          it { is_expected.to configure_splunk("#{app_path}/metadata/#{scope}.meta").with(scope: :none, config: {}, reset: true) }
+        end
 
         chef_context 'when install_dir is provided' do
           let(:install_dir) { '/etc/splunk' }
