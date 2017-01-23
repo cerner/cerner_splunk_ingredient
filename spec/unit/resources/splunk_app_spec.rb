@@ -23,7 +23,6 @@ describe 'splunk_app' do
     }
   end
 
-  # %w(splunk_app_custom splunk_app_package splunk_app_git).each do |resource, test|
   %w(splunk_app_custom).each do |resource|
     describe resource do
       let(:test_resource) { resource }
