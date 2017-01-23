@@ -17,10 +17,6 @@ module CernerSplunk
       Pathname.new(install_dir).join('bin')
     end
 
-    def splunk_app_path
-      Pathname.new(install_dir).join('etc/apps')
-    end
-
     def command_prefix
       node['os'] == 'windows' ? 'splunk.exe' : './splunk'
     end

@@ -36,6 +36,10 @@ class SplunkApp < ChefCompat::Resource
     'local'
   end
 
+  def splunk_app_path
+    Pathname.new(install_dir).join('etc/apps')
+  end
+
   def parse_meta_access(access)
     access_read = Array(access[:read] || access['read']).join(', ')
     access_write = Array(access[:write] || access['write']).join(', ')
