@@ -56,7 +56,6 @@ describe 'splunk_app' do
           }
         end
 
-        # let(:configs_double) { double('configs') }
         let(:configs_proc) do
           proc do
             splunk_conf 'test.conf' do
@@ -65,7 +64,6 @@ describe 'splunk_app' do
           end
         end
 
-        # let(:files_double) { double('files') }
         let(:files_proc) do
           proc do |path|
             file Pathname.new(path).join('testing.txt').to_s do
