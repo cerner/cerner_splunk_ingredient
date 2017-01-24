@@ -56,19 +56,22 @@ describe 'splunk_app' do
           }
         end
 
-        let(:configs_double) { double('configs') }
+        # let(:configs_double) { double('configs') }
         let(:configs_proc) do
-          -> { configs_double.call }
+          proc do
+            splunk_conf 'test.conf' do
+              config(abc: 123)
+            end
+          end
         end
 
-        let(:files_double) { double('files') }
+        # let(:files_double) { double('files') }
         let(:files_proc) do
-          ->(path) { files_double.call(path) }
-        end
-
-        let(:proc_stubs) do
-          expect(configs_double).to receive(:call)
-          expect(files_double).to receive(:call).with(app_path)
+          proc do |path|
+            file Pathname.new(path).join('testing.txt').to_s do
+              content 'Unimportant Text'
+            end
+          end
         end
 
         let(:version_stub) do
@@ -77,7 +80,6 @@ describe 'splunk_app' do
 
         let(:chef_run_stubs) do
           allow_any_instance_of(Chef::Resource).to receive(:current_owner).and_return('splunk')
-          proc_stubs
           version_stub
         end
 
@@ -104,11 +106,12 @@ describe 'splunk_app' do
             it { is_expected.to create_directory("#{app_path}/metadata").with(directory_params) }
           end
 
-          it { is_expected.to configure_splunk("#{app_path}/metadata/#{scope}.meta").with(scope: :none, config: expected_meta_conf, reset: true) }
+          it { is_expected.to configure_splunk('test.conf').with(config: { abc: 123 }) }
+          it { is_expected.to create_file("#{app_path}/testing.txt").with(content: 'Unimportant Text') }
+          it { is_expected.to configure_splunk("apps/test_app/metadata/#{scope}.meta").with(scope: :none, config: expected_meta_conf, reset: true) }
         end
 
         shared_examples 'app_no_install' do
-          let(:proc_stubs) {}
 
           case resource
           when 'splunk_app_custom'
@@ -119,7 +122,9 @@ describe 'splunk_app' do
             it { is_expected.not_to create_directory("#{app_path}/metadata") }
           end
 
-          it { is_expected.not_to configure_splunk("#{app_path}/metadata/#{scope}.meta") }
+          it { is_expected.not_to configure_splunk('test.conf') }
+          it { is_expected.not_to create_file("#{app_path}/testing.txt") }
+          it { is_expected.not_to configure_splunk("apps/test_app/metadata/#{scope}.meta") }
         end
 
         include_examples 'app_install'
@@ -148,7 +153,7 @@ describe 'splunk_app' do
             }
           end
 
-          it { is_expected.to configure_splunk("#{app_path}/metadata/#{scope}.meta").with(scope: :none, config: expected_meta_conf, reset: true) }
+          it { is_expected.to configure_splunk("apps/test_app/metadata/#{scope}.meta").with(scope: :none, config: expected_meta_conf, reset: true) }
         end
 
         chef_context 'when metadata[:access] is not a hash' do
@@ -175,7 +180,7 @@ describe 'splunk_app' do
             }
           end
 
-          it { is_expected.to configure_splunk("#{app_path}/metadata/#{scope}.meta").with(scope: :none, config: expected_meta_conf, reset: true) }
+          it { is_expected.to configure_splunk("apps/test_app/metadata/#{scope}.meta").with(scope: :none, config: expected_meta_conf, reset: true) }
         end
 
         chef_context 'when metadata is not given' do
@@ -188,7 +193,7 @@ describe 'splunk_app' do
             }
           end
 
-          it { is_expected.to configure_splunk("#{app_path}/metadata/#{scope}.meta").with(scope: :none, config: {}, reset: true) }
+          it { is_expected.to configure_splunk("apps/test_app/metadata/#{scope}.meta").with(scope: :none, config: {}, reset: true) }
         end
 
         chef_context 'when install_dir is provided' do
@@ -307,7 +312,6 @@ describe 'splunk_app' do
             end
           end
           chef_context 'when version is not provided' do
-            let(:proc_stubs) {}
             it 'should fail the chef run' do
               expect { subject }.to raise_error RuntimeError, /Version to install must be specified when app has a version.$/
             end

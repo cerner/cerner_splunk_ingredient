@@ -77,16 +77,22 @@ class SplunkApp < ChefCompat::Resource
         install_dir: install_dir,
         scope: :none
       }
-      configs.call
-      node.run_state['splunk_ingredient']['conf_override'] = {}
 
-      files.call app_path.to_s
-
-      metadata.each do |_, props|
-        props['access'] = parse_meta_access(props.delete(:access) || props.delete('access')) if props['access'].is_a? Hash
+      instance_eval(&configs)
+      ruby_block 'clear config overrides' do
+        block do
+          node.run_state['splunk_ingredient']['conf_override'] = {}
+        end
       end
 
-      splunk_conf app_path.join("metadata/#{config_scope}.meta").to_s do
+      instance_exec(app_path.to_s, &files)
+
+      metadata.each do |_, props|
+        access = props.delete(:access) || props.delete('access')
+        props['access'] = parse_meta_access(access) if access.is_a? Hash
+      end
+
+      splunk_conf Pathname.new('apps').join("#{name}/metadata/#{config_scope}.meta").to_s do
         scope :none
         config metadata
         reset true
@@ -96,6 +102,7 @@ class SplunkApp < ChefCompat::Resource
 
   action :uninstall do
     directory app_path.to_s do
+      recursive true
       action :delete
     end
   end
