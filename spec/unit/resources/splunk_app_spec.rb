@@ -110,7 +110,6 @@ describe 'splunk_app' do
         end
 
         shared_examples 'app_no_install' do
-
           case resource
           when 'splunk_app_custom'
             it { is_expected.not_to create_directory(app_path) }
