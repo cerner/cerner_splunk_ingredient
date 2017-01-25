@@ -41,6 +41,7 @@ class SplunkApp < ChefCompat::Resource
   end
 
   def parse_meta_access(access)
+    return access unless access.is_a? Hash
     access_read = Array(access[:read] || access['read']).join(', ')
     access_write = Array(access[:write] || access['write']).join(', ')
     "read : [ #{access_read} ], write : [ #{access_write} ]"
@@ -89,7 +90,7 @@ class SplunkApp < ChefCompat::Resource
 
       metadata.each do |_, props|
         access = props.delete(:access) || props.delete('access')
-        props['access'] = parse_meta_access(access) if access.is_a? Hash
+        props['access'] = parse_meta_access(access) unless access.to_s.empty?
       end
 
       splunk_conf Pathname.new('apps').join("#{name}/metadata/#{config_scope}.meta").to_s do
