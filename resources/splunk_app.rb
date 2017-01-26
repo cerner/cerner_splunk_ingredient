@@ -61,7 +61,7 @@ class SplunkApp < ChefCompat::Resource
       install_state
     end
 
-    app_conf = CernerSplunk::ConfHelpers.read_config(app_path.join('local/app.conf'))
+    app_conf = CernerSplunk::ConfHelpers.read_config(app_path.join('default/app.conf'))
     app_version = (app_conf['launcher'] ||= {})['version']
     if app_version
       raise 'Version to install must be specified when app has a version.' unless desired.version
