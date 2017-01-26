@@ -73,7 +73,7 @@ describe 'splunk_app' do
         end
 
         let(:version_stub) do
-          expect(CernerSplunk::ConfHelpers).to receive(:read_config).with(Pathname.new(app_path).join('local/app.conf')).and_return({})
+          expect(CernerSplunk::ConfHelpers).to receive(:read_config).with(Pathname.new(app_path).join('default/app.conf')).and_return({})
         end
 
         let(:chef_run_stubs) do
@@ -285,7 +285,7 @@ describe 'splunk_app' do
         chef_context 'when app.conf provides a version' do
           let(:version_config) { { 'launcher' => { 'version' => '1.0.0' } } }
           let(:version_stub) do
-            expect(CernerSplunk::ConfHelpers).to receive(:read_config).with(Pathname.new(app_path).join('local/app.conf')).and_return(version_config)
+            expect(CernerSplunk::ConfHelpers).to receive(:read_config).with(Pathname.new(app_path).join('default/app.conf')).and_return(version_config)
           end
 
           chef_context 'when version is provided' do
