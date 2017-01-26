@@ -73,11 +73,15 @@ class SplunkApp < ChefCompat::Resource
     include CernerSplunk::ProviderHelpers
 
     def apply_config
-      node.run_state['splunk_ingredient']['conf_override'] = {
-        conf_path: Pathname.new('apps').join(name).join(config_scope).to_s,
-        install_dir: install_dir,
-        scope: :none
-      }
+      ruby_block 'set config overrides' do
+        block do
+          node.run_state['splunk_ingredient']['conf_override'] = {
+            conf_path: Pathname.new('apps').join(name).join(config_scope).to_s,
+            install_dir: install_dir,
+            scope: :none
+          }
+        end
+      end
 
       instance_eval(&configs)
       ruby_block 'clear config overrides' do
