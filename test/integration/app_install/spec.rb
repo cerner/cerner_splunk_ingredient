@@ -24,7 +24,7 @@ describe file(Pathname.new(app_path).join('metadata/default.meta').to_s) do
   it { is_expected.to be_file }
   it { is_expected.to be_owned_by 'splunk' } unless windows
   its('content') { is_expected.to match(/\[views\]/) }
-  its('content') { is_expected.to match(/access = read : \[ * \], write : \[ admin, power \]/) }
+  its('content') { is_expected.to match(/access = read : \[ \* \], write : \[ admin, power \]/) }
   its('content') { is_expected.to match(%r{\[views/index_check\]}) }
   its('content') { is_expected.to match(/access = read : \[ admin \], write : \[ admin \]/) }
 end

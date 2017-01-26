@@ -11,6 +11,7 @@ splunk_app_custom 'test_app' do
 
   files(proc do |app_path|
     file Pathname.new(app_path).join('plain_file.txt').to_s do
+      owner 'splunk'
       content 'A secret to everybody'
     end
   end)

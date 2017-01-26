@@ -18,6 +18,12 @@ class SplunkConf < ChefCompat::Resource
 
   default_action :configure
 
+  def after_created
+    ((node.run_state['splunk_ingredient'] || {})['conf_override'] ||= {}).each do |key, value|
+      send(key.to_sym, value)
+    end
+  end
+
   def install_state
     unless @install_exists
       raise 'Attempted to reference service for Splunk installation that does not exist' unless load_installation_state
@@ -42,11 +48,6 @@ class SplunkConf < ChefCompat::Resource
   end
 
   load_current_value do |desired|
-    (node.run_state['splunk_ingredient']['conf_override'] ||= {}).each do |key, value|
-      send(key.to_sym, value)
-      desired.send(key.to_sym, value)
-    end
-
     if property_is_set? :install_dir
       install_dir desired.install_dir
       package desired.package = install_state['package']
