@@ -308,6 +308,7 @@ describe 'splunk_app' do
               include_examples 'app_no_install'
             end
           end
+
           chef_context 'when version is not provided' do
             it 'should fail the chef run' do
               expect { subject }.to raise_error RuntimeError, /Version to install must be specified when app has a version.$/

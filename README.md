@@ -95,7 +95,7 @@ node.run_state['splunk_ingredient'] = {
 
 Manages an installation of Splunk. Requires splunk\_install to be evaluated first.
 
-**The following actions (start and restart) share the same properties**
+**The following actions (start and restart) share the same properties:**
 
 #### Action *:start*
 
@@ -287,7 +287,7 @@ Places a file marker to indicate a pending Splunk restart. Useful when using an 
 preventing delayed restarts from taking place. If a file marker exists, and the splunk\_service resource is referenced in a future
 Chef run, it will notify a delayed restart as was intended in the previous run. The marker is removed on a successful restart.
 
-**The following actions all share the same properties**
+**The following actions all share the same properties:**
 
 #### Action *:ensure*
 
@@ -342,7 +342,6 @@ Properties:
 | configs      |                 Proc                |              No             |                                             | Proc containing `splunk_conf` resources. The resources will behave similarly to normal, except the config will be placed relative to the app directory rather than relative to the Splunk installation, and you can not change the scope. |
 | files        |                 Proc                |              No             |                                             | Proc containing miscellaneous resources for manipulating the app directory. This is ideally directories, templates, and files. The Proc will be given an absolute app path parameter for you to use in these resources.                  |
 | metadata     |                 Hash                |              No             | {}                                          | Configuration to apply to the metadata (local.meta in most cases, default.meta for custom apps). See splunk\_conf for more info, and also below for special handling of the `access` key.                                                |
-
 
 #### Action *:uninstall*
 
