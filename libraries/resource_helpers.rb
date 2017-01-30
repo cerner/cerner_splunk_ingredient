@@ -43,7 +43,7 @@ module CernerSplunk
       return true if self_state['installations'][install_dir]
       return false unless Pathname.new(install_dir).join('bin').exist?
 
-      install_state = { 'name' => name, 'x64' => x64_support }
+      install_state = { 'name' => name, 'x64' => x64_support, 'path' => install_dir }
       install_state['package'] = if Pathname.new(install_dir).join('etc/apps/SplunkUniversalForwarder').exist?
                                    :universal_forwarder
                                  else

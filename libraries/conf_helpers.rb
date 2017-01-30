@@ -2,9 +2,13 @@ module CernerSplunk
   # Helper methods for reading and evaluating Splunk config
   module ConfHelpers
     def self.evaluate_config(current_config, desired_config)
-      return desired_config.call(current_config) if desired_config.is_a? Proc
+      desired_config = desired_config.call(current_config) if desired_config.is_a? Proc
       desired_config.map do |section, props|
-        props.is_a?(Proc) ? props.call(section, current_config[section] || {}) : [section, props]
+        mapout = props.is_a?(Proc) ? props.call(section, current_config[section] || {}) : [section, props]
+        mapout[1] = mapout[1].map do |key, value|
+          value.is_a?(Proc) ? value.call(key, (current_config[section] || {})[key]) : [key, value]
+        end.to_h
+        mapout
       end.to_h
     end
 

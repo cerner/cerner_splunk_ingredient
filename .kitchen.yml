@@ -4,12 +4,12 @@ driver:
 
 provisioner:
   name: chef_zero
-  require_chef_omnibus: 12.9
+  require_chef_omnibus: 12.14
 
 platforms:
   - name: centos-6.7
     provisioner:
-      require_chef_omnibus: 12.4
+      require_chef_omnibus: 12.13
     driver:
       box: bento/centos-6.7
   - name: centos-7.2
@@ -41,6 +41,15 @@ suites:
     run_list:
       - recipe[cerner_splunk_ingredient_test::splunk_archive]
       - recipe[cerner_splunk_ingredient_test::uninstall_splunk_archive]
+  - name: app_install
+    run_list:
+      - recipe[cerner_splunk_ingredient_test::splunk]
+      - recipe[cerner_splunk_ingredient_test::splunk_app]
+  - name: app_uninstall
+    run_list:
+      - recipe[cerner_splunk_ingredient_test::splunk]
+      - recipe[cerner_splunk_ingredient_test::splunk_app]
+      - recipe[cerner_splunk_ingredient_test::uninstall_splunk_app]
 
 verifier:
   name: inspec

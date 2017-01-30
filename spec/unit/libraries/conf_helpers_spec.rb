@@ -58,6 +58,31 @@ describe 'ConfHelpers' do
 
       it { is_expected.to eq(expected_config) }
     end
+
+    context 'with value-level proc' do
+      let(:config) do
+        {
+          'default' => {
+            'second' => 'false'
+          },
+          'other' => {
+            'something' => ->(key, value) { [key, value.upcase] }
+          }
+        }
+      end
+      let(:expected_config) do
+        {
+          'default' => {
+            'second' => 'false'
+          },
+          'other' => {
+            'something' => 'HERE'
+          }
+        }
+      end
+
+      it { is_expected.to eq(expected_config) }
+    end
   end
 
   describe 'stringify_config' do

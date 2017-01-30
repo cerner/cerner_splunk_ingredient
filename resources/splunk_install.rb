@@ -29,7 +29,7 @@ class SplunkInstall < ChefCompat::Resource
     load_installation_state && node.run_state['splunk_ingredient']['installations'][install_dir] || {}
   end
 
-  # Must be overridden by a platform provider
+  # Must be overridden by platform sub-resources
   def kernel_string
     raise 'No implementation for current platform'
   end

@@ -14,6 +14,7 @@ shared_examples 'splunk_conf' do |platform, version, package|
     let(:mock_run_state) do
       install = {
         name: package.to_s,
+        path: install_dir,
         package: package,
         version: '6.3.4',
         build: 'cae2458f4aef',
@@ -163,11 +164,31 @@ shared_examples 'splunk_conf' do |platform, version, package|
 
       it { is_expected.to configure_splunk('system/test.conf') }
 
+      chef_context 'when prior install is in a non-default location' do
+        let(:install_dir) { platform == 'windows' ? 'C:\Splunk' : '/etc/splunk' }
+        let(:conf_path) { Pathname.new(install_dir) + 'etc/system/local/test.conf' }
+        let(:expected_params) do
+          {
+            path: conf_path,
+            package: package,
+            install_dir: install_dir,
+            scope: :local,
+            config: expected_config,
+            user: package.to_s
+          }
+        end
+
+        it { is_expected.to configure_splunk('system/test.conf').with expected_params }
+        it { is_expected.to create_file(conf_path).with(content: 'merged config', owner: package.to_s) }
+        it { is_expected.to init_splunk_service('init_before_config') }
+      end
+
       chef_context 'without a prior install' do
         let(:chef_run_stubs) {}
         let(:mock_run_state) do
           install = {
             name: package.to_s,
+            path: install_dir,
             package: package,
             version: '6.3.4',
             build: 'cae2458f4aef',
@@ -256,6 +277,48 @@ shared_examples 'splunk_conf' do |platform, version, package|
 
       it { is_expected.to configure_splunk('system/test.conf') }
       it { is_expected.to create_file(conf_path).with(content: 'just my config', owner: package.to_s) }
+    end
+
+    chef_context 'when conf_override is set in the run state' do
+      let(:test_params) do
+        {
+          path: 'system/test.conf',
+          package: package,
+          user: package.to_s,
+          scope: :local,
+          config: config,
+          action: action
+        }
+      end
+
+      let(:mock_run_state) do
+        install = {
+          name: package.to_s,
+          path: install_dir,
+          package: package,
+          version: '6.3.4',
+          build: 'cae2458f4aef',
+          x64: true
+        }
+        {
+          'splunk_ingredient' => {
+            'installations' => {
+              install_dir => install
+            },
+            'current_installation' => install,
+            'conf_override' => {
+              conf_path: 'apps/test_app/local',
+              scope: :none,
+              user: 'otherbody'
+            }
+          }
+        }
+      end
+
+      let(:conf_path) { Pathname.new(install_dir) + 'etc/apps/test_app/local/test.conf' }
+
+      it { is_expected.to configure_splunk('system/test.conf') }
+      it { is_expected.to create_file(conf_path).with(content: 'merged config', owner: 'otherbody') }
     end
   end
 end

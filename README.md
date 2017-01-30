@@ -37,7 +37,7 @@ Installs Splunk or Universal Forwarder.
 Properties:
 
 | Name      |               Type(s)               | Required | Default                                                                   | Description                                                                                                                                                                                                                                                            |
-|:----------|:-----------------------------------:|:--------:|:--------------------------------------------------------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| :-------- | :---------------------------------: | :------: | :------------------------------------------------------------------------ | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | package   | `:splunk` or `:universal_forwarder` | **Yes**  |                                                                           | Specifies the Splunk package to install. You must specify the package, or name the resource for the package; for example, `package :splunk` or `splunk_install 'universal_forwarder' do ... end`                                                                       |
 | version   |               String                | **Yes**  |                                                                           | Version of Splunk to install                                                                                                                                                                                                                                           |
 | build     |               String                | **Yes**  |                                                                           | Build number of the version                                                                                                                                                                                                                                            |
@@ -57,9 +57,9 @@ Removes Splunk or Universal Forwarder and all its configuration.
 
 Properties:
 
-| Name    |               Type(s)               |               Required               | Default | Description                                                                                                                                                                                                                                      |
-|:--------|:-----------------------------------:|:------------------------------------:|:--------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| package | `:splunk` or `:universal_forwarder` | **Yes, unless install_dir is given** |         | Specifies the Splunk package to uninstall. If you did not specify the install\_dir, then you must specify the package, or name the resource for the package; for example, `package :splunk` or `splunk_install 'universal_forwarder' do ... end` |
+| Name    |               Type(s)               |                Required               | Default | Description                                                                                                                                                                                                                                      |
+| :------ | :---------------------------------: | :-----------------------------------: | :------ | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| package | `:splunk` or `:universal_forwarder` | **Yes, unless install\_dir is given** |         | Specifies the Splunk package to uninstall. If you did not specify the install\_dir, then you must specify the package, or name the resource for the package; for example, `package :splunk` or `splunk_install 'universal_forwarder' do ... end` |
 
 ##### Run State
 
@@ -95,7 +95,7 @@ node.run_state['splunk_ingredient'] = {
 
 Manages an installation of Splunk. Requires splunk\_install to be evaluated first.
 
-**The following actions (start and restart) share the same properties**
+**The following actions (start and restart) share the same properties:**
 
 #### Action *:start*
 
@@ -109,9 +109,9 @@ Restarts the Splunk daemon, or starts it if not already running.
 Properties:
 
 | Name         |               Type(s)               |               Required               | Default                                            | Description                                                                                                                                                                                                                                   |
-|:-------------|:-----------------------------------:|:------------------------------------:|:---------------------------------------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| :----------- | :---------------------------------: | :----------------------------------: | :------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | package      | `:splunk` or `:universal_forwarder` | **Yes, unless install_dir is given** |                                                    | Specifies the installed Splunk package. If you did not specify the install\_dir, then you must specify the package, or name the resource for the package; for example, `package :splunk` or `splunk_service 'universal_forwarder' do ... end` |
-| install\_dir |               String                |                  No                  | Same as splunk\_install                            | The install directory of Splunk. If you installed to a different directory than the default, you should provide this. If install_dir is given, you do not need package.                                                                       |
+| install\_dir |               String                |                  No                  | Same as splunk\_install                            | The install directory of Splunk. If you installed to a different directory than the default, you should provide this. If install\_dir is given, you do not need package.                                                                      |
 | user         |            String or nil            |                  No                  | Owner of the specified Splunk installation, if any | User to run Splunk as. This is the user that will be used to run the Splunk service.                                                                                                                                                          |
 | ulimit       |               Integer               |                  No                  | Start up script ulimit or user ulimit              | Open file ulimit to give Splunk. This sets the ulimit in the start up script (if it exists) and for the given user in `/etc/security/limits.d/`. -1 translates to `'unlimited'`                                                               |
 
@@ -122,9 +122,9 @@ Stop the Splunk daemon if it is running.
 Properties:
 
 | Name         |               Type(s)               |               Required               | Default                 | Description                                                                                                                                                                                                                                   |
-|:-------------|:-----------------------------------:|:------------------------------------:|:------------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| :----------- | :---------------------------------: | :----------------------------------: | :---------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | package      | `:splunk` or `:universal_forwarder` | **Yes, unless install_dir is given** |                         | Specifies the installed Splunk package. If you did not specify the install\_dir, then you must specify the package, or name the resource for the package; for example, `package :splunk` or `splunk_service 'universal_forwarder' do ... end` |
-| install\_dir |               String                |                  No                  | Same as splunk\_install | The install directory of Splunk. If you installed to a different directory than the default, you should provide this. If install_dir is given, you do not need package.                                                                       |
+| install\_dir |               String                |                  No                  | Same as splunk\_install | The install directory of Splunk. If you installed to a different directory than the default, you should provide this. If install\_dir is given, you do not need package.                                                                      |
 
 #### Action *:init*
 
@@ -133,9 +133,9 @@ Executes Splunk's first time run, accepting the license agreement if applicable.
 Properties:
 
 | Name         |               Type(s)               |               Required               | Default                                            | Description                                                                                                                                                                                                                                   |
-|:-------------|:-----------------------------------:|:------------------------------------:|:---------------------------------------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| :----------- | :---------------------------------: | :----------------------------------: | :------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | package      | `:splunk` or `:universal_forwarder` | **Yes, unless install_dir is given** |                                                    | Specifies the installed Splunk package. If you did not specify the install\_dir, then you must specify the package, or name the resource for the package; for example, `package :splunk` or `splunk_service 'universal_forwarder' do ... end` |
-| install\_dir |               String                |                  No                  | Same as splunk\_install                            | The install directory of Splunk. If you installed to a different directory than the default, you should provide this. If install_dir is given, you do not need package.                                                                       |
+| install\_dir |               String                |                  No                  | Same as splunk\_install                            | The install directory of Splunk. If you installed to a different directory than the default, you should provide this. If install\_dir is given, you do not need package.                                                                      |
 | user         |            String or nil            |                  No                  | Owner of the specified Splunk installation, if any | User to initialize Splunk as. This is the user that will be used to run the Splunk service.                                                                                                                                                   |
 
 ### splunk\_conf
@@ -152,16 +152,16 @@ property and specify this path: `system/indexes.conf`. The resource will modify 
 
 Properties:
 
-| Name         |               Type(s)               |        Required         | Default                                          | Description                                                                                                                                                                                                                                       |
-|:-------------|:-----------------------------------:|:-----------------------:|:-------------------------------------------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| path         |         String or Pathname          | **Yes (resource name)** |                                                  | Path of the .conf file from `$SPLUNK_HOME/etc`. The intermediate directory determining scope is optional. Examples: `system/indexes.conf` or `system/local/indexes.conf`.                                                                         |
-| package      | `:splunk` or `:universal_forwarder` |           No            | Package of the current install in run state      | Specifies the installed Splunk package. If you did not specify the install\_dir, then you may specify the package (`:splunk` or `:universal_forwarder`) otherwise the resource will refer to the most recently evaluated splunk\_install resource |
-| install\_dir |               String                |           No            | Same as splunk\_install                          | The install directory of Splunk. If you installed to a different directory than the default, you should provide this. If install_dir is given, you do not need package.                                                                           |
-| scope        |       `:local` or `:default`        |           No            | `:local`                                         | Scope of the configuration to modify. In most circumstances, you should *not* change this.                                                                                                                                                        |
-| config       |                Hash                 |         **Yes**         |                                                  | Configuration to apply to the .conf file. This hash is structured as follows: `{ stanza: { key: 'value' } }`. See below for more detailed explanation of the config property.                                                                     |
-| user         |            String or nil            |           No            | Owner of the current Splunk installation, if any | User that will be used to write to the .conf files.                                                                                                                                                                                               |
-| group        |            String or nil            |           No            | Group of the current Splunk installation, if any | Group that will be used to write to the .conf files.                                                                                                                                                                                              |
-| reset        |            true or false            |           No            | false                                            | When specified as true, entirely replaces existing config. By default, config is merged into the existing conf file.                                                                                                                              |
+| Name         |               Type(s)               |         Required        | Default                                          | Description                                                                                                                                                                                                                                       |
+| :----------- | :---------------------------------: | :---------------------: | :----------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| path         |          String or Pathname         | **Yes (resource name)** |                                                  | Path of the .conf file from `$SPLUNK_HOME/etc`. The intermediate directory determining scope is optional. Examples: `system/indexes.conf` or `system/local/indexes.conf`.                                                                         |
+| package      | `:splunk` or `:universal_forwarder` |            No           | Package of the current install in run state      | Specifies the installed Splunk package. If you did not specify the install\_dir, then you may specify the package (`:splunk` or `:universal_forwarder`) otherwise the resource will refer to the most recently evaluated splunk\_install resource |
+| install\_dir |                String               |            No           | Path of the current install in run state         | The install directory of Splunk. If you installed to a different directory than the default, you should provide this. If install\_dir is given, you do not need package.                                                                          |
+| scope        |   `:local`, `:none`, or `:default`  |            No           | `:local`                                         | Scope of the configuration to modify. In most circumstances, you should *not* change this. `:none` will disable checking or modifying scope in the path.                                                                                          |
+| config       |                 Hash                |         **Yes**         |                                                  | Configuration to apply to the .conf file. This hash is structured as follows: `{ stanza: { key: 'value' } }`. See below for more detailed explanation of the config property.                                                                     |
+| user         |            String or nil            |            No           | Owner of the current Splunk installation, if any | User that will be used to write to the .conf files.                                                                                                                                                                                               |
+| group        |            String or nil            |            No           | Group of the current Splunk installation, if any | Group that will be used to write to the .conf files.                                                                                                                                                                                              |
+| reset        |            true or false            |            No           | false                                            | When specified as true, entirely replaces existing config. By default, config is merged into the existing conf file.                                                                                                                              |
 
 #### Configuration
 
@@ -261,13 +261,33 @@ splunk_conf 'system/test.conf' do
 end
 ```
 
+###### Value-level Evaluation
+
+Value-level evaluation, while possible from a Stanza-level lambda, is the more common case and thus is supported for sheer
+ease of use. This is especially handy when you want to produce some value for a particular key and don't want to bother with
+nesting the rest of the stanza in your Proc. If there is a case where you're applying a Proc to values whose keys you don't know,
+this becomes a necessary functionality.
+
+In this example, if the value is an Array object, it is converted into a comma spaced string using join. **Note that the Value-level proc
+receives the key and value, and expects a pair (array) of the desired key and value (similar to the Stanza-level proc).**
+
+```Ruby
+splunk_conf 'system/test.conf' do
+  config(
+    testing: {
+      servers: ->(key, value) { [key, value.is_a?(Array) ? value.join(', ') : value] }
+    }
+  )
+end
+```
+
 ### splunk\_restart
 
 Places a file marker to indicate a pending Splunk restart. Useful when using an unstable cookbook that can crash the Chef run,
 preventing delayed restarts from taking place. If a file marker exists, and the splunk\_service resource is referenced in a future
 Chef run, it will notify a delayed restart as was intended in the previous run. The marker is removed on a successful restart.
 
-**The following actions all share the same properties**
+**The following actions all share the same properties:**
 
 #### Action *:ensure*
 
@@ -287,10 +307,77 @@ Removes the file marker.
 Properties:
 
 | Name         |               Type(s)               |               Required               | Default                 | Description                                                                                                                                                                                                                                   |
-|:-------------|:-----------------------------------:|:------------------------------------:|:------------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| :----------- | :---------------------------------: | :----------------------------------: | :---------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | name         |               String                |                  No                  | Resource Name           | Name of the splunk\_service resource to notify when a restart is triggered. By default, this is the name given to this resource.                                                                                                              |
 | package      | `:splunk` or `:universal_forwarder` | **Yes, unless install_dir is given** |                         | Specifies the installed Splunk package. If you did not specify the install\_dir, then you must specify the package, or name the resource for the package; for example, `package :splunk` or `splunk_restart 'universal_forwarder' do ... end` |
 | install\_dir |               String                |                  No                  | Same as splunk\_install | The install directory of Splunk. If you installed to a different directory than the default, you should provide this. If install_dir is given, you do not need package.                                                                       |
+
+### splunk\_app
+
+Installs and manages Splunk Apps. Performs different types of install based on sub-resource used.
+
+#### Sub-Resources
+
+##### splunk\_app\_custom
+
+Creates or updates a custom Splunk app, to be configured entirely via Chef. A new custom app will create the app directory and
+necessary sub-directories, but the files and configuration of the app must be populated via Chef resources. There is no upgrade
+strategy for this type of app; directories will be created if they do not exist, and all further configuration is created or updated
+from the configs, files, and metadata properties of this resource. You can use version to control updating of this app if you
+set a version in app.conf.
+
+#### Action *:install*
+
+Install or upgrade a Splunk App.
+
+Properties:
+
+| Name         |               Type(s)               |           Required          | Default                                     | Description                                                                                                                                                                                                                              |
+| :----------- | :---------------------------------: | :-------------------------: | :------------------------------------------ | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| name         |                String               |   **Yes (resource name)**   |                                             | Name of the app to install.                                                                                                                                                                                                              |
+| package      | `:splunk` or `:universal_forwarder` |              No             | Package of the current install in run state | The installed Splunk package. If you did not specify the install\_dir, then you may specify the package (`:splunk` or `:universal_forwarder`) otherwise the resource will refer to the most recently evaluated splunk\_install resource  |
+| install\_dir |                String               |              No             | Path of the current install in run state    | The install directory of Splunk. If you did not specfiy the package, then you may specify the install\_dir otherwise the resource will refer to the most recently evaluated splunk\_install resource                                     |
+| source\_url  |                String               |              No             |                                             | **Not Implemented** Source url to use for installing a package or Git repo.                                                                                                                                                              |
+| version      |                String               | **Yes if app is versioned** |                                             | Version of the app to install. This is required if the app has a version in its app.conf, and will only install/upgrade if the version is different or the app is not already installed. If the app has no version, this does nothing.   |
+| configs      |                 Proc                |              No             |                                             | Proc containing `splunk_conf` resources. The resources will behave similarly to normal, except the config will be placed relative to the app directory rather than relative to the Splunk installation, and you can not change the scope. |
+| files        |                 Proc                |              No             |                                             | Proc containing miscellaneous resources for manipulating the app directory. This is ideally directories, templates, and files. The Proc will be given an absolute app path parameter for you to use in these resources.                  |
+| metadata     |                 Hash                |              No             | {}                                          | Configuration to apply to the metadata (local.meta in most cases, default.meta for custom apps). See splunk\_conf for more info, and also below for special handling of the `access` key.                                                |
+
+#### Action *:uninstall*
+
+Uninstalls an app, completely removing it and its files.
+
+Properties:
+
+| Name         |               Type(s)               |           Required          | Default                                     | Description                                                                                                                                                                                                                              |
+| :----------- | :---------------------------------: | :-------------------------: | :------------------------------------------ | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| name         |                String               |   **Yes (resource name)**   |                                             | Name of the app to uninstall.                                                                                                                                                                                                              |
+| package      | `:splunk` or `:universal_forwarder` |              No             | Package of the current install in run state | The installed Splunk package. If you did not specify the install\_dir, then you may specify the package (`:splunk` or `:universal_forwarder`) otherwise the resource will refer to the most recently evaluated splunk\_install resource  |
+| install\_dir |                String               |              No             | Path of the current install in run state    | The install directory of Splunk. If you did not specfiy the package, then you may specify the install\_dir otherwise the resource will refer to the most recently evaluated splunk\_install resource                                     |
+
+#### Metadata
+
+The metadata property accepts a config hash, just as `splunk_conf` would (it basically calls `splunk_conf` behind the scenes), but there is one
+important operation that is performed before writing the config. It looks in each stanza for an `access` key, and checks if the value is a hash.
+If this is the case, then it parses this hash into a string. This is part of a special syntax to make configuring read/write permissions via Chef easier.
+
+For example, if I want to set the following permissions for all views on the app, I might write:
+
+```INI
+[views]
+access = read : [ * ], write : [ admin, power ]
+```
+
+When using splunk\_app's metadata property, however, I can write the following hash to the same effect:
+
+```Ruby
+splunk_app 'test_app' do
+  ...
+  metadata(views: { access: { read: '*', write: [ 'admin', 'power' ] } })
+end
+```
+
+This helps when using programmatic values or large arrays of roles, though you *can* still use the appropriate string instead of the Hash syntax.
 
 ---
 

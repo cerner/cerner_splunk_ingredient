@@ -10,13 +10,19 @@ class SplunkConf < ChefCompat::Resource
   property :path, [String, Pathname], name_property: true, desired_state: false, identity: true
   property :install_dir, String, required: true, desired_state: false
   property :package, [:splunk, :universal_forwarder], required: true, desired_state: false
-  property :scope, [:local, :default], desired_state: false, default: :local
+  property :scope, [:local, :default, :none], desired_state: false, default: :local
   property :config, Hash, required: true
   property :user, [String, nil]
   property :group, [String, nil], default: lazy { user }
   property :reset, [TrueClass, FalseClass], desired_state: false, default: false
 
   default_action :configure
+
+  def after_created
+    ((node.run_state['splunk_ingredient'] || {})['conf_override'] ||= {}).each do |key, value|
+      send(key.to_sym, value)
+    end
+  end
 
   def install_state
     unless @install_exists
@@ -37,6 +43,10 @@ class SplunkConf < ChefCompat::Resource
     @cache['existing_config'][path.to_s] ||= CernerSplunk::ConfHelpers.read_config(path)
   end
 
+  def conf_path(base_path)
+    path((Pathname.new(base_path) + Pathname.new(path).basename).to_s)
+  end
+
   load_current_value do |desired|
     if property_is_set? :install_dir
       install_dir desired.install_dir
@@ -45,7 +55,7 @@ class SplunkConf < ChefCompat::Resource
       current_state = node.run_state['splunk_ingredient']['current_installation'] || {}
       desired.package = current_state['package'] unless property_is_set? :package
       package desired.package
-      install_dir desired.install_dir = default_install_dir
+      install_dir desired.install_dir = (current_state['path'] || default_install_dir)
       install_state
     end
 
@@ -58,7 +68,7 @@ class SplunkConf < ChefCompat::Resource
       scope :default
     else
       real_path = real_path.dirname + scope.to_s + real_path.basename
-    end
+    end unless scope == :none
 
     desired.path = Pathname.new(install_dir).join('etc').join(real_path.sub(%r{^/}, ''))
     current_config = existing_config(desired.path)
