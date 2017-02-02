@@ -6,12 +6,9 @@
 class SplunkApp < ChefCompat::Resource
   include CernerSplunk::PlatformHelpers, CernerSplunk::PathHelpers, CernerSplunk::ResourceHelpers
 
-  resource_name :splunk_app
-
   property :name, String, name_property: true, identity: true
   property :install_dir, String, required: true, desired_state: false
   property :package, [:splunk, :universal_forwarder], required: true, desired_state: false
-  property :source_url, String
   property :version, String
   property :configs, Proc
   property :files, Proc
@@ -33,7 +30,7 @@ class SplunkApp < ChefCompat::Resource
   end
 
   def config_scope
-    'local'
+    @config_scope ||= (resource_name == :splunk_app_custom ? 'default' : 'local')
   end
 
   def splunk_app_path
@@ -112,10 +109,6 @@ end
 class CustomApp < SplunkApp
   resource_name :splunk_app_custom
 
-  def config_scope
-    'default'
-  end
-
   action :install do
     return unless !version || changed?(:version)
 
@@ -131,6 +124,40 @@ class CustomApp < SplunkApp
         group current_owner
         action :create
       end
+    end
+
+    apply_config
+  end
+end
+
+class PackagedApp < SplunkApp
+  property :source_url, String, required: true
+
+  resource_name :splunk_app_package
+
+  def package_path
+    return @package_path if @package_path
+    file_cache = Pathname.new(Chef::Config['file_cache_path'])
+    @package_path = file_cache.join(CernerSplunk::PathHelpers.filename_from_url(source_url).gsub(/.spl$/, '.tgz'))
+  end
+
+  action :install do
+    return unless !version || changed?(:version)
+
+    remote_file package_path.to_s do
+      source source_url
+      show_progress true if defined? show_progress # Chef 12.9 feature
+      notifies :delete, "remote_file[#{package_path}]", :delayed
+    end
+
+    directory app_path.to_s do
+      action :create
+    end
+
+    poise_archive package_path.to_s do
+      destination app_path.to_s
+      user current_owner
+      group current_owner
     end
 
     apply_config

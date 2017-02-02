@@ -23,7 +23,7 @@ describe 'splunk_app' do
     }
   end
 
-  %w(splunk_app_custom).each do |resource|
+  %w(splunk_app_custom splunk_app_package).each do |resource|
     describe resource do
       let(:test_resource) { resource }
       let(:test_recipe) { 'app_unit_test' }
@@ -81,10 +81,17 @@ describe 'splunk_app' do
           version_stub
         end
 
+        let(:source_url) do
+          case resource
+          when 'splunk_app_package' then 'http://fake/my_app.spl'
+          end
+        end
+
         let(:test_params) do
           {
             name: 'test_app',
             configs: configs_proc,
+            source_url: source_url,
             files: files_proc,
             metadata: meta_conf,
             action: action
@@ -93,8 +100,12 @@ describe 'splunk_app' do
 
         let(:scope) { resource == 'splunk_app_custom' ? 'default' : 'local' }
 
-        shared_examples 'app_install' do
+        shared_examples 'app install' do
           case resource
+          when 'splunk_app_package'
+            let(:package_path) { './test/unit/.cache/my_app.tgz' }
+            it { is_expected.to create_remote_file(package_path).with(source: source_url) }
+            it { is_expected.to unpack_poise_archive(package_path).with(destination: app_path) }
           when 'splunk_app_custom'
             let(:directory_params) { { owner: 'splunk', group: 'splunk' } }
             it { is_expected.to create_directory(app_path).with(directory_params) }
@@ -109,8 +120,12 @@ describe 'splunk_app' do
           it { is_expected.to configure_splunk("apps/test_app/metadata/#{scope}.meta").with(scope: :none, config: expected_meta_conf, reset: true) }
         end
 
-        shared_examples 'app_no_install' do
+        shared_examples 'app no-install' do
           case resource
+          when 'splunk_app_package'
+            let(:package_path) { './test/unit/.cache/my_app.tgz' }
+            it { is_expected.not_to create_remote_file(package_path) }
+            it { is_expected.not_to unpack_poise_archive(package_path) }
           when 'splunk_app_custom'
             it { is_expected.not_to create_directory(app_path) }
             it { is_expected.not_to create_directory("#{app_path}/default") }
@@ -124,7 +139,7 @@ describe 'splunk_app' do
           it { is_expected.not_to configure_splunk("apps/test_app/metadata/#{scope}.meta") }
         end
 
-        include_examples 'app_install'
+        include_examples 'app install'
 
         chef_context 'when metadata[:access] does not exist' do
           let(:meta_conf) do
@@ -185,6 +200,7 @@ describe 'splunk_app' do
             {
               name: 'test_app',
               configs: configs_proc,
+              source_url: source_url,
               files: files_proc,
               action: action
             }
@@ -200,13 +216,14 @@ describe 'splunk_app' do
               name: 'test_app',
               install_dir: install_dir,
               configs: configs_proc,
+              source_url: source_url,
               files: files_proc,
               metadata: meta_conf,
               action: action
             }
           end
 
-          include_examples 'app_install'
+          include_examples 'app install'
         end
 
         chef_context 'when package is provided' do
@@ -215,13 +232,14 @@ describe 'splunk_app' do
               name: 'test_app',
               package: :splunk,
               configs: configs_proc,
+              source_url: source_url,
               files: files_proc,
               metadata: meta_conf,
               action: action
             }
           end
 
-          include_examples 'app_install'
+          include_examples 'app install'
         end
 
         chef_context 'without a prior install' do
@@ -257,13 +275,14 @@ describe 'splunk_app' do
                 name: 'test_app',
                 install_dir: install_dir,
                 configs: configs_proc,
+                source_url: source_url,
                 files: files_proc,
                 metadata: meta_conf,
                 action: action
               }
             end
 
-            include_examples 'app_install'
+            include_examples 'app install'
           end
 
           chef_context 'when package is provided' do
@@ -272,13 +291,14 @@ describe 'splunk_app' do
                 name: 'test_app',
                 package: :splunk,
                 configs: configs_proc,
+                source_url: source_url,
                 files: files_proc,
                 metadata: meta_conf,
                 action: action
               }
             end
 
-            include_examples 'app_install'
+            include_examples 'app install'
           end
         end
 
@@ -294,18 +314,19 @@ describe 'splunk_app' do
                 name: 'test_app',
                 version: '2.0.0',
                 configs: configs_proc,
+                source_url: source_url,
                 files: files_proc,
                 metadata: meta_conf,
                 action: action
               }
             end
 
-            include_examples 'app_install'
+            include_examples 'app install'
 
             chef_context 'when version is the same' do
               let(:version_config) { { 'launcher' => { 'version' => '2.0.0' } } }
 
-              include_examples 'app_no_install'
+              include_examples 'app no-install'
             end
           end
 
@@ -323,13 +344,14 @@ describe 'splunk_app' do
                 name: 'test_app',
                 version: '2.0.0',
                 configs: configs_proc,
+                source_url: source_url,
                 files: files_proc,
                 metadata: meta_conf,
                 action: action
               }
             end
 
-            include_examples 'app_install'
+            include_examples 'app install'
           end
         end
       end

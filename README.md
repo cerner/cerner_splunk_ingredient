@@ -312,11 +312,11 @@ Properties:
 | package      | `:splunk` or `:universal_forwarder` | **Yes, unless install_dir is given** |                         | Specifies the installed Splunk package. If you did not specify the install\_dir, then you must specify the package, or name the resource for the package; for example, `package :splunk` or `splunk_restart 'universal_forwarder' do ... end` |
 | install\_dir |               String                |                  No                  | Same as splunk\_install | The install directory of Splunk. If you installed to a different directory than the default, you should provide this. If install_dir is given, you do not need package.                                                                       |
 
-### splunk\_app
+### splunk\_app\_*
 
-Installs and manages Splunk Apps. Performs different types of install based on sub-resource used.
+A collection of resources to install and manage Splunk Apps.
 
-#### Sub-Resources
+#### Resources
 
 ##### splunk\_app\_custom
 
@@ -326,22 +326,38 @@ strategy for this type of app; directories will be created if they do not exist,
 from the configs, files, and metadata properties of this resource. You can use version to control updating of this app if you
 set a version in app.conf.
 
+##### splunk\_app\_package
+
+Installs or updates a Splunk app from a package/archive. 
+
 #### Action *:install*
 
 Install or upgrade a Splunk App.
 
-Properties:
+##### Properties for splunk\_app\_custom
 
-| Name         |               Type(s)               |           Required          | Default                                     | Description                                                                                                                                                                                                                              |
-| :----------- | :---------------------------------: | :-------------------------: | :------------------------------------------ | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| name         |                String               |   **Yes (resource name)**   |                                             | Name of the app to install.                                                                                                                                                                                                              |
-| package      | `:splunk` or `:universal_forwarder` |              No             | Package of the current install in run state | The installed Splunk package. If you did not specify the install\_dir, then you may specify the package (`:splunk` or `:universal_forwarder`) otherwise the resource will refer to the most recently evaluated splunk\_install resource  |
-| install\_dir |                String               |              No             | Path of the current install in run state    | The install directory of Splunk. If you did not specfiy the package, then you may specify the install\_dir otherwise the resource will refer to the most recently evaluated splunk\_install resource                                     |
-| source\_url  |                String               |              No             |                                             | **Not Implemented** Source url to use for installing a package or Git repo.                                                                                                                                                              |
-| version      |                String               | **Yes if app is versioned** |                                             | Version of the app to install. This is required if the app has a version in its app.conf, and will only install/upgrade if the version is different or the app is not already installed. If the app has no version, this does nothing.   |
+| Name         |               Type(s)               |           Required          | Default                                     | Description                                                                                                                                                                                                                               |
+| :----------- | :---------------------------------: | :-------------------------: | :------------------------------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| name         |                String               |   **Yes (resource name)**   |                                             | Name of the app to install.                                                                                                                                                                                                               |
+| package      | `:splunk` or `:universal_forwarder` |              No             | Package of the current install in run state | The installed Splunk package. If you did not specify the install\_dir, then you may specify the package (`:splunk` or `:universal_forwarder`) otherwise the resource will refer to the most recently evaluated splunk\_install resource   |
+| install\_dir |                String               |              No             | Path of the current install in run state    | The install directory of Splunk. If you did not specfiy the package, then you may specify the install\_dir otherwise the resource will refer to the most recently evaluated splunk\_install resource                                      |
+| version      |                String               | **Yes if app is versioned** |                                             | Version of the app to install. This is required if the app has a version in its app.conf, and will only install/upgrade if the version is different or the app is not already installed. If the app has no version, this does nothing.    |
 | configs      |                 Proc                |              No             |                                             | Proc containing `splunk_conf` resources. The resources will behave similarly to normal, except the config will be placed relative to the app directory rather than relative to the Splunk installation, and you can not change the scope. |
-| files        |                 Proc                |              No             |                                             | Proc containing miscellaneous resources for manipulating the app directory. This is ideally directories, templates, and files. The Proc will be given an absolute app path parameter for you to use in these resources.                  |
-| metadata     |                 Hash                |              No             | {}                                          | Configuration to apply to the metadata (local.meta in most cases, default.meta for custom apps). See splunk\_conf for more info, and also below for special handling of the `access` key.                                                |
+| files        |                 Proc                |              No             |                                             | Proc containing miscellaneous resources for manipulating the app directory. This is ideally directories, templates, and files. The Proc will be given an absolute app path parameter for you to use in these resources.                   |
+| metadata     |                 Hash                |              No             | {}                                          | Configuration to apply to the metadata (default.meta for custom apps). See splunk\_conf for more info, and also below for special handling of the `access` key.                                                 |
+
+##### Properties for splunk\_app\_package
+
+| Name         |               Type(s)               |           Required          | Default                                     | Description                                                                                                                                                                                                                               |
+| :----------- | :---------------------------------: | :-------------------------: | :------------------------------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| name         |                String               |   **Yes (resource name)**   |                                             | Name of the app to install.                                                                                                                                                                                                               |
+| package      | `:splunk` or `:universal_forwarder` |              No             | Package of the current install in run state | The installed Splunk package. If you did not specify the install\_dir, then you may specify the package (`:splunk` or `:universal_forwarder`) otherwise the resource will refer to the most recently evaluated splunk\_install resource   |
+| install\_dir |                String               |              No             | Path of the current install in run state    | The install directory of Splunk. If you did not specfiy the package, then you may specify the install\_dir otherwise the resource will refer to the most recently evaluated splunk\_install resource                                      |
+| source\_url  |                String               |           **Yes**           |                                             | Source url to use for installing an app package.                                                                                                                                                                                          |
+| version      |                String               | **Yes if app is versioned** |                                             | Version of the app to install. This is required if the app has a version in its app.conf, and will only install/upgrade if the version is different or the app is not already installed. If the app has no version, this does nothing.    |
+| configs      |                 Proc                |              No             |                                             | Proc containing `splunk_conf` resources. The resources will behave similarly to normal, except the config will be placed relative to the app directory rather than relative to the Splunk installation, and you can not change the scope. |
+| files        |                 Proc                |              No             |                                             | Proc containing miscellaneous resources for manipulating the app directory. This is ideally directories, templates, and files. The Proc will be given an absolute app path parameter for you to use in these resources.                   |
+| metadata     |                 Hash                |              No             | {}                                          | Configuration to apply to the metadata (local.meta for non-custom apps). See splunk\_conf for more info, and also below for special handling of the `access` key.                                                 |
 
 #### Action *:uninstall*
 
