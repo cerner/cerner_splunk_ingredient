@@ -37,11 +37,20 @@ class SplunkApp < ChefCompat::Resource
     Pathname.new(install_dir).join('etc/apps')
   end
 
+  def app_cache_path
+    @app_cache_path ||= Pathname.new(Chef::Config['file_cache_path']).join('splunk_ingredient/old_apps')
+  end
+
   def parse_meta_access(access)
     return access unless access.is_a? Hash
     access_read = Array(access[:read] || access['read']).join(', ')
     access_write = Array(access[:write] || access['write']).join(', ')
     "read : [ #{access_read} ], write : [ #{access_write} ]"
+  end
+
+  # Must be overridden by sub-resources
+  def perform_upgrade
+    raise "No upgrade implementation for current install scheme (#{resource_name})"
   end
 
   ### Inherited Actions
@@ -68,6 +77,29 @@ class SplunkApp < ChefCompat::Resource
 
   action_class do
     include CernerSplunk::ProviderHelpers
+
+    def backup_existing_app
+      directory app_cache_path.to_s do
+        recursive true
+        action :create
+      end
+
+      execute "mv #{app_path} #{app_cache_path + name}" do
+        live_stream true
+      end
+    end
+
+    def upgrade_app
+      # Keep Existing strategy
+      # TODO: Replace with deep copy
+      execute "\\cp -r #{app_cache_path + name + 'local/*'} #{app_path + 'local'}" do
+        live_stream true
+      end
+
+      execute "\\cp -r #{app_cache_path + name + 'metadata/local.meta'} #{app_path + 'metadata/local.meta'}" do
+        live_stream true
+      end
+    end
 
     def apply_config
       node.run_state['splunk_ingredient']['conf_override'] = {
@@ -154,11 +186,15 @@ class PackagedApp < SplunkApp
       action :create
     end
 
+    backup_existing_app if version && changed?(:version)
+
     poise_archive package_path.to_s do
       destination app_path.to_s
       user current_owner
       group current_owner
     end
+
+    upgrade_app if version && changed?(:version)
 
     apply_config
   end

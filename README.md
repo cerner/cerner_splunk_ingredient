@@ -328,7 +328,7 @@ set a version in app.conf.
 
 ##### splunk\_app\_package
 
-Installs or updates a Splunk app from a package/archive. 
+Installs or updates a Splunk app from a package/archive.
 
 #### Action *:install*
 
