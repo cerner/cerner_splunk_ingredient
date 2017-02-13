@@ -12,7 +12,6 @@ class SplunkService < ChefCompat::Resource
   property :name, String, name_property: true, desired_state: false, identity: true
   property :install_dir, String, required: true, desired_state: false
   property :package, [:splunk, :universal_forwarder], required: true
-  property :user, [String, nil]
   property :ulimit, Integer
 
   default_action :start
@@ -54,9 +53,6 @@ class SplunkService < ChefCompat::Resource
         ulimit limit if limit > 0
       end
     end
-
-    user current_owner
-    desired.user ||= user
   end
 
   action_class do
@@ -73,7 +69,7 @@ class SplunkService < ChefCompat::Resource
     def initialize_service
       return unless CernerSplunk::PathHelpers.ftr_pathname(install_dir).exist?
 
-      cmd = "#{command_prefix} enable boot-start#{user ? ' -user ' + user : ''} --accept-license --no-prompt"
+      cmd = "#{command_prefix} enable boot-start --accept-license --no-prompt"
       execute cmd do
         cwd splunk_bin_path.to_s
         live_stream true if defined? live_stream

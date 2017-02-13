@@ -13,8 +13,8 @@ class SplunkInstall < ChefCompat::Resource
   property :version, String, required: true
   property :build, String, required: true
   property :install_dir, String, required: true, desired_state: false
-  property :user, String, default: lazy { node['current_user'] || package == :splunk ? 'splunk' : 'splunkforwarder' }
-  property :group, String, default: lazy { user }
+  property :user, String, default: lazy { default_users[package][node['os'].to_sym] }
+  property :group, String, default: lazy { current_group || user }
   property :base_url, String, default: 'https://download.splunk.com/products'
 
   default_action :install
@@ -66,6 +66,12 @@ class SplunkInstall < ChefCompat::Resource
 
     current_value_does_not_exist! if install_state.empty?
 
+    # We do not support user/group on Windows yet.
+    if platform_family? 'windows'
+      desired.user = nil
+      desired.group = nil
+    end
+
     version install_state['version']
     build install_state['build']
   end
@@ -90,8 +96,9 @@ class SplunkInstall < ChefCompat::Resource
         block { load_version_state }
       end if changed?
 
-      execute "chown -R #{user}:#{group} #{install_dir}" do
-        not_if { node['os'] == 'windows' || current_owner == user }
+      ruby_block "Give ownership of #{install_dir} to #{user}:#{group}" do
+        block { deep_change_ownership(install_dir, user, group) }
+        not_if { platform_family? 'windows' }
       end
     end
   end
@@ -111,6 +118,7 @@ class SplunkInstall < ChefCompat::Resource
       append true
       members user
       action :create
+      not_if { /\\None^/ =~ group }
       # The user is created in a group of the same name, so we can skip this step if the group isn't changed.
       only_if { group != user }
     end

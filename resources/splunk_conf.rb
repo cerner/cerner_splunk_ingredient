@@ -12,8 +12,8 @@ class SplunkConf < ChefCompat::Resource
   property :package, [:splunk, :universal_forwarder], required: true, desired_state: false
   property :scope, [:local, :default, :none], desired_state: false, default: :local
   property :config, Hash, required: true
-  property :user, [String, nil]
-  property :group, [String, nil], default: lazy { user }
+  property :user, String, default: lazy { current_owner }
+  property :group, String, default: lazy { current_group }
   property :reset, [TrueClass, FalseClass], desired_state: false, default: false
 
   default_action :configure
@@ -77,9 +77,6 @@ class SplunkConf < ChefCompat::Resource
     desired.config = CernerSplunk::ConfHelpers.stringify_config(evaluated_config)
 
     config reset ? current_config : current_config.select { |key, _| desired.config.keys.include? key.to_s }
-
-    user current_owner
-    desired.user ||= user
   end
 
   action_class do

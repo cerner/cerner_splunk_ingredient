@@ -18,14 +18,35 @@ module CernerSplunk
     end
 
     def command_prefix
-      node['os'] == 'windows' ? 'splunk.exe' : './splunk'
+      platform_family?('windows') ? 'splunk.exe' : './splunk'
     end
 
-    # Get the owner of the install directory (first creating it, if it doesn't exist)
-    def current_owner
-      dir = Chef::Resource::Directory.new(install_dir, run_context)
-      dir.run_action(:create)
-      dir.owner
+    # Get the owner of the install directory
+    def current_owner(options = {})
+      if platform_family? 'windows'
+        return "#{::ENV['COMPUTERNAME']}\\None" unless Pathname.new(install_dir).exist?
+
+        require 'chef/win32/security'
+        security_descriptor = Chef::ReservedNames::Win32::Security.get_named_security_info(install_dir)
+        return security_descriptor.owner if options[:sid]
+        security_descriptor.owner.account_name
+      else
+        Etc.getpwuid(Pathname.new(install_dir).stat.uid).name
+      end
+    end
+
+    # Get the group of the install directory
+    def current_group(options = {})
+      if platform_family? 'windows'
+        return "#{::ENV['COMPUTERNAME']}\\None" unless Pathname.new(install_dir).exist?
+
+        require 'chef/win32/security'
+        security_descriptor = Chef::ReservedNames::Win32::Security.get_named_security_info(install_dir)
+        return security_descriptor.group if options[:sid]
+        security_descriptor.group.account_name
+      else
+        Etc.getpwgid(Pathname.new(install_dir).stat.gid).name
+      end
     end
 
     # Sets the package based on the resource name.

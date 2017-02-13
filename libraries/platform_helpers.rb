@@ -38,5 +38,16 @@ module CernerSplunk
         }
       }
     end
+
+    def default_users
+      {
+        splunk: {
+          linux: 'splunk'
+        },
+        universal_forwarder: {
+          linux: 'splunk'
+        }
+      }
+    end
   end
 end
