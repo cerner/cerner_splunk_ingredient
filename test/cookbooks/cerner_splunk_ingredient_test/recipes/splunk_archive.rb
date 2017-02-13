@@ -2,7 +2,6 @@ node.default['splunk']['install_dir'] = node['os'] == 'windows' ? 'c:\splunk' : 
 
 splunk_install_archive 'splunk' do
   install_dir node['splunk']['install_dir']
-  user 'splunk'
   version '6.3.4'
   build 'cae2458f4aef'
   base_url 'http://download.splunk.com/products'

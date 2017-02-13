@@ -33,6 +33,7 @@ describe 'splunk_install' do
         chef_describe 'action :install' do
           let(:action_stubs) do
             allow_any_instance_of(Chef::Resource).to receive(:load_installation_state).and_return false
+            expect(CernerSplunk::FileHelpers).to receive(:deep_change_ownership).with(install_dir, 'fauxhai')
           end
 
           include_examples 'standard install', platform, package, expected_url
@@ -71,11 +72,15 @@ describe 'splunk_install' do
 
           if platform != 'windows'
             chef_context 'when the user is specified' do
-              let(:test_params) { { resource_name: package.to_s, build: 'cae2458f4aef', version: '6.3.4', user: 'fauxhai' } }
+              let(:action_stubs) do
+                allow_any_instance_of(Chef::Resource).to receive(:load_installation_state).and_return false
+                expect(CernerSplunk::FileHelpers).to receive(:deep_change_ownership).with(install_dir, 'splunk')
+              end
+              let(:test_params) { { resource_name: package.to_s, build: 'cae2458f4aef', version: '6.3.4', user: 'splunk' } }
 
-              it { is_expected.to run_execute "chown -R fauxhai:fauxhai #{install_dir}" }
+              it { run_chef }
               chef_context 'when the group is specified' do
-                let(:test_params) { { resource_name: package.to_s, build: 'cae2458f4aef', version: '6.3.4', user: 'fauxhai', group: 'grouphai' } }
+                let(:test_params) { { resource_name: package.to_s, build: 'cae2458f4aef', version: '6.3.4', user: 'splunk', group: 'splunk' } }
 
                 it { is_expected.to create_group('grouphai').with(append: true, members: ['fauxhai']) }
                 it { is_expected.to run_execute "chown -R fauxhai:grouphai #{install_dir}" }
@@ -172,6 +177,7 @@ describe 'splunk_install' do
           chef_describe 'action :install' do
             let(:action_stubs) do
               allow_any_instance_of(Chef::Resource).to receive(:load_installation_state).and_return false
+              expect(CernerSplunk::FileHelpers).to receive(:deep_change_ownership).with(install_dir, 'fauxhai')
             end
 
             chef_context 'when explicitly installing from archive' do

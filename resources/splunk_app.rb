@@ -78,27 +78,21 @@ class SplunkApp < ChefCompat::Resource
   action_class do
     include CernerSplunk::ProviderHelpers
 
-    def backup_existing_app
-      directory app_cache_path.to_s do
-        recursive true
-        action :create
+    def upgrade_app(strategy)
+      require 'fileutils'
+
+      case strategy
+      when :prep
+        app_cache_path.mkpath
+        FileUtils.mv(app_path, app_cache_path + name)
+      when :keep_existing
+        FileUtils.cp_r(app_cache_path + name + 'local', app_path + 'local')
+        deep_change_ownership(app_path + 'local', current_owner(sid: true), current_group(sid: true))
+
+        FileUtils.cp(app_cache_path + name + 'metadata/local.meta', app_path + 'metadata/local.meta')
+        change_ownership(app_path + 'metadata/local.meta', current_owner(sid: true), current_group(sid: true))
       end
 
-      execute "mv #{app_path} #{app_cache_path + name}" do
-        live_stream true
-      end
-    end
-
-    def upgrade_app
-      # Keep Existing strategy
-      # TODO: Replace with deep copy
-      execute "\\cp -r #{app_cache_path + name + 'local/*'} #{app_path + 'local'}" do
-        live_stream true
-      end
-
-      execute "\\cp -r #{app_cache_path + name + 'metadata/local.meta'} #{app_path + 'metadata/local.meta'}" do
-        live_stream true
-      end
     end
 
     def apply_config
@@ -186,7 +180,7 @@ class PackagedApp < SplunkApp
       action :create
     end
 
-    backup_existing_app if version && changed?(:version)
+    upgrade_app(:prep) if version && changed?(:version)
 
     poise_archive package_path.to_s do
       destination app_path.to_s
@@ -194,7 +188,7 @@ class PackagedApp < SplunkApp
       group current_owner
     end
 
-    upgrade_app if version && changed?(:version)
+    upgrade_app(:keep_existing) if version && changed?(:version)
 
     apply_config
   end
