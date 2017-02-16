@@ -36,14 +36,14 @@ Installs Splunk or Universal Forwarder.
 
 Properties:
 
-| Name      |               Type(s)               | Required | Default                                                                   | Description                                                                                                                                                                                                                                                            |
-| :-------- | :---------------------------------: | :------: | :------------------------------------------------------------------------ | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| package   | `:splunk` or `:universal_forwarder` | **Yes**  |                                                                           | Specifies the Splunk package to install. You must specify the package, or name the resource for the package; for example, `package :splunk` or `splunk_install 'universal_forwarder' do ... end`                                                                       |
-| version   |               String                | **Yes**  |                                                                           | Version of Splunk to install                                                                                                                                                                                                                                           |
-| build     |               String                | **Yes**  |                                                                           | Build number of the version                                                                                                                                                                                                                                            |
-| user      |               String                |    No    | Current user, or based on the package (`'splunk'` or `'splunkforwarder'`) | User that should own the splunk installation. Make sure you don't use a different user for running Splunk that has insufficient read/write access, or Splunk won't start!                                                                                              |
-| group     |               String                |    No    | Value of user property                                                    | Group that should own the splunk installation.                                                                                                                                                                                                                         |
-| base\_url |               String                |    No    | `'https://download.splunk.com/products'`                                  | Base url to pull Splunk packages from. Use this if you are mirroring the downloads for Splunk packages. The resource will append the version, os, and filename to the url like so: `{base_url}/splunk/releases/0.0.0/linux/splunk-0.0.0-a1b2c3d4e5f6-Linux-x86_64.tgz` |
+| Name      |               Type(s)               | Required | Default                                          | Description                                                                                                                                                                                                                                                            |
+| :-------- | :---------------------------------: | :------: | :----------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| package   | `:splunk` or `:universal_forwarder` |  **Yes** |                                                  | Specifies the Splunk package to install. You must specify the package, or name the resource for the package; for example, `package :splunk` or `splunk_install 'universal_forwarder' do ... end`                                                                       |
+| version   |                String               |  **Yes** |                                                  | Version of Splunk to install                                                                                                                                                                                                                                           |
+| build     |                String               |  **Yes** |                                                  | Build number of the version                                                                                                                                                                                                                                            |
+| user      |                String               |    No    | `'splunk'` on Linux, current user on Windows     | User that should own the splunk installation. Currently not modifiable on Windows. Make sure you don't use a different user for running Splunk that has insufficient read/write access, or Splunk won't start!                                                         |
+| group     |                String               |    No    | Value of user property on Linux, None on Windows | Group that should own the splunk installation. Currently not modifiable on Windows.                                                                                                                                                                                    |
+| base\_url |                String               |    No    | `'https://download.splunk.com/products'`         | Base url to pull Splunk packages from. Use this if you are mirroring the downloads for Splunk packages. The resource will append the version, os, and filename to the url like so: `{base_url}/splunk/releases/0.0.0/linux/splunk-0.0.0-a1b2c3d4e5f6-Linux-x86_64.tgz` |
 
 Specific to splunk\_install\_archive
 
@@ -112,7 +112,6 @@ Properties:
 | :----------- | :---------------------------------: | :----------------------------------: | :------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | package      | `:splunk` or `:universal_forwarder` | **Yes, unless install_dir is given** |                                                    | Specifies the installed Splunk package. If you did not specify the install\_dir, then you must specify the package, or name the resource for the package; for example, `package :splunk` or `splunk_service 'universal_forwarder' do ... end` |
 | install\_dir |               String                |                  No                  | Same as splunk\_install                            | The install directory of Splunk. If you installed to a different directory than the default, you should provide this. If install\_dir is given, you do not need package.                                                                      |
-| user         |            String or nil            |                  No                  | Owner of the specified Splunk installation, if any | User to run Splunk as. This is the user that will be used to run the Splunk service.                                                                                                                                                          |
 | ulimit       |               Integer               |                  No                  | Start up script ulimit or user ulimit              | Open file ulimit to give Splunk. This sets the ulimit in the start up script (if it exists) and for the given user in `/etc/security/limits.d/`. -1 translates to `'unlimited'`                                                               |
 
 #### Action *:stop*
@@ -136,7 +135,6 @@ Properties:
 | :----------- | :---------------------------------: | :----------------------------------: | :------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | package      | `:splunk` or `:universal_forwarder` | **Yes, unless install_dir is given** |                                                    | Specifies the installed Splunk package. If you did not specify the install\_dir, then you must specify the package, or name the resource for the package; for example, `package :splunk` or `splunk_service 'universal_forwarder' do ... end` |
 | install\_dir |               String                |                  No                  | Same as splunk\_install                            | The install directory of Splunk. If you installed to a different directory than the default, you should provide this. If install\_dir is given, you do not need package.                                                                      |
-| user         |            String or nil            |                  No                  | Owner of the specified Splunk installation, if any | User to initialize Splunk as. This is the user that will be used to run the Splunk service.                                                                                                                                                   |
 
 ### splunk\_conf
 
@@ -362,6 +360,7 @@ Install or upgrade a Splunk App.
 #### Action *:uninstall*
 
 Uninstalls an app, completely removing it and its files.
+Note: You can use any sub-resource or `splunk_app` to uninstall apps.
 
 Properties:
 
@@ -408,7 +407,7 @@ before submitting an issue or pull request.
 - Author:: Alec Sears (alec.sears@cerner.com)
 
 ```text
-Copyright:: 2016, Cerner Innovation, Inc.
+Copyright:: 2017, Cerner Innovation, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

@@ -70,7 +70,7 @@ class SplunkService < Chef::Resource
     def initialize_service
       return unless CernerSplunk::PathHelpers.ftr_pathname(install_dir).exist?
 
-      cmd = "#{command_prefix} enable boot-start#{platform_family?('windows') ? '' : "-user #{current_owner}"} --accept-license --no-prompt"
+      cmd = "#{command_prefix} enable boot-start#{platform_family?('windows') ? '' : " -user #{current_owner}"} --accept-license --no-prompt"
       execute cmd do
         cwd splunk_bin_path.to_s
         live_stream true if defined? live_stream
