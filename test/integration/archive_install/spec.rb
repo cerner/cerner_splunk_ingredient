@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 windows = os.windows?
 splunk_path = windows ? 'c:\splunk' : '/etc/splunk'
 splunk_command = windows ? "& \"#{splunk_path}\\bin\\splunk.exe\"" : "#{splunk_path}/bin/splunk"

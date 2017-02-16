@@ -1,9 +1,10 @@
+# frozen_string_literal: true
 # Cookbook Name:: cerner_splunk_ingredient
 # Resource:: splunk_install
 #
 # Resource for managing the installation of Splunk
 
-class SplunkInstall < ChefCompat::Resource
+class SplunkInstall < Chef::Resource
   include CernerSplunk::PlatformHelpers, CernerSplunk::PathHelpers, CernerSplunk::ResourceHelpers
 
   resource_name :splunk_install
@@ -21,6 +22,9 @@ class SplunkInstall < ChefCompat::Resource
 
   def after_created
     package_from_name unless property_is_set?(:package) || (@action.include?(:uninstall) && property_is_set?(:install_dir))
+    return unless platform_family? 'windows'
+    reset_property :user
+    reset_property :group
   end
 
   ### Inherited Methods
@@ -66,12 +70,6 @@ class SplunkInstall < ChefCompat::Resource
 
     current_value_does_not_exist! if install_state.empty?
 
-    # We do not support user/group on Windows yet.
-    if platform_family? 'windows'
-      desired.user = nil
-      desired.group = nil
-    end
-
     version install_state['version']
     build install_state['build']
   end
@@ -96,10 +94,11 @@ class SplunkInstall < ChefCompat::Resource
         block { load_version_state }
       end if changed?
 
+      return unless changed? :version, :build
+
       ruby_block "Give ownership of #{install_dir} to #{user}:#{group}" do
-        block { deep_change_ownership(install_dir, user, group) }
-        not_if { platform_family? 'windows' }
-      end
+        block { CernerSplunk::FileHelpers.deep_change_ownership(install_dir, user, group) }
+      end unless platform_family? 'windows'
     end
   end
 
@@ -108,19 +107,20 @@ class SplunkInstall < ChefCompat::Resource
 
     return unless changed? :version, :build
 
-    declare_resource(:user, user) do
-      system true
-      manage_home true
-      action :create
-    end
+    unless platform_family? 'windows'
+      declare_resource(:user, user) do
+        system true
+        manage_home true
+        action :create
+      end
 
-    declare_resource(:group, group) do
-      append true
-      members user
-      action :create
-      not_if { /\\None^/ =~ group }
-      # The user is created in a group of the same name, so we can skip this step if the group isn't changed.
-      only_if { group != user }
+      declare_resource(:group, group) do
+        append true
+        members user
+        action :create
+        # The user is created in a group of the same name, so we can skip this step if the group isn't changed.
+        only_if { group != user }
+      end
     end
 
     remote_file package_path.to_s do

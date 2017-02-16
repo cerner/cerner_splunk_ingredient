@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 splunk_install 'splunk' do
   version '6.3.4'
   build 'cae2458f4aef'
@@ -21,7 +22,7 @@ end
 splunk_app_custom 'test_app' do
   configs(proc do
     splunk_conf 'testing.conf' do
-      config(debug: { banana: 'yellow' })
+      config(debug: { banana: 'green' })
     end
     splunk_conf 'app.conf' do
       config(launcher: { version: '1.0.0' })
@@ -29,7 +30,7 @@ splunk_app_custom 'test_app' do
   end)
   files(proc do |app_path|
     file Pathname.new(app_path).join('plain_file.txt').to_s do
-      owner 'splunk'
+      owner 'splunk' unless platform_family? 'windows'
       content 'A secret to everybody'
     end
   end)

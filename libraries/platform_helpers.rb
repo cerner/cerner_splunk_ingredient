@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module CernerSplunk
   # Helper methods for platform oddities in Chef
   module PlatformHelpers
@@ -42,9 +43,11 @@ module CernerSplunk
     def default_users
       {
         splunk: {
+          windows: node['current_user'],
           linux: 'splunk'
         },
         universal_forwarder: {
+          windows: node['current_user'],
           linux: 'splunk'
         }
       }

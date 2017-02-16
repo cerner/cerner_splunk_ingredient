@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require_relative '../spec_helper'
 require_relative 'install_examples'
 
@@ -22,7 +23,7 @@ describe 'splunk_install' do
         let(:package_path) { "./test/unit/.cache/#{CernerSplunk::PathHelpers.filename_from_url(expected_url)}" }
 
         let(:common_stubs) do
-          allow_any_instance_of(Chef::Resource).to receive(:current_owner).and_return('root')
+          allow_any_instance_of(Chef::Resource).to receive(:current_group).and_return(nil)
         end
 
         let(:chef_run_stubs) do
@@ -33,7 +34,6 @@ describe 'splunk_install' do
         chef_describe 'action :install' do
           let(:action_stubs) do
             allow_any_instance_of(Chef::Resource).to receive(:load_installation_state).and_return false
-            expect(CernerSplunk::FileHelpers).to receive(:deep_change_ownership).with(install_dir, 'fauxhai')
           end
 
           include_examples 'standard install', platform, package, expected_url
@@ -74,16 +74,18 @@ describe 'splunk_install' do
             chef_context 'when the user is specified' do
               let(:action_stubs) do
                 allow_any_instance_of(Chef::Resource).to receive(:load_installation_state).and_return false
-                expect(CernerSplunk::FileHelpers).to receive(:deep_change_ownership).with(install_dir, 'splunk')
               end
-              let(:test_params) { { resource_name: package.to_s, build: 'cae2458f4aef', version: '6.3.4', user: 'splunk' } }
+              let(:test_params) { { resource_name: package.to_s, build: 'cae2458f4aef', version: '6.3.4', user: 'newuser' } }
 
-              it { run_chef }
+              it { is_expected.to run_ruby_block("Give ownership of #{install_dir} to newuser:newuser") }
               chef_context 'when the group is specified' do
-                let(:test_params) { { resource_name: package.to_s, build: 'cae2458f4aef', version: '6.3.4', user: 'splunk', group: 'splunk' } }
+                let(:action_stubs) do
+                  allow_any_instance_of(Chef::Resource).to receive(:load_installation_state).and_return false
+                end
+                let(:test_params) { { resource_name: package.to_s, build: 'cae2458f4aef', version: '6.3.4', user: 'newuser', group: 'newgroup' } }
 
-                it { is_expected.to create_group('grouphai').with(append: true, members: ['fauxhai']) }
-                it { is_expected.to run_execute "chown -R fauxhai:grouphai #{install_dir}" }
+                it { is_expected.to create_group('newgroup').with(append: true, members: ['newuser']) }
+                it { is_expected.to run_ruby_block("Give ownership of #{install_dir} to newuser:newgroup") }
               end
             end
           end
@@ -166,7 +168,7 @@ describe 'splunk_install' do
           let(:archive_expected_url) { platform_package_urls[platform == 'windows' ? :windows : :linux][:archive][package] }
 
           let(:common_stubs) do
-            allow_any_instance_of(Chef::Resource).to receive(:current_owner).and_return('root')
+            allow_any_instance_of(Chef::Resource).to receive(:current_group).and_return(nil)
           end
 
           let(:chef_run_stubs) do
@@ -177,7 +179,6 @@ describe 'splunk_install' do
           chef_describe 'action :install' do
             let(:action_stubs) do
               allow_any_instance_of(Chef::Resource).to receive(:load_installation_state).and_return false
-              expect(CernerSplunk::FileHelpers).to receive(:deep_change_ownership).with(install_dir, 'fauxhai')
             end
 
             chef_context 'when explicitly installing from archive' do

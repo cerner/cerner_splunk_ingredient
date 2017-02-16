@@ -1,9 +1,10 @@
+# frozen_string_literal: true
 # Cookbook Name:: cerner_splunk_ingredient
 # Resource:: splunk_app
 #
 # Resource for installing and configuring Splunk apps
 
-class SplunkApp < ChefCompat::Resource
+class SplunkApp < Chef::Resource
   include CernerSplunk::PlatformHelpers, CernerSplunk::PathHelpers, CernerSplunk::ResourceHelpers
 
   property :name, String, name_property: true, identity: true
@@ -33,10 +34,6 @@ class SplunkApp < ChefCompat::Resource
     @config_scope ||= (resource_name == :splunk_app_custom ? 'default' : 'local')
   end
 
-  def splunk_app_path
-    Pathname.new(install_dir).join('etc/apps')
-  end
-
   def app_cache_path
     @app_cache_path ||= Pathname.new(Chef::Config['file_cache_path']).join('splunk_ingredient/old_apps')
   end
@@ -47,13 +44,6 @@ class SplunkApp < ChefCompat::Resource
     access_write = Array(access[:write] || access['write']).join(', ')
     "read : [ #{access_read} ], write : [ #{access_write} ]"
   end
-
-  # Must be overridden by sub-resources
-  def perform_upgrade
-    raise "No upgrade implementation for current install scheme (#{resource_name})"
-  end
-
-  ### Inherited Actions
 
   load_current_value do |desired|
     if property_is_set? :install_dir
@@ -75,6 +65,8 @@ class SplunkApp < ChefCompat::Resource
     end
   end
 
+  # Provider exclusive methods
+
   action_class do
     include CernerSplunk::ProviderHelpers
 
@@ -87,12 +79,11 @@ class SplunkApp < ChefCompat::Resource
         FileUtils.mv(app_path, app_cache_path + name)
       when :keep_existing
         FileUtils.cp_r(app_cache_path + name + 'local', app_path + 'local')
-        deep_change_ownership(app_path + 'local', current_owner(sid: true), current_group(sid: true))
+        CernerSplunk::FileHelpers.deep_change_ownership(app_path + 'local', current_owner, current_group)
 
         FileUtils.cp(app_cache_path + name + 'metadata/local.meta', app_path + 'metadata/local.meta')
-        change_ownership(app_path + 'metadata/local.meta', current_owner(sid: true), current_group(sid: true))
+        CernerSplunk::FileHelpers.change_ownership(app_path + 'metadata/local.meta', current_owner, current_group)
       end
-
     end
 
     def apply_config
@@ -102,15 +93,15 @@ class SplunkApp < ChefCompat::Resource
         scope: :none
       }
 
-      instance_eval(&configs)
+      instance_eval(&configs) if property_is_set?(:configs)
       node.run_state['splunk_ingredient']['conf_override'] = {}
 
-      instance_exec(app_path.to_s, &files)
+      instance_exec(app_path.to_s, &files) if property_is_set?(:files)
 
       metadata.each do |_, props|
         access = props.delete(:access) || props.delete('access')
         props['access'] = parse_meta_access(access) unless access.to_s.empty?
-      end
+      end if property_is_set?(:metadata)
 
       splunk_conf Pathname.new('apps').join("#{name}/metadata/#{config_scope}.meta").to_s do
         scope :none
@@ -119,6 +110,8 @@ class SplunkApp < ChefCompat::Resource
       end
     end
   end
+
+  ### Inherited Actions
 
   action :uninstall do
     directory app_path.to_s do
@@ -180,7 +173,7 @@ class PackagedApp < SplunkApp
       action :create
     end
 
-    upgrade_app(:prep) if version && changed?(:version)
+    upgrade_app(:prep) if splunk_app_exists(name)
 
     poise_archive package_path.to_s do
       destination app_path.to_s
@@ -188,7 +181,7 @@ class PackagedApp < SplunkApp
       group current_owner
     end
 
-    upgrade_app(:keep_existing) if version && changed?(:version)
+    upgrade_app(:keep_existing) if splunk_app_exists(name)
 
     apply_config
   end

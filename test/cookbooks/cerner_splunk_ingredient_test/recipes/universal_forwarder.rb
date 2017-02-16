@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 splunk_install 'universal_forwarder' do
   user 'splunkforwarder' unless platform_family? 'windows'
   version '6.3.4'

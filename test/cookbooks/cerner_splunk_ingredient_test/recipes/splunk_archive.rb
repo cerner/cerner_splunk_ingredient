@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 node.default['splunk']['install_dir'] = node['os'] == 'windows' ? 'c:\splunk' : '/etc/splunk'
 
 splunk_install_archive 'splunk' do

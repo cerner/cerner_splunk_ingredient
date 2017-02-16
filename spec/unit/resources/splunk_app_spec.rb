@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require_relative '../spec_helper'
 include CernerSplunk::ResourceHelpers
 
@@ -27,6 +28,23 @@ describe 'splunk_app' do
     describe resource do
       let(:test_resource) { resource }
       let(:test_recipe) { 'app_unit_test' }
+
+      let(:version_stub) do
+        expect(CernerSplunk::ConfHelpers).to receive(:read_config).with(Pathname.new(app_path).join('default/app.conf')).and_return({})
+      end
+
+      let(:action_stubs) {}
+
+      let(:chef_run_stubs) do
+        allow_any_instance_of(Chef::Provider).to receive(:splunk_app_exists).with('test_app').and_return(upgrade)
+        allow_any_instance_of(Chef::Resource).to receive(:current_owner).and_return('splunk')
+        allow_any_instance_of(Chef::Provider).to receive(:current_owner).and_return('splunk')
+        allow_any_instance_of(Chef::Provider).to receive(:current_group).and_return('splunk')
+        version_stub
+        action_stubs
+      end
+
+      let(:upgrade) { false }
 
       chef_describe 'action :install' do
         let(:action) { :install }
@@ -72,15 +90,6 @@ describe 'splunk_app' do
           end
         end
 
-        let(:version_stub) do
-          expect(CernerSplunk::ConfHelpers).to receive(:read_config).with(Pathname.new(app_path).join('default/app.conf')).and_return({})
-        end
-
-        let(:chef_run_stubs) do
-          allow_any_instance_of(Chef::Resource).to receive(:current_owner).and_return('splunk')
-          version_stub
-        end
-
         let(:source_url) do
           case resource
           when 'splunk_app_package' then 'http://fake/my_app.spl'
@@ -101,42 +110,57 @@ describe 'splunk_app' do
         let(:scope) { resource == 'splunk_app_custom' ? 'default' : 'local' }
 
         shared_examples 'app install' do
-          case resource
-          when 'splunk_app_package'
-            let(:package_path) { './test/unit/.cache/my_app.tgz' }
-            it { is_expected.to create_remote_file(package_path).with(source: source_url) }
-            it { is_expected.to unpack_poise_archive(package_path).with(destination: app_path) }
-          when 'splunk_app_custom'
-            let(:directory_params) { { owner: 'splunk', group: 'splunk' } }
-            it { is_expected.to create_directory(app_path).with(directory_params) }
-            it { is_expected.to create_directory("#{app_path}/default").with(directory_params) }
-            it { is_expected.to create_directory("#{app_path}/local").with(directory_params) }
-            it { is_expected.to create_directory("#{app_path}/lookups").with(directory_params) }
-            it { is_expected.to create_directory("#{app_path}/metadata").with(directory_params) }
-          end
+          chef_context 'installing the app' do
+            let(:action_stubs) {}
+            case resource
+            when 'splunk_app_package'
+              let(:action_stubs) do
+                if upgrade
+                  expect(FileUtils).to receive(:mv).with(Pathname.new(app_path), Pathname.new(backup_path))
+                  expect(FileUtils).to receive(:cp_r).with(Pathname.new(backup_path).join('local'), Pathname.new(app_path).join('local'))
+                  expect(CernerSplunk::FileHelpers).to receive(:deep_change_ownership).with(Pathname.new(app_path).join('local'), 'splunk', 'splunk')
+                  expect(FileUtils).to receive(:cp).with(Pathname.new(backup_path).join('metadata/local.meta'), Pathname.new(app_path).join('metadata/local.meta'))
+                  expect(CernerSplunk::FileHelpers).to receive(:change_ownership).with(Pathname.new(app_path).join('metadata/local.meta'), 'splunk', 'splunk')
+                end
+              end
+              let(:package_path) { './test/unit/.cache/my_app.tgz' }
+              let(:backup_path) { './test/unit/.cache/splunk_ingredient/old_apps/test_app' }
+              it { is_expected.to create_remote_file(package_path).with(source: source_url) }
+              it { is_expected.to unpack_poise_archive(package_path).with(destination: app_path) }
+            when 'splunk_app_custom'
+              let(:directory_params) { { owner: 'splunk', group: 'splunk' } }
+              it { is_expected.to create_directory(app_path).with(directory_params) }
+              it { is_expected.to create_directory("#{app_path}/default").with(directory_params) }
+              it { is_expected.to create_directory("#{app_path}/local").with(directory_params) }
+              it { is_expected.to create_directory("#{app_path}/lookups").with(directory_params) }
+              it { is_expected.to create_directory("#{app_path}/metadata").with(directory_params) }
+            end
 
-          it { is_expected.to configure_splunk('test.conf').with(config: { abc: 123 }) }
-          it { is_expected.to create_file("#{app_path}/testing.txt").with(content: 'Unimportant Text') }
-          it { is_expected.to configure_splunk("apps/test_app/metadata/#{scope}.meta").with(scope: :none, config: expected_meta_conf, reset: true) }
+            it { is_expected.to configure_splunk('test.conf').with(config: { abc: 123 }) }
+            it { is_expected.to create_file("#{app_path}/testing.txt").with(content: 'Unimportant Text') }
+            it { is_expected.to configure_splunk("apps/test_app/metadata/#{scope}.meta").with(scope: :none, config: expected_meta_conf, reset: true) }
+          end
         end
 
         shared_examples 'app no-install' do
-          case resource
-          when 'splunk_app_package'
-            let(:package_path) { './test/unit/.cache/my_app.tgz' }
-            it { is_expected.not_to create_remote_file(package_path) }
-            it { is_expected.not_to unpack_poise_archive(package_path) }
-          when 'splunk_app_custom'
-            it { is_expected.not_to create_directory(app_path) }
-            it { is_expected.not_to create_directory("#{app_path}/default") }
-            it { is_expected.not_to create_directory("#{app_path}/local") }
-            it { is_expected.not_to create_directory("#{app_path}/lookups") }
-            it { is_expected.not_to create_directory("#{app_path}/metadata") }
-          end
+          chef_context 'not installing the app' do
+            case resource
+            when 'splunk_app_package'
+              let(:package_path) { './test/unit/.cache/my_app.tgz' }
+              it { is_expected.not_to create_remote_file(package_path) }
+              it { is_expected.not_to unpack_poise_archive(package_path) }
+            when 'splunk_app_custom'
+              it { is_expected.not_to create_directory(app_path) }
+              it { is_expected.not_to create_directory("#{app_path}/default") }
+              it { is_expected.not_to create_directory("#{app_path}/local") }
+              it { is_expected.not_to create_directory("#{app_path}/lookups") }
+              it { is_expected.not_to create_directory("#{app_path}/metadata") }
+            end
 
-          it { is_expected.not_to configure_splunk('test.conf') }
-          it { is_expected.not_to create_file("#{app_path}/testing.txt") }
-          it { is_expected.not_to configure_splunk("apps/test_app/metadata/#{scope}.meta") }
+            it { is_expected.not_to configure_splunk('test.conf') }
+            it { is_expected.not_to create_file("#{app_path}/testing.txt") }
+            it { is_expected.not_to configure_splunk("apps/test_app/metadata/#{scope}.meta") }
+          end
         end
 
         include_examples 'app install'
@@ -264,7 +288,7 @@ describe 'splunk_app' do
             let(:chef_run_stubs) {}
 
             it 'should fail the chef run' do
-              expect { subject }.to raise_error Chef::Exceptions::ValidationFailed, /package is required$/
+              expect { chef_run }.to raise_error Chef::Exceptions::ValidationFailed, /package is required$/
             end
           end
 
@@ -309,6 +333,7 @@ describe 'splunk_app' do
           end
 
           chef_context 'when version is provided' do
+            let(:upgrade) { true }
             let(:test_params) do
               {
                 name: 'test_app',
@@ -332,13 +357,14 @@ describe 'splunk_app' do
 
           chef_context 'when version is not provided' do
             it 'should fail the chef run' do
-              expect { subject }.to raise_error RuntimeError, /Version to install must be specified when app has a version.$/
+              expect { chef_run }.to raise_error RuntimeError, /Version to install must be specified when app has a version.$/
             end
           end
         end
 
         chef_context 'when app.conf does not provide a version' do
           chef_context 'when version is provided' do
+            let(:upgrade) { true }
             let(:test_params) do
               {
                 name: 'test_app',
@@ -413,7 +439,7 @@ describe 'splunk_app' do
 
           chef_context 'without install_dir or package' do
             it 'should fail the chef run' do
-              expect { subject }.to raise_error Chef::Exceptions::ValidationFailed, /package is required$/
+              expect { chef_run }.to raise_error Chef::Exceptions::ValidationFailed, /package is required$/
             end
           end
 

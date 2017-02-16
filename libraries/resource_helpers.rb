@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module CernerSplunk
   # Mixin Helper methods for Splunk Ingredient resources
   module ResourceHelpers
@@ -21,6 +22,14 @@ module CernerSplunk
       platform_family?('windows') ? 'splunk.exe' : './splunk'
     end
 
+    def splunk_app_path
+      Pathname.new(install_dir).join('etc/apps')
+    end
+
+    def splunk_app_exists(app)
+      splunk_app_path.join(app).exist?
+    end
+
     # Get the owner of the install directory
     def current_owner(options = {})
       if platform_family? 'windows'
@@ -30,7 +39,7 @@ module CernerSplunk
         security_descriptor = Chef::ReservedNames::Win32::Security.get_named_security_info(install_dir)
         return security_descriptor.owner if options[:sid]
         security_descriptor.owner.account_name
-      else
+      elsif Pathname.new(install_dir).exist?
         Etc.getpwuid(Pathname.new(install_dir).stat.uid).name
       end
     end
@@ -44,8 +53,8 @@ module CernerSplunk
         security_descriptor = Chef::ReservedNames::Win32::Security.get_named_security_info(install_dir)
         return security_descriptor.group if options[:sid]
         security_descriptor.group.account_name
-      else
-        Etc.getpwgid(Pathname.new(install_dir).stat.gid).name
+      elsif Pathname.new(install_dir).exist?
+        Etc.getgrgid(Pathname.new(install_dir).stat.gid).name
       end
     end
 

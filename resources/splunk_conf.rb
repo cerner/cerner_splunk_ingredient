@@ -1,9 +1,10 @@
+# frozen_string_literal: true
 # Cookbook Name:: cerner_splunk_ingredient
 # Resource:: splunk_conf
 #
 # Resource for managing Splunk configuration files
 
-class SplunkConf < ChefCompat::Resource
+class SplunkConf < Chef::Resource
   include CernerSplunk::ResourceHelpers
   resource_name :splunk_conf
 
@@ -99,6 +100,8 @@ class SplunkConf < ChefCompat::Resource
       end
       action :nothing
     end
+
+    Pathname.new(path).parent.mkpath
 
     file new_resource.path.to_s do
       owner config_user
