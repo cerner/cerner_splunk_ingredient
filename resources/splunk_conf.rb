@@ -101,7 +101,10 @@ class SplunkConf < Chef::Resource
       action :nothing
     end
 
-    Pathname.new(path).parent.mkpath
+    directory Pathname.new(path).parent.to_s do
+      recursive true
+      action :create
+    end
 
     file new_resource.path.to_s do
       owner config_user

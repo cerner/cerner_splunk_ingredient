@@ -24,7 +24,7 @@ class SplunkInstall < Chef::Resource
     package_from_name unless property_is_set?(:package) || (@action.include?(:uninstall) && property_is_set?(:install_dir))
     return unless platform_family? 'windows'
     reset_property :user
-    reset_property :group
+    group "#{::ENV['COMPUTERNAME']}\\None"
   end
 
   ### Inherited Methods
@@ -90,11 +90,11 @@ class SplunkInstall < Chef::Resource
     end
 
     def post_install
+      return unless changed? :version, :build
+
       ruby_block 'load_version_state' do
         block { load_version_state }
-      end if changed?
-
-      return unless changed? :version, :build
+      end
 
       ruby_block "Give ownership of #{install_dir} to #{user}:#{group}" do
         block { CernerSplunk::FileHelpers.deep_change_ownership(install_dir, user, group) }
