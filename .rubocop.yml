@@ -21,6 +21,9 @@ Metrics/ClassLength:
 Style/NumericPredicate:
   Enabled: false
 
+Style/FormatString:
+  EnforcedStyle: percent
+
 Metrics/MethodLength:
   Max: 40
 
