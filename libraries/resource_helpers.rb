@@ -26,10 +26,6 @@ module CernerSplunk
       Pathname.new(install_dir).join('etc/apps')
     end
 
-    def splunk_app_exists(app)
-      splunk_app_path.join(app).exist?
-    end
-
     # Get the owner of the install directory
     def current_owner(options = {})
       if platform_family? 'windows'

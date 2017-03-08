@@ -10,12 +10,16 @@ class SplunkApp < Chef::Resource
   property :name, String, name_property: true, identity: true
   property :install_dir, String, required: true, desired_state: false
   property :package, [:splunk, :universal_forwarder], required: true, desired_state: false
-  property :version, String
+  property :version, [String, CernerSplunk::SplunkVersion]
   property :configs, Proc
   property :files, Proc
   property :metadata, Hash, default: {}
 
   default_action :install
+
+  def after_created
+    version CernerSplunk::SplunkVersion.from_string(version) if version
+  end
 
   def install_state
     unless @install_exists
@@ -32,10 +36,6 @@ class SplunkApp < Chef::Resource
 
   def config_scope
     @config_scope ||= (resource_name == :splunk_app_custom ? 'default' : 'local')
-  end
-
-  def app_cache_path
-    @app_cache_path ||= Pathname.new(Chef::Config['file_cache_path']).join('splunk_ingredient/old_apps')
   end
 
   def parse_meta_access(access)
@@ -57,34 +57,23 @@ class SplunkApp < Chef::Resource
       install_state
     end
 
-    app_conf = CernerSplunk::ConfHelpers.read_config(app_path.join('default/app.conf'))
+    app_conf = CernerSplunk::ConfHelpers.read_config(app_path + 'default/app.conf')
     app_version = (app_conf['launcher'] ||= {})['version']
     if app_version
       raise 'Version to install must be specified when app has a version.' unless desired.version
-      version app_version
+      version CernerSplunk::SplunkVersion.from_string(app_version)
+
+      # Check that a pre-release version isn't being installed over a similar release version.
+      raise "Attempted to install pre-release version over release version (#{desired.version} vs. #{version})" if desired.version.prerelease? && !version.prerelease?
     end
   end
 
   # Provider exclusive methods
 
   action_class do
+    require 'fileutils'
     include CernerSplunk::ProviderHelpers
-
-    def upgrade_app(strategy)
-      require 'fileutils'
-
-      case strategy
-      when :prep
-        app_cache_path.mkpath
-        FileUtils.mv(app_path, app_cache_path + name)
-      when :keep_existing
-        FileUtils.cp_r(app_cache_path + name + 'local', app_path + 'local')
-        CernerSplunk::FileHelpers.deep_change_ownership(app_path + 'local', current_owner, current_group)
-
-        FileUtils.cp(app_cache_path + name + 'metadata/local.meta', app_path + 'metadata/local.meta')
-        CernerSplunk::FileHelpers.change_ownership(app_path + 'metadata/local.meta', current_owner, current_group)
-      end
-    end
+    include CernerSplunk::ProviderHelpers::AppUpgrade
 
     def apply_config
       node.run_state['splunk_ingredient']['conf_override'] = {
@@ -154,34 +143,36 @@ class PackagedApp < SplunkApp
 
   resource_name :splunk_app_package
 
-  def package_path
-    return @package_path if @package_path
-    file_cache = Pathname.new(Chef::Config['file_cache_path'])
-    @package_path = file_cache.join(CernerSplunk::PathHelpers.filename_from_url(source_url).gsub(/.spl$/, '.tgz'))
-  end
-
   action :install do
     return unless !version || changed?(:version)
+
+    package_path = app_cache_path.join(CernerSplunk::PathHelpers.filename_from_url(source_url).gsub(/.spl$/, '.tgz'))
 
     remote_file package_path.to_s do
       source source_url
       show_progress true if defined? show_progress # Chef 12.9 feature
-      notifies :delete, "remote_file[#{package_path}]", :delayed
     end
 
     directory app_path.to_s do
       action :create
     end
 
-    upgrade_app(:prep) if splunk_app_exists(name)
+    backup_app if changed? :version
 
     poise_archive package_path.to_s do
-      destination app_path.to_s
+      destination app_cache_path.join('new').to_s
       user current_owner
       group current_owner
     end
 
-    upgrade_app(:keep_existing) if splunk_app_exists(name)
+    converge_by 'validating the extracted app' do
+      validate_extracted_app
+    end
+
+    ruby_block 'upgrade app' do
+      block { upgrade_keep_existing }
+      only_if { validate_versions }
+    end
 
     apply_config
   end

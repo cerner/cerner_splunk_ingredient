@@ -2,17 +2,25 @@
 module CernerSplunk
   # Class object for parsing and encapsulating Splunk app versions
   class SplunkVersion
+    include Comparable
+
     attr_reader :major
     attr_reader :minor
     attr_reader :patch
     attr_reader :meta
 
-    def initialize(major, minor, patch = 0, meta = '', string = nil)
+    def initialize(major, minor, patch = nil, meta = '', string = nil)
       @major = major.to_i
       @minor = minor.to_i
-      @patch = patch.to_i
+      @patch = patch.to_i if patch
       @meta = meta
-      @string = string if string
+
+      if string
+        raise "Given string does not match given version (#{string} vs. #{self})" unless self == string
+        @string = string
+      end
+
+      @patch ||= 0
 
       return unless @meta[/\s/]
       @pre63 = true
@@ -24,7 +32,7 @@ module CernerSplunk
     end
 
     def pre_6_3?
-      @pre63
+      !@pre63.nil?
     end
 
     def release_version
@@ -32,7 +40,13 @@ module CernerSplunk
     end
 
     def to_s
-      @string ||= '%{major}.%{minor}.%{patch}%{meta}' % { major: @major, minor: @minor, patch: @patch, meta: @meta }
+      @string ||= '%{major}.%{minor}%{patch_dot}%{patch}%{meta}' % {
+        major: @major,
+        minor: @minor,
+        patch_dot: @patch.nil? ? '' : '.',
+        patch: @patch,
+        meta: @meta
+      }
     end
 
     def ==(other)
@@ -40,23 +54,35 @@ module CernerSplunk
     end
 
     # Compares two versions by major, minor, and patch version with consideration to prerelease versions
-    # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
     def <=>(other)
-      if self == other
-        0
-      elsif major != other.major
+      return 0 if self == other
+
+      release_comp = compare_release_version(other)
+      release_comp == 0 && compare_prerelease(other) || release_comp
+    end
+
+    private
+
+    def compare_release_version(other)
+      if major != other.major
         major <=> other.major
       elsif minor != other.minor
         minor <=> other.minor
       elsif patch != other.patch
         patch <=> other.patch
-      elsif !prerelease? # At this point, the versions are the same, but they have differing metadata
-        1 # One of these versions is prerelease... And it's not self
-      elsif !other.prerelease?
-        -1 # One of these versions is prerelease... And it's not other
       else
-        Chef::Log.warn("Attempted to compare two similar prerelease versions; metadata will not be compared (#{self} <=> #{other})")
         0
+      end
+    end
+
+    def compare_prerelease(other)
+      if prerelease? && other.prerelease?
+        Chef::Log.warn("Attempted to compare two similar prerelease versions (#{self} <=> #{other})")
+        0
+      elsif prerelease?
+        -1
+      elsif other.prerelease?
+        1
       end
     end
 

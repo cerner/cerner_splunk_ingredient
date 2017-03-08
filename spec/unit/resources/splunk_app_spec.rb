@@ -5,7 +5,7 @@ include CernerSplunk::ResourceHelpers
 describe 'splunk_app' do
   let(:runner_params) { { platform: 'redhat', version: '7.1', user: 'root' } }
   let(:install_dir) { CernerSplunk::PathHelpers.default_install_dirs[:splunk][:linux] }
-  let(:app_path) { "#{install_dir}/etc/apps/test_app" }
+  let(:app_path) { Pathname.new("#{install_dir}/etc/apps/test_app") }
   let(:mock_run_state) do
     install = {
       name: 'splunk',
@@ -30,21 +30,28 @@ describe 'splunk_app' do
       let(:test_recipe) { 'app_unit_test' }
 
       let(:version_stub) do
-        expect(CernerSplunk::ConfHelpers).to receive(:read_config).with(Pathname.new(app_path).join('default/app.conf')).and_return({})
+        expect(CernerSplunk::ConfHelpers).to receive(:read_config).with(app_path + 'default/app.conf').and_return({})
       end
 
       let(:action_stubs) {}
 
       let(:chef_run_stubs) do
-        allow_any_instance_of(Chef::Provider).to receive(:splunk_app_exists).with('test_app').and_return(upgrade)
         allow_any_instance_of(Chef::Resource).to receive(:current_owner).and_return('splunk')
         allow_any_instance_of(Chef::Provider).to receive(:current_owner).and_return('splunk')
         allow_any_instance_of(Chef::Provider).to receive(:current_group).and_return('splunk')
+
+        if resource == 'splunk_app_package'
+          allow_any_instance_of(CernerSplunk::ProviderHelpers::AppUpgrade).to receive(:validate_extracted_app)
+          allow_any_instance_of(CernerSplunk::ProviderHelpers::AppUpgrade).to receive(:validate_versions).and_return(upgrade)
+        end
+
         version_stub
         action_stubs
       end
 
       let(:upgrade) { false }
+
+      let(:app_cache_path) { './test/unit/.cache/splunk_ingredient/app_cache' }
 
       chef_describe 'action :install' do
         let(:action) { :install }
@@ -114,22 +121,27 @@ describe 'splunk_app' do
             let(:action_stubs) {}
             case resource
             when 'splunk_app_package'
+              let(:package_path) { Pathname.new(app_cache_path) + 'my_app.tgz' }
+              let(:existing_cache_path) { Pathname.new(app_cache_path) + 'current' }
+              let(:new_cache_path) { Pathname.new(app_cache_path) + 'new' }
               let(:action_stubs) do
                 if upgrade
-                  expect(FileUtils).to receive(:mv).with(Pathname.new(app_path), Pathname.new(backup_path))
-                  expect(FileUtils).to receive(:cp_r).with(Pathname.new(backup_path).join('local'), Pathname.new(app_path).join('local'))
-                  expect(CernerSplunk::FileHelpers).to receive(:deep_change_ownership).with(Pathname.new(app_path).join('local'), 'splunk', 'splunk')
-                  expect(FileUtils).to receive(:cp).with(Pathname.new(backup_path).join('metadata/local.meta'), Pathname.new(app_path).join('metadata/local.meta'))
-                  expect(CernerSplunk::FileHelpers).to receive(:change_ownership).with(Pathname.new(app_path).join('metadata/local.meta'), 'splunk', 'splunk')
+                  # Backup App
+                  expect(FileUtils).to receive(:cp_r).with(app_path, existing_cache_path)
                 end
               end
-              let(:package_path) { './test/unit/.cache/my_app.tgz' }
-              let(:backup_path) { './test/unit/.cache/splunk_ingredient/old_apps/test_app' }
+              it do
+                if upgrade
+                  is_expected.to run_ruby_block('upgrade app')
+                else
+                  is_expected.not_to run_ruby_block('upgrade app')
+                end
+              end
               it { is_expected.to create_remote_file(package_path).with(source: source_url) }
-              it { is_expected.to unpack_poise_archive(package_path).with(destination: app_path) }
+              it { is_expected.to unpack_poise_archive(package_path).with(destination: new_cache_path.to_s) }
             when 'splunk_app_custom'
               let(:directory_params) { { owner: 'splunk', group: 'splunk' } }
-              it { is_expected.to create_directory(app_path).with(directory_params) }
+              it { is_expected.to create_directory(app_path.to_s).with(directory_params) }
               it { is_expected.to create_directory("#{app_path}/default").with(directory_params) }
               it { is_expected.to create_directory("#{app_path}/local").with(directory_params) }
               it { is_expected.to create_directory("#{app_path}/lookups").with(directory_params) }
@@ -146,11 +158,12 @@ describe 'splunk_app' do
           chef_context 'not installing the app' do
             case resource
             when 'splunk_app_package'
-              let(:package_path) { './test/unit/.cache/my_app.tgz' }
+              let(:package_path) { Pathname.new(app_cache_path) + 'my_app.tgz' }
+              it { is_expected.not_to run_ruby_block('upgrade app') }
               it { is_expected.not_to create_remote_file(package_path) }
               it { is_expected.not_to unpack_poise_archive(package_path) }
             when 'splunk_app_custom'
-              it { is_expected.not_to create_directory(app_path) }
+              it { is_expected.not_to create_directory(app_path.to_s) }
               it { is_expected.not_to create_directory("#{app_path}/default") }
               it { is_expected.not_to create_directory("#{app_path}/local") }
               it { is_expected.not_to create_directory("#{app_path}/lookups") }
@@ -329,7 +342,7 @@ describe 'splunk_app' do
         chef_context 'when app.conf provides a version' do
           let(:version_config) { { 'launcher' => { 'version' => '1.0.0' } } }
           let(:version_stub) do
-            expect(CernerSplunk::ConfHelpers).to receive(:read_config).with(Pathname.new(app_path).join('default/app.conf')).and_return(version_config)
+            expect(CernerSplunk::ConfHelpers).to receive(:read_config).with(app_path + 'default/app.conf').and_return(version_config)
           end
 
           chef_context 'when version is provided' do
@@ -392,7 +405,7 @@ describe 'splunk_app' do
           }
         end
 
-        it { is_expected.to delete_directory(app_path) }
+        it { is_expected.to delete_directory(app_path.to_s) }
 
         chef_context 'when install_dir is provided' do
           let(:install_dir) { '/etc/splunk' }
@@ -404,7 +417,7 @@ describe 'splunk_app' do
             }
           end
 
-          it { is_expected.to delete_directory(app_path) }
+          it { is_expected.to delete_directory(app_path.to_s) }
         end
 
         chef_context 'when package is provided' do
@@ -416,7 +429,7 @@ describe 'splunk_app' do
             }
           end
 
-          it { is_expected.to delete_directory(app_path) }
+          it { is_expected.to delete_directory(app_path.to_s) }
         end
 
         chef_context 'without a prior install' do
@@ -453,7 +466,7 @@ describe 'splunk_app' do
               }
             end
 
-            it { is_expected.to delete_directory(app_path) }
+            it { is_expected.to delete_directory(app_path.to_s) }
           end
 
           chef_context 'when package is provided' do
@@ -465,7 +478,7 @@ describe 'splunk_app' do
               }
             end
 
-            it { is_expected.to delete_directory(app_path) }
+            it { is_expected.to delete_directory(app_path.to_s) }
           end
         end
       end

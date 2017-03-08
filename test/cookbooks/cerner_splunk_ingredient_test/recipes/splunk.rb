@@ -20,6 +20,7 @@ splunk_service 'splunk' do
 end
 
 splunk_app_custom 'test_app' do
+  version '1.0.0'
   configs(proc do
     splunk_conf 'testing.conf' do
       config(debug: { banana: 'green' })
