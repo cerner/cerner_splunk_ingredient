@@ -53,19 +53,11 @@ if defined?(ChefSpec)
     ChefSpec::Matchers::ResourceMatcher.new(:splunk_app_package, :install, name)
   end
 
-  def install_splunk_app_git(name)
-    ChefSpec::Matchers::ResourceMatcher.new(:splunk_app_git, :install, name)
-  end
-
   def uninstall_splunk_app_custom(name)
     ChefSpec::Matchers::ResourceMatcher.new(:splunk_app_custom, :uninstall, name)
   end
 
   def uninstall_splunk_app_package(name)
     ChefSpec::Matchers::ResourceMatcher.new(:splunk_app_package, :uninstall, name)
-  end
-
-  def uninstall_splunk_app_git(name)
-    ChefSpec::Matchers::ResourceMatcher.new(:splunk_app_git, :uninstall, name)
   end
 end
