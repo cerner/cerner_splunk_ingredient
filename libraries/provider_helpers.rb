@@ -78,7 +78,7 @@ module CernerSplunk
 
         # Check that the package's version is not a pre-release when we really expect a release
         if !app_version.prerelease? && pkg_version.prerelease?
-          raise "Downloaded app version was unexpectedly a pre-release version (#{pkg_version} vs. #{app_Version})"
+          raise "Downloaded app version was unexpectedly a pre-release version (#{pkg_version} vs. #{app_version})"
         end
 
         pkg_version != current_resource.version
