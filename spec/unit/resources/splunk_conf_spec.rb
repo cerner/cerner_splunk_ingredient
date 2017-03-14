@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require_relative '../spec_helper'
 include CernerSplunk::ResourceHelpers
 
@@ -34,7 +35,8 @@ shared_examples 'splunk_conf' do |platform, version, package|
       expect_any_instance_of(Chef::Resource).to receive(:load_installation_state).and_return true
       expect(CernerSplunk::ConfHelpers).to receive(:read_config).with(conf_path).and_return(existing_config)
       expect(CernerSplunk::ConfHelpers).to receive(:merge_config).with(existing_config, expected_config).and_return 'merged config'
-      expect_any_instance_of(Chef::Resource).to receive(:current_owner).and_return(platform == 'windows' ? nil : 'fauxhai')
+      allow_any_instance_of(Chef::Resource).to receive(:current_owner).and_return(platform == 'windows' ? 'administrator' : 'fauxhai')
+      allow_any_instance_of(Chef::Resource).to receive(:current_group).and_return(platform == 'windows' ? 'host\NONE' : 'fauxhai')
     end
 
     let(:conf_path) { Pathname.new(install_dir) + 'etc/system/local/test.conf' }
@@ -253,7 +255,7 @@ shared_examples 'splunk_conf' do |platform, version, package|
       end
 
       it { is_expected.to configure_splunk('system/test.conf') }
-      it { is_expected.to create_file(conf_path).with(content: 'merged config', owner: platform == 'windows' ? nil : 'fauxhai') }
+      it { is_expected.to create_file(conf_path).with(content: 'merged config', owner: platform == 'windows' ? 'administrator' : 'fauxhai') }
     end
 
     chef_context 'when reset is specified' do
@@ -272,7 +274,7 @@ shared_examples 'splunk_conf' do |platform, version, package|
         expect_any_instance_of(Chef::Resource).to receive(:load_installation_state).and_return true
         expect(CernerSplunk::ConfHelpers).to receive(:read_config).with(conf_path).and_return(existing_config)
         expect(CernerSplunk::ConfHelpers).to receive(:merge_config).with({}, expected_config).and_return 'just my config'
-        expect_any_instance_of(Chef::Resource).to receive(:current_owner).and_return(platform == 'windows' ? nil : 'fauxhai')
+        allow_any_instance_of(Chef::Resource).to receive(:current_group).and_return(platform == 'windows' ? 'host\NONE' : 'fauxhai')
       end
 
       it { is_expected.to configure_splunk('system/test.conf') }

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 windows = os.windows?
 
 describe package(windows ? 'Splunk Enterprise' : 'splunk') do

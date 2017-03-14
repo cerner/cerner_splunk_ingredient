@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 name             'cerner_splunk_ingredient_test'
 maintainer       'Cerner Innovation, Inc.'
 maintainer_email 'splunk@cerner.com'

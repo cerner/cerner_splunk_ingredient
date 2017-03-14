@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require_relative '../spec_helper'
 include CernerSplunk::ServiceHelpers, CernerSplunk::RestartHelpers
 
@@ -23,11 +24,6 @@ shared_examples '*start examples' do |action, platform, _, package|
     end
 
     it { is_expected.to run_execute("#{cmd_prefix} enable boot-start#{is_windows ? '' : ' -user fauxhai'} --accept-license --no-prompt").with(cwd: "#{install_dir}/bin") }
-
-    chef_context 'when user is provided' do
-      let(:test_params) { { resource_name: package.to_s, action: :restart, user: 'fauxhai' } }
-      it { is_expected.to run_execute("#{cmd_prefix} enable boot-start -user fauxhai --accept-license --no-prompt").with(cwd: "#{install_dir}/bin") }
-    end
 
     case action
     when :start then it { is_expected.to start_service(service_name) }
@@ -142,7 +138,7 @@ describe 'splunk_service' do
           expect(CernerSplunk::PathHelpers).to receive(:ftr_pathname).and_return ftr
           expect(ftr).to receive(:exist?).and_return ftr_exists
 
-          expect_any_instance_of(Chef::Resource).to receive(:current_owner).and_return(is_windows ? nil : 'fauxhai')
+          allow_any_instance_of(Chef::Provider).to receive(:current_owner).and_return(is_windows ? 'administrator' : 'fauxhai')
           expect_any_instance_of(Chef::Resource).to receive(:load_installation_state).and_return true
           unless is_windows
             expect_any_instance_of(Chef::Resource).to receive(:init_script_path).at_least(:once).and_return(init_script)

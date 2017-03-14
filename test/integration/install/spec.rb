@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 windows = os.windows?
 splunk_path = windows ? 'c:\Program Files\Splunk' : '/opt/splunk'
 splunk_command = windows ? "& \"#{splunk_path}\\bin\\splunk.exe\"" : "#{splunk_path}/bin/splunk"
@@ -18,16 +19,52 @@ end
 
 describe file(splunk_path) do
   it { is_expected.to be_directory }
-  it { is_expected.to be_owned_by 'splunk' } unless windows
+  its('owner') { is_expected.to match(/splunk$/) } unless windows
 end
 
 describe file(Pathname.new(splunk_path).join('etc/system/local/indexes.conf').to_s) do
   it { is_expected.to be_file }
-  it { is_expected.to be_owned_by 'splunk' } unless windows
+  its('owner') { is_expected.to match(/splunk$/) } unless windows
   its('content') { is_expected.to match(/\[test_index\]/) }
   its('content') { is_expected.to match %r{homePath = \$SPLUNK_DB/test_index/db} }
   its('content') { is_expected.to match %r{coldPath = \$SPLUNK_DB/test_index/colddb} }
   its('content') { is_expected.to match %r{thawedPath = \$SPLUNK_DB/test_index/thaweddb} }
+end
+
+test_app_path = Pathname.new(splunk_path).join('etc/apps/test_app')
+
+describe file(test_app_path.to_s) do
+  it { is_expected.to be_directory }
+  its('owner') { is_expected.to match(/splunk$/) } unless windows
+end
+
+describe file(test_app_path.join('default/testing.conf').to_s) do
+  it { is_expected.to be_file }
+  its('owner') { is_expected.to match(/splunk$/) } unless windows
+  its('content') { is_expected.to match(/\[debug\]/) }
+  its('content') { is_expected.to match(/banana = green/) }
+end
+
+describe file(test_app_path.join('default/app.conf').to_s) do
+  it { is_expected.to be_file }
+  its('owner') { is_expected.to match(/splunk$/) } unless windows
+  its('content') { is_expected.to match(/\[launcher\]/) }
+  its('content') { is_expected.to match(/version = 1.0.0/) }
+end
+
+describe file(test_app_path.join('plain_file.txt').to_s) do
+  it { is_expected.to be_file }
+  its('owner') { is_expected.to match(/splunk$/) } unless windows
+  its('content') { is_expected.to match(/A secret to everybody/) }
+end
+
+describe file(test_app_path.join('metadata/default.meta').to_s) do
+  it { is_expected.to be_file }
+  its('owner') { is_expected.to match(/splunk$/) } unless windows
+  its('content') { is_expected.to match(/\[views\]/) }
+  its('content') { is_expected.to match(/access = read : \[ \* \], write : \[ admin, power \]/) }
+  its('content') { is_expected.to match(%r{\[views/index_check\]}) }
+  its('content') { is_expected.to match(/access = read : \[ admin \], write : \[ admin \]/) }
 end
 
 unless windows
@@ -42,5 +79,9 @@ unless windows
 
   describe command('cat /proc/$(pgrep splunkd | sed -n 1p)/limits') do
     its('stdout') { is_expected.to match(/^Max open files \s+ \w+ \s+ 4000 \s+ files\s*$/m) }
+  end
+
+  describe command('ps --no-headers -C splunkd -o %U | sed -n 1p') do
+    its('stdout') { is_expected.to match(/splunk/) }
   end
 end

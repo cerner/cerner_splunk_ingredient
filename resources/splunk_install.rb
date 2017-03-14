@@ -1,9 +1,10 @@
+# frozen_string_literal: true
 # Cookbook Name:: cerner_splunk_ingredient
 # Resource:: splunk_install
 #
 # Resource for managing the installation of Splunk
 
-class SplunkInstall < ChefCompat::Resource
+class SplunkInstall < Chef::Resource
   include CernerSplunk::PlatformHelpers, CernerSplunk::PathHelpers, CernerSplunk::ResourceHelpers
 
   resource_name :splunk_install
@@ -13,14 +14,17 @@ class SplunkInstall < ChefCompat::Resource
   property :version, String, required: true
   property :build, String, required: true
   property :install_dir, String, required: true, desired_state: false
-  property :user, String, default: lazy { node['current_user'] || package == :splunk ? 'splunk' : 'splunkforwarder' }
-  property :group, String, default: lazy { user }
+  property :user, String, default: lazy { default_users[package][node['os'].to_sym] }
+  property :group, String, default: lazy { current_group || user }
   property :base_url, String, default: 'https://download.splunk.com/products'
 
   default_action :install
 
   def after_created
     package_from_name unless property_is_set?(:package) || (@action.include?(:uninstall) && property_is_set?(:install_dir))
+    return unless platform_family? 'windows'
+    reset_property :user
+    group "#{::ENV['COMPUTERNAME']}\\None"
   end
 
   ### Inherited Methods
@@ -86,13 +90,15 @@ class SplunkInstall < ChefCompat::Resource
     end
 
     def post_install
+      return unless changed? :version, :build
+
       ruby_block 'load_version_state' do
         block { load_version_state }
-      end if changed?
-
-      execute "chown -R #{user}:#{group} #{install_dir}" do
-        not_if { node['os'] == 'windows' || current_owner == user }
       end
+
+      ruby_block "Give ownership of #{install_dir} to #{user}:#{group}" do
+        block { CernerSplunk::FileHelpers.deep_change_ownership(install_dir, user, group) }
+      end unless platform_family? 'windows'
     end
   end
 
@@ -101,18 +107,20 @@ class SplunkInstall < ChefCompat::Resource
 
     return unless changed? :version, :build
 
-    declare_resource(:user, user) do
-      system true
-      manage_home true
-      action :create
-    end
+    unless platform_family? 'windows'
+      declare_resource(:user, user) do
+        system true
+        manage_home true
+        action :create
+      end
 
-    declare_resource(:group, group) do
-      append true
-      members user
-      action :create
-      # The user is created in a group of the same name, so we can skip this step if the group isn't changed.
-      only_if { group != user }
+      declare_resource(:group, group) do
+        append true
+        members user
+        action :create
+        # The user is created in a group of the same name, so we can skip this step if the group isn't changed.
+        only_if { group != user }
+      end
     end
 
     remote_file package_path.to_s do

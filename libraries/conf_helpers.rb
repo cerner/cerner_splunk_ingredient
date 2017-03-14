@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module CernerSplunk
   # Helper methods for reading and evaluating Splunk config
   module ConfHelpers

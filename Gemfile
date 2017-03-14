@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 source 'https://rubygems.org'
 
 gem 'berkshelf', '~> 5.3'
@@ -7,7 +8,7 @@ gem 'fauxhai', '~> 3.10'
 gem 'foodcritic', '~> 8.0'
 gem 'hashie', '~> 3.4.6'
 gem 'parallel_tests'
-gem 'rubocop', '~> 0.46'
+gem 'rubocop', '~> 0.47'
 
 group :local do
   gem 'guard', '~> 2.14'

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 name             'cerner_splunk_ingredient'
 maintainer       'Cerner Innovation, Inc.'
 maintainer_email 'splunk@cerner.com'
@@ -14,4 +15,3 @@ supports         'ubuntu', '>= 12.04'
 supports         'windows', '>= 6.1'
 
 depends          'poise-archive', '~> 1.3.0'
-depends          'compat_resource' # Chef <12.5 Compatability

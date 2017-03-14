@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 windows = os.windows?
 splunk_path = windows ? 'c:\splunk' : '/etc/splunk'
 splunk_command = windows ? "& \"#{splunk_path}\\bin\\splunk.exe\"" : "#{splunk_path}/bin/splunk"
@@ -13,12 +14,12 @@ end
 
 describe file(splunk_path) do
   it { is_expected.to be_directory }
-  it { is_expected.to be_owned_by 'splunk' } unless windows
+  its('owner') { is_expected.to match(/splunk$/) } unless windows
 end
 
 describe file(Pathname.new(splunk_path).join('etc/system/local/indexes.conf').to_s) do
   it { is_expected.to be_file }
-  it { is_expected.to be_owned_by 'splunk' } unless windows
+  its('owner') { is_expected.to match(/splunk$/) } unless windows
   its('content') { is_expected.to match(/\[test_index\]/) }
   its('content') { is_expected.to match %r{homePath = \$SPLUNK_DB/test_index/db} }
   its('content') { is_expected.to match %r{coldPath = \$SPLUNK_DB/test_index/colddb} }

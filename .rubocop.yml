@@ -1,7 +1,7 @@
 AllCops:
   Exclude:
     - 'vendor/**/*'
-  TargetRubyVersion: 2.1
+  TargetRubyVersion: 2.3
 
 Metrics/LineLength:
   Enabled: false
@@ -11,6 +11,18 @@ Metrics/BlockLength:
 
 Metrics/AbcSize:
   Enabled: false
+
+# splunk_install is unavoidably bloated with windows user guards.
+# This can probably be removed in the future.
+Metrics/ClassLength:
+  Max: 120
+
+# Disabled for the Chef 12.13 integration tests which use an older Ruby.
+Style/NumericPredicate:
+  Enabled: false
+
+Style/FormatString:
+  EnforcedStyle: percent
 
 Metrics/MethodLength:
   Max: 40

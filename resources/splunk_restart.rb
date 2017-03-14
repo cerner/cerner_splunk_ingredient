@@ -1,9 +1,10 @@
+# frozen_string_literal: true
 # Cookbook Name:: cerner_splunk_ingredient
 # Resource:: splunk_restart
 #
 # Resource for managing ensured restarts of the Splunk service
 
-class SplunkRestart < ChefCompat::Resource
+class SplunkRestart < Chef::Resource
   include CernerSplunk::RestartHelpers
 
   resource_name :splunk_restart

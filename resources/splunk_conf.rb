@@ -1,9 +1,10 @@
+# frozen_string_literal: true
 # Cookbook Name:: cerner_splunk_ingredient
 # Resource:: splunk_conf
 #
 # Resource for managing Splunk configuration files
 
-class SplunkConf < ChefCompat::Resource
+class SplunkConf < Chef::Resource
   include CernerSplunk::ResourceHelpers
   resource_name :splunk_conf
 
@@ -12,8 +13,8 @@ class SplunkConf < ChefCompat::Resource
   property :package, [:splunk, :universal_forwarder], required: true, desired_state: false
   property :scope, [:local, :default, :none], desired_state: false, default: :local
   property :config, Hash, required: true
-  property :user, [String, nil]
-  property :group, [String, nil], default: lazy { user }
+  property :user, String, default: lazy { current_owner }
+  property :group, String, default: lazy { current_group }
   property :reset, [TrueClass, FalseClass], desired_state: false, default: false
 
   default_action :configure
@@ -77,9 +78,6 @@ class SplunkConf < ChefCompat::Resource
     desired.config = CernerSplunk::ConfHelpers.stringify_config(evaluated_config)
 
     config reset ? current_config : current_config.select { |key, _| desired.config.keys.include? key.to_s }
-
-    user current_owner
-    desired.user ||= user
   end
 
   action_class do
@@ -101,6 +99,11 @@ class SplunkConf < ChefCompat::Resource
         release_config_cache(path)
       end
       action :nothing
+    end
+
+    directory Pathname.new(path).parent.to_s do
+      recursive true
+      action :create
     end
 
     file new_resource.path.to_s do
