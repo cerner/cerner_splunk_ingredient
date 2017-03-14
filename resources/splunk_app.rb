@@ -15,10 +15,12 @@ class SplunkApp < Chef::Resource
   property :files, Proc
   property :metadata, Hash, default: {}
 
+  resource_name :splunk_app
+
   default_action :install
 
   def after_created
-    version CernerSplunk::SplunkVersion.from_string(version) if version
+    version CernerSplunk::SplunkVersion.from_string(version) if version && version.is_a?(String)
   end
 
   def install_state
