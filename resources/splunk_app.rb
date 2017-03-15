@@ -44,7 +44,7 @@ class SplunkApp < Chef::Resource
   end
 
   def app_path
-    @app_path ||= Pathname.new(absolute_app_root).join(name)
+    @app_path ||= Pathname.new(absolute_app_root) + name
   end
 
   def config_scope
@@ -90,7 +90,7 @@ class SplunkApp < Chef::Resource
 
     def apply_config
       node.run_state['splunk_ingredient']['conf_override'] = {
-        conf_path: Pathname.new('apps').join(name).join(config_scope).to_s,
+        conf_path: (Pathname.new('apps') + name + config_scope).to_s,
         install_dir: install_dir,
         scope: :none
       }
@@ -105,7 +105,7 @@ class SplunkApp < Chef::Resource
         props['access'] = parse_meta_access(access) unless access.to_s.empty?
       end if property_is_set?(:metadata)
 
-      splunk_conf Pathname.new('apps').join("#{name}/metadata/#{config_scope}.meta").to_s do
+      splunk_conf((Pathname.new('apps') + "#{name}/metadata/#{config_scope}.meta").to_s) do
         scope :none
         config metadata
         reset true
@@ -140,7 +140,7 @@ class CustomApp < SplunkApp
     end
 
     %w(default local lookups metadata).each do |subdir|
-      directory app_path.join(subdir).to_s do
+      directory((app_path + subdir).to_s) do
         user current_owner
         group current_owner
         action :create
@@ -159,7 +159,7 @@ class PackagedApp < SplunkApp
   action :install do
     return unless !version || changed?(:version)
 
-    package_path = app_cache_path.join(CernerSplunk::PathHelpers.filename_from_url(source_url).gsub(/.spl$/, '.tgz'))
+    package_path = app_cache_path + CernerSplunk::PathHelpers.filename_from_url(source_url).gsub(/.spl$/, '.tgz')
 
     remote_file package_path.to_s do
       source source_url
@@ -173,7 +173,7 @@ class PackagedApp < SplunkApp
     backup_app if changed? :version
 
     poise_archive package_path.to_s do
-      destination app_cache_path.join('new').to_s
+      destination((app_cache_path + 'new').to_s)
       user current_owner
       group current_owner
     end

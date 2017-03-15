@@ -30,7 +30,7 @@ splunk_app_custom 'test_app' do
     end
   end)
   files(proc do |app_path|
-    file Pathname.new(app_path).join('plain_file.txt').to_s do
+    file((Pathname.new(app_path) + 'plain_file.txt').to_s) do
       owner 'splunk' unless platform_family? 'windows'
       content 'A secret to everybody'
     end

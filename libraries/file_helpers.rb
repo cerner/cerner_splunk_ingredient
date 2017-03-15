@@ -14,7 +14,7 @@ module CernerSplunk
       return if Chef.node.platform_family?('windows')
 
       change_ownership(path, owner, group)
-      Pathname.glob(Pathname.new(path).join('**/*')).each { |sub_path| change_ownership(sub_path, owner, group) }
+      Pathname.glob(Pathname.new(path) + '**/*').each { |sub_path| change_ownership(sub_path, owner, group) }
     end
   end unless defined? FileHelpers
 end

@@ -15,7 +15,7 @@ module CernerSplunk
     end
 
     def splunk_bin_path
-      Pathname.new(install_dir).join('bin')
+      Pathname.new(install_dir) + 'bin'
     end
 
     def command_prefix
@@ -63,10 +63,10 @@ module CernerSplunk
       node.run_state['splunk_ingredient'] ||= { 'installations' => {} }
       self_state = node.run_state['splunk_ingredient']
       return true if self_state['installations'][install_dir]
-      return false unless Pathname.new(install_dir).join('bin').exist?
+      return false unless (Pathname.new(install_dir) + 'bin').exist?
 
       install_state = { 'name' => name, 'x64' => x64_support, 'path' => install_dir }
-      install_state['package'] = if Pathname.new(install_dir).join('etc/apps/SplunkUniversalForwarder').exist?
+      install_state['package'] = if (Pathname.new(install_dir) + 'etc/apps/SplunkUniversalForwarder').exist?
                                    :universal_forwarder
                                  else
                                    :splunk

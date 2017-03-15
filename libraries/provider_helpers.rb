@@ -10,7 +10,7 @@ module CernerSplunk
     module AppUpgrade
       def app_cache_path
         unless @app_cache_path
-          @app_cache_path = Pathname.new(Chef::Config['file_cache_path']).join('splunk_ingredient/app_cache')
+          @app_cache_path = Pathname.new(Chef::Config['file_cache_path']) + 'splunk_ingredient/app_cache'
           [@app_cache_path, new_cache_path, existing_cache_path].each(&:mkpath)
         end
 
@@ -61,7 +61,7 @@ module CernerSplunk
         raise "Invalid or corrupt app package; could not find extracted app #{name} at #{new_cache_path}." unless new_cache_path.exist?
 
         # Check that the app does not contain local data
-        return unless new_cache_path.join('local').exist? && !new_cache_path.join('local').children.empty? || new_cache_path.join('metadata/local.meta').exist?
+        return unless (new_cache_path + 'local').exist? && !(new_cache_path + 'local').children.empty? || (new_cache_path + 'metadata/local.meta').exist?
         raise 'Downloaded app contains local data'
       end
 

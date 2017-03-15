@@ -22,7 +22,7 @@ describe file(splunk_path) do
   its('owner') { is_expected.to match(/splunkforwarder$/) } unless windows
 end
 
-describe file(Pathname.new(splunk_path).join('etc/system/local/server.conf').to_s) do
+describe file((Pathname.new(splunk_path) + 'etc/system/local/server.conf').to_s) do
   it { is_expected.to be_file }
   its('owner') { is_expected.to match(/splunkforwarder$/) } unless windows
   its('content') { is_expected.to match '[general]' }

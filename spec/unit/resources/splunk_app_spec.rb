@@ -95,7 +95,7 @@ describe 'splunk_app' do
 
         let(:files_proc) do
           proc do |path|
-            file Pathname.new(path).join('testing.txt').to_s do
+            file((Pathname.new(path) + 'testing.txt').to_s) do
               content 'Unimportant Text'
             end
           end
