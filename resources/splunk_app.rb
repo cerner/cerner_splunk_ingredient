@@ -10,6 +10,7 @@ class SplunkApp < Chef::Resource
   property :name, String, name_property: true, identity: true
   property :install_dir, String, required: true, desired_state: false
   property :package, [:splunk, :universal_forwarder], required: true, desired_state: false
+  property :app_root, [String, :shcluster, :master_apps], default: 'apps', desired_state: false
   property :version, [String, CernerSplunk::SplunkVersion]
   property :configs, Proc
   property :files, Proc
@@ -32,8 +33,18 @@ class SplunkApp < Chef::Resource
     node.run_state['splunk_ingredient']['installations'][install_dir]
   end
 
+  def absolute_app_root
+    root_path = case app_root
+                when :master_apps then 'master-apps/apps'
+                when :shcluster then 'shcluster/apps'
+                else app_root
+                end
+
+    Pathname.new(install_dir) + 'etc' + root_path
+  end
+
   def app_path
-    @app_path ||= Pathname.new(splunk_app_path).join(name)
+    @app_path ||= Pathname.new(absolute_app_root).join(name)
   end
 
   def config_scope

@@ -22,10 +22,6 @@ module CernerSplunk
       platform_family?('windows') ? 'splunk.exe' : './splunk'
     end
 
-    def splunk_app_path
-      Pathname.new(install_dir).join('etc/apps')
-    end
-
     # Get the owner of the install directory
     def current_owner(options = {})
       if platform_family? 'windows'

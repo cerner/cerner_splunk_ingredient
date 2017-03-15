@@ -53,6 +53,10 @@ describe 'splunk_app' do
 
       let(:app_cache_path) { './test/unit/.cache/splunk_ingredient/app_cache' }
 
+      ##==================================================================##
+      ##                    splunk_app action :install                    ##
+      ##==================================================================##
+
       chef_describe 'action :install' do
         let(:action) { :install }
 
@@ -263,6 +267,74 @@ describe 'splunk_app' do
           include_examples 'app install'
         end
 
+        chef_context 'when app_path is provided' do
+          let(:app_path) { Pathname.new("#{install_dir}/etc/deployment-apps/test_app") }
+          let(:test_params) do
+            {
+              name: 'test_app',
+              app_root: 'deployment-apps',
+              configs: configs_proc,
+              source_url: source_url,
+              files: files_proc,
+              metadata: meta_conf,
+              action: action
+            }
+          end
+
+          include_examples 'app install'
+
+          chef_context 'when the app_path is an absolute path' do
+            let(:app_path) { Pathname.new('/etc/deployment-apps/test_app') }
+            let(:test_params) do
+              {
+                name: 'test_app',
+                app_root: '/etc/deployment-apps',
+                configs: configs_proc,
+                source_url: source_url,
+                files: files_proc,
+                metadata: meta_conf,
+                action: action
+              }
+            end
+
+            include_examples 'app install'
+          end
+
+          chef_context 'when the app_path is :master_apps' do
+            let(:app_path) { Pathname.new("#{install_dir}/etc/master-apps/apps/test_app") }
+            let(:test_params) do
+              {
+                name: 'test_app',
+                app_root: :master_apps,
+                configs: configs_proc,
+                source_url: source_url,
+                files: files_proc,
+                metadata: meta_conf,
+                action: action
+              }
+            end
+
+            include_examples 'app install'
+          end
+
+          chef_context 'when the app_path is :shcluster' do
+            let(:app_path) { Pathname.new("#{install_dir}/etc/shcluster/apps/test_app") }
+            let(:test_params) do
+              {
+                name: 'test_app',
+                app_root: :shcluster,
+                configs: configs_proc,
+                source_url: source_url,
+                files: files_proc,
+                metadata: meta_conf,
+                action: action
+              }
+            end
+
+            include_examples 'app install'
+          end
+        end
+
         chef_context 'when package is provided' do
           let(:test_params) do
             {
@@ -395,6 +467,10 @@ describe 'splunk_app' do
         end
       end unless resource == 'splunk_app'
 
+      ##==================================================================##
+      ##                   splunk_app action :uninstall                   ##
+      ##==================================================================##
+
       chef_describe 'action :uninstall' do
         let(:action) { :uninstall }
         let(:chef_run_stubs) { {} }
@@ -430,6 +506,58 @@ describe 'splunk_app' do
           end
 
           it { is_expected.to delete_directory(app_path.to_s) }
+        end
+
+        chef_context 'when app_path is provided' do
+          let(:app_path) { Pathname.new("#{install_dir}/etc/deployment-apps/test_app") }
+          let(:test_params) do
+            {
+              name: 'test_app',
+              app_root: 'deployment-apps',
+              action: action
+            }
+          end
+
+          it { is_expected.to delete_directory(app_path.to_s) }
+
+          chef_context 'when the app_path is an absolute path' do
+            let(:app_path) { Pathname.new('/etc/deployment-apps/test_app') }
+            let(:test_params) do
+              {
+                name: 'test_app',
+                app_root: '/etc/deployment-apps',
+                action: action
+              }
+            end
+
+            it { is_expected.to delete_directory(app_path.to_s) }
+          end
+
+          chef_context 'when the app_path is :master_apps' do
+            let(:app_path) { Pathname.new("#{install_dir}/etc/master-apps/apps/test_app") }
+            let(:test_params) do
+              {
+                name: 'test_app',
+                app_root: :master_apps,
+                action: action
+              }
+            end
+
+            it { is_expected.to delete_directory(app_path.to_s) }
+          end
+
+          chef_context 'when the app_path is :shcluster' do
+            let(:app_path) { Pathname.new("#{install_dir}/etc/shcluster/apps/test_app") }
+            let(:test_params) do
+              {
+                name: 'test_app',
+                app_root: :shcluster,
+                action: action
+              }
+            end
+
+            it { is_expected.to delete_directory(app_path.to_s) }
+          end
         end
 
         chef_context 'without a prior install' do
