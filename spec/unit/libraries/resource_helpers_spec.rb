@@ -19,8 +19,8 @@ describe 'ResourceHelpers' do
 
     before do
       allow(Pathname).to receive(:new).with(install_dir).and_return(install_dir_path)
-      allow(install_dir_path).to receive(:join).with('bin').and_return splunk_bin_path
-      allow(install_dir_path).to receive(:join).with('etc/apps/SplunkUniversalForwarder').and_return forwarder_app_path
+      allow(install_dir_path).to receive(:+).with('bin').and_return splunk_bin_path
+      allow(install_dir_path).to receive(:+).with('etc/apps/SplunkUniversalForwarder').and_return forwarder_app_path
 
       allow(splunk_bin_path).to receive(:exist?).and_return true
       allow(forwarder_app_path).to receive(:exist?).and_return false
@@ -75,7 +75,7 @@ describe 'ResourceHelpers' do
         }
       end
       it 'should not modify the run_state' do
-        expect(install_dir_path).not_to receive(:join)
+        expect(install_dir_path).not_to receive(:+)
         expect(load_installation_state).to be true
       end
     end
