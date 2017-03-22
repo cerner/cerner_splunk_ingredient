@@ -40,6 +40,7 @@ class SplunkApp < Chef::Resource
                 else app_root
                 end
 
+    # Joining pathnames acts like `cd`, so if root_path is absolute, that becomes the new path.
     Pathname.new(install_dir) + 'etc' + root_path
   end
 
