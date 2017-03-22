@@ -10,7 +10,7 @@ module CernerSplunk
       install_state = node.run_state['splunk_ingredient']['installations'][install_dir]
       return unless install_state
 
-      pid_file = Pathname.new(install_dir).join('var/run/splunk/splunkd.pid')
+      pid_file = Pathname.new(install_dir) + 'var/run/splunk/splunkd.pid'
       return unless pid_file.exist?
 
       pid = pid_file.readlines.first.to_i

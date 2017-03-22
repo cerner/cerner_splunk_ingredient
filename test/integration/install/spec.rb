@@ -22,7 +22,7 @@ describe file(splunk_path) do
   its('owner') { is_expected.to match(/splunk$/) } unless windows
 end
 
-describe file(Pathname.new(splunk_path).join('etc/system/local/indexes.conf').to_s) do
+describe file((Pathname.new(splunk_path) + 'etc/system/local/indexes.conf').to_s) do
   it { is_expected.to be_file }
   its('owner') { is_expected.to match(/splunk$/) } unless windows
   its('content') { is_expected.to match(/\[test_index\]/) }
@@ -31,34 +31,34 @@ describe file(Pathname.new(splunk_path).join('etc/system/local/indexes.conf').to
   its('content') { is_expected.to match %r{thawedPath = \$SPLUNK_DB/test_index/thaweddb} }
 end
 
-test_app_path = Pathname.new(splunk_path).join('etc/apps/test_app')
+test_app_path = Pathname.new(splunk_path) + 'etc/apps/test_app'
 
 describe file(test_app_path.to_s) do
   it { is_expected.to be_directory }
   its('owner') { is_expected.to match(/splunk$/) } unless windows
 end
 
-describe file(test_app_path.join('default/testing.conf').to_s) do
+describe file((test_app_path + 'default/testing.conf').to_s) do
   it { is_expected.to be_file }
   its('owner') { is_expected.to match(/splunk$/) } unless windows
   its('content') { is_expected.to match(/\[debug\]/) }
   its('content') { is_expected.to match(/banana = green/) }
 end
 
-describe file(test_app_path.join('default/app.conf').to_s) do
+describe file((test_app_path + 'default/app.conf').to_s) do
   it { is_expected.to be_file }
   its('owner') { is_expected.to match(/splunk$/) } unless windows
   its('content') { is_expected.to match(/\[launcher\]/) }
   its('content') { is_expected.to match(/version = 1.0.0/) }
 end
 
-describe file(test_app_path.join('plain_file.txt').to_s) do
+describe file((test_app_path + 'plain_file.txt').to_s) do
   it { is_expected.to be_file }
   its('owner') { is_expected.to match(/splunk$/) } unless windows
   its('content') { is_expected.to match(/A secret to everybody/) }
 end
 
-describe file(test_app_path.join('metadata/default.meta').to_s) do
+describe file((test_app_path + 'metadata/default.meta').to_s) do
   it { is_expected.to be_file }
   its('owner') { is_expected.to match(/splunk$/) } unless windows
   its('content') { is_expected.to match(/\[views\]/) }

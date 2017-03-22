@@ -17,7 +17,7 @@ describe file(splunk_path) do
   its('owner') { is_expected.to match(/splunk$/) } unless windows
 end
 
-describe file(Pathname.new(splunk_path).join('etc/system/local/indexes.conf').to_s) do
+describe file((Pathname.new(splunk_path) + 'etc/system/local/indexes.conf').to_s) do
   it { is_expected.to be_file }
   its('owner') { is_expected.to match(/splunk$/) } unless windows
   its('content') { is_expected.to match(/\[test_index\]/) }

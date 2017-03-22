@@ -31,7 +31,7 @@ describe 'ServiceHelpers' do
         }
 
         expect(Pathname).to receive(:new).with(install_dir).and_return(install_dir_path)
-        expect(install_dir_path).to receive(:join).with('var/run/splunk/splunkd.pid').and_return splunk_pid_path
+        expect(install_dir_path).to receive(:+).with('var/run/splunk/splunkd.pid').and_return splunk_pid_path
       end
 
       context 'when the pid file exists' do

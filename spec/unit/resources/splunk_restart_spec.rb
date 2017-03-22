@@ -42,7 +42,7 @@ describe 'splunk_restart' do
         chef_describe 'action :ensure' do
           let(:test_params) { { resource_name: package.to_s, action: :ensure } }
           let(:action_stubs) {}
-          it { is_expected.to create_file_if_missing(Pathname.new(install_dir).join('restart_on_chef_client').to_s) }
+          it { is_expected.to create_file_if_missing((Pathname.new(install_dir) + 'restart_on_chef_client').to_s) }
 
           it 'should notify the Splunk service to restart' do
             expect(subject.splunk_restart(package.to_s)).to notify("splunk_service[#{package}]").to(:restart).delayed
@@ -60,12 +60,12 @@ describe 'splunk_restart' do
             let(:install_dir) { platform == 'windows' ? 'C:\\Splunk' : '/etc/splunk' }
             let(:test_params) { { resource_name: package.to_s, install_dir: install_dir, action: :ensure } }
 
-            it { is_expected.to create_file_if_missing(Pathname.new(install_dir).join('restart_on_chef_client').to_s) }
+            it { is_expected.to create_file_if_missing((Pathname.new(install_dir) + 'restart_on_chef_client').to_s) }
 
             chef_context 'without package' do
               let(:test_params) { { resource_name: 'ensure', install_dir: install_dir, action: :ensure } }
 
-              it { is_expected.to create_file_if_missing(Pathname.new(install_dir).join('restart_on_chef_client').to_s) }
+              it { is_expected.to create_file_if_missing((Pathname.new(install_dir) + 'restart_on_chef_client').to_s) }
             end
           end
         end
@@ -102,18 +102,18 @@ describe 'splunk_restart' do
           let(:test_params) { { resource_name: package.to_s, action: :clear } }
           let(:action_stubs) {}
 
-          it { is_expected.to delete_file(Pathname.new(install_dir).join('restart_on_chef_client').to_s) }
+          it { is_expected.to delete_file((Pathname.new(install_dir) + 'restart_on_chef_client').to_s) }
 
           chef_context 'when install_dir is provided' do
             let(:install_dir) { platform == 'windows' ? 'C:\\Splunk' : '/etc/splunk' }
             let(:test_params) { { resource_name: package.to_s, install_dir: install_dir, action: :clear } }
 
-            it { is_expected.to delete_file(Pathname.new(install_dir).join('restart_on_chef_client').to_s) }
+            it { is_expected.to delete_file((Pathname.new(install_dir) + 'restart_on_chef_client').to_s) }
 
             chef_context 'without package' do
               let(:test_params) { { resource_name: 'clear', install_dir: install_dir, action: :clear } }
 
-              it { is_expected.to delete_file(Pathname.new(install_dir).join('restart_on_chef_client').to_s) }
+              it { is_expected.to delete_file((Pathname.new(install_dir) + 'restart_on_chef_client').to_s) }
             end
           end
         end

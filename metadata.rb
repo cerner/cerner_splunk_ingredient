@@ -4,7 +4,7 @@ maintainer       'Cerner Innovation, Inc.'
 maintainer_email 'splunk@cerner.com'
 license          'Apache 2.0'
 description      'Installs and configures Splunk'
-long_description IO.read(File.join(File.dirname(__FILE__), 'README.md'))
+long_description((Pathname.new(__FILE__).dirname + 'README.md').read)
 version          '0.1.0'
 
 source_url       'https://github.com/cerner/cerner_splunk_ingredient'

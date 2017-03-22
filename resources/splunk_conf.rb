@@ -71,7 +71,7 @@ class SplunkConf < Chef::Resource
       real_path = real_path.dirname + scope.to_s + real_path.basename
     end unless scope == :none
 
-    desired.path = Pathname.new(install_dir).join('etc').join(real_path.sub(%r{^/}, ''))
+    desired.path = Pathname.new(install_dir) + 'etc' + real_path.sub(%r{^/}, '')
     current_config = existing_config(desired.path)
 
     evaluated_config = CernerSplunk::ConfHelpers.evaluate_config(current_config, desired.config)
