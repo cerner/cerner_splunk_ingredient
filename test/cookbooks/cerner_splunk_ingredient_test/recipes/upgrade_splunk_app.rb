@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 app_url = platform_family?('windows') ? 'file:///C:/Users/Vagrant/AppData/Local/Temp/kitchen/data/pkg-app.spl' : 'file:///tmp/kitchen/data/pkg-app.spl'
 
 splunk_app_package 'test_app' do

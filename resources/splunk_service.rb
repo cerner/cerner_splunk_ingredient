@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 # Cookbook Name:: cerner_splunk_ingredient
 # Resource:: splunk_service
 #
@@ -12,7 +13,7 @@ class SplunkService < Chef::Resource
 
   property :name, String, name_property: true, desired_state: false, identity: true
   property :install_dir, String, required: true, desired_state: false
-  property :package, [:splunk, :universal_forwarder], required: true
+  property :package, %i(splunk universal_forwarder), required: true
   property :ulimit, Integer
 
   default_action :start

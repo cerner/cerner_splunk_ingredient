@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 # Cookbook Name:: cerner_splunk_ingredient
 # Resource:: splunk_install
 #
@@ -10,7 +11,7 @@ class SplunkInstall < Chef::Resource
   resource_name :splunk_install
 
   property :name, String, name_property: true, identity: true
-  property :package, [:splunk, :universal_forwarder], required: true
+  property :package, %i(splunk universal_forwarder), required: true
   property :version, String, required: true
   property :build, String, required: true
   property :install_dir, String, required: true, desired_state: false

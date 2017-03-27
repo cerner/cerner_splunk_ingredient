@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 # Cookbook Name:: cerner_splunk_ingredient
 # Resource:: splunk_app
 #
@@ -9,7 +10,7 @@ class SplunkApp < Chef::Resource
 
   property :name, String, name_property: true, identity: true
   property :install_dir, String, required: true, desired_state: false
-  property :package, [:splunk, :universal_forwarder], required: true, desired_state: false
+  property :package, %i(splunk universal_forwarder), required: true, desired_state: false
   property :app_root, [String, :shcluster, :master_apps], default: 'apps', desired_state: false
   property :version, [String, CernerSplunk::SplunkVersion]
   property :configs, Proc
@@ -91,6 +92,7 @@ class SplunkApp < Chef::Resource
 
     def apply_config
       node.run_state['splunk_ingredient']['conf_override'] = {
+        app: name,
         conf_path: (Pathname.new('apps') + name + config_scope).to_s,
         install_dir: install_dir,
         scope: :none

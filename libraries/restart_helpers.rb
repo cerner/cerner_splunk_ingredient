@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 module CernerSplunk
   # Mixin Helper methods for Splunk Ingredient resources to ensure a service restart
   module RestartHelpers

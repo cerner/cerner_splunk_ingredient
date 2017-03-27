@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 module CernerSplunk
   # Class object for parsing and encapsulating Splunk app versions
   class SplunkVersion

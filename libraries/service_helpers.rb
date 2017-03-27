@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 module CernerSplunk
   # Mixin Helper methods for the Splunk Service resource
   module ServiceHelpers

@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 windows = os.windows?
 splunk_path = windows ? 'c:\Program Files\Splunk' : '/opt/splunk'
 

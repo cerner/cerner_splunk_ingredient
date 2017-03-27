@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require 'rspec/its'
 require_relative '../spec_helper'
 require_relative '../../../libraries/splunk_version'

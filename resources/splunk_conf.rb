@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 # Cookbook Name:: cerner_splunk_ingredient
 # Resource:: splunk_conf
 #
@@ -10,8 +11,8 @@ class SplunkConf < Chef::Resource
 
   property :path, [String, Pathname], name_property: true, desired_state: false, identity: true
   property :install_dir, String, required: true, desired_state: false
-  property :package, [:splunk, :universal_forwarder], required: true, desired_state: false
-  property :scope, [:local, :default, :none], desired_state: false, default: :local
+  property :package, %i(splunk universal_forwarder), required: true, desired_state: false
+  property :scope, %i(local default none), desired_state: false, default: :local
   property :config, Hash, required: true
   property :user, String, default: lazy { current_owner }
   property :group, String, default: lazy { current_group }
@@ -48,6 +49,10 @@ class SplunkConf < Chef::Resource
     path((Pathname.new(base_path) + Pathname.new(path).basename).to_s)
   end
 
+  def app(app_name)
+    @app = app_name
+  end
+
   load_current_value do |desired|
     if property_is_set? :install_dir
       install_dir desired.install_dir
@@ -74,7 +79,8 @@ class SplunkConf < Chef::Resource
     desired.path = Pathname.new(install_dir) + 'etc' + real_path.sub(%r{^/}, '')
     current_config = existing_config(desired.path)
 
-    evaluated_config = CernerSplunk::ConfHelpers.evaluate_config(current_config, desired.config)
+    context = CernerSplunk::ConfHelpers::ConfContext.new(desired.path, @app)
+    evaluated_config = CernerSplunk::ConfHelpers.evaluate_config(context, current_config, desired.config)
     desired.config = CernerSplunk::ConfHelpers.stringify_config(evaluated_config)
 
     config reset ? current_config : current_config.select { |key, _| desired.config.keys.include? key.to_s }

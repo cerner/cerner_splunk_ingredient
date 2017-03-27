@@ -1,13 +1,16 @@
 # frozen_string_literal: true
+
 module CernerSplunk
   # Helper methods for reading and evaluating Splunk config
   module ConfHelpers
-    def self.evaluate_config(current_config, desired_config)
-      desired_config = desired_config.call(current_config) if desired_config.is_a? Proc
+    def self.evaluate_config(context, current_config, desired_config)
+      desired_config = desired_config.call(context, current_config) if desired_config.is_a? Proc
       desired_config.map do |section, props|
-        mapout = props.is_a?(Proc) ? props.call(section, current_config[section] || {}) : [section, props]
+        local_context = ConfContext.new(context.path, context.app, section)
+        mapout = props.is_a?(Proc) ? props.call(local_context, current_config[section] || {}) : [section, props]
         mapout[1] = mapout[1].map do |key, value|
-          value.is_a?(Proc) ? value.call(key, (current_config[section] || {})[key]) : [key, value]
+          local_context = ConfContext.new(context.path, context.app, section, key)
+          value.is_a?(Proc) ? value.call(local_context, (current_config[section] || {})[key]) : [key, value]
         end.to_h
         mapout
       end.to_h
@@ -56,6 +59,24 @@ module CernerSplunk
         props.each { |key, value| stream.puts "#{key} = #{value}" }
       end
       stream.string
+    end
+
+    class ConfContext
+      attr_reader :path
+      attr_reader :app
+      attr_reader :stanza
+      attr_reader :key
+
+      def initialize(path, app = nil, stanza = nil, key = nil)
+        @path = Pathname.new path
+        @app = app || /local|default|metadata$/.match(@path.parent.to_s) && @path.parent.parent.basename.to_s
+        @stanza = stanza
+        @key = key
+      end
+
+      def ==(other)
+        other.path == @path && other.app == @app && other.stanza == @stanza && other.key == @key
+      end
     end
   end unless defined?(ConfHelpers)
 end

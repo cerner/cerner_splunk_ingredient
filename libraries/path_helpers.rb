@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 module CernerSplunk
   # Helper methods for Splunk-related file and URL paths
   module PathHelpers

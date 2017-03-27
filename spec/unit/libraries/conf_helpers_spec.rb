@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require_relative '../spec_helper'
 
 describe 'ConfHelpers' do
@@ -16,14 +17,20 @@ describe 'ConfHelpers' do
   end
 
   describe 'evaluate_config' do
-    subject { CernerSplunk::ConfHelpers.evaluate_config(existing_config, config) }
+    let(:conf_context) { CernerSplunk::ConfHelpers::ConfContext.new(conf_path) }
+    subject { CernerSplunk::ConfHelpers.evaluate_config(conf_context, existing_config, config) }
 
     context 'with top-level proc' do
+      let!(:actual_context) {}
       let(:config) do
-        ->(conf) { conf.map { |section, props| [section.upcase, props] }.to_h }
+        lambda do |context, conf|
+          conf.map { |section, props| [section.upcase, props] }.to_h.merge('context' => { 'context' => context })
+        end
       end
+      let(:expected_context) { CernerSplunk::ConfHelpers::ConfContext.new(conf_path, 'system') }
       let(:expected_config) do
         {
+          'context' => { 'context' => expected_context },
           'DEFAULT' => {
             'first' => 'true',
             'second' => 'true'
@@ -43,15 +50,17 @@ describe 'ConfHelpers' do
           'default' => {
             'second' => 'false'
           },
-          'other' => ->(section, props) { [section.upcase, props] }
+          'other' => ->(context, props) { [context.stanza.upcase, props.merge('context' => context)] }
         }
       end
+      let(:expected_context) { CernerSplunk::ConfHelpers::ConfContext.new(conf_path, 'system', 'other') }
       let(:expected_config) do
         {
           'default' => {
             'second' => 'false'
           },
           'OTHER' => {
+            'context' => expected_context,
             'something' => 'here'
           }
         }
@@ -67,17 +76,18 @@ describe 'ConfHelpers' do
             'second' => 'false'
           },
           'other' => {
-            'something' => ->(key, value) { [key, value.upcase] }
+            'something' => ->(context, _) { [context.key, context] }
           }
         }
       end
+      let(:expected_context) { CernerSplunk::ConfHelpers::ConfContext.new(conf_path, 'system', 'other', 'something') }
       let(:expected_config) do
         {
           'default' => {
             'second' => 'false'
           },
           'other' => {
-            'something' => 'HERE'
+            'something' => expected_context
           }
         }
       end
