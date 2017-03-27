@@ -94,5 +94,23 @@ module CernerSplunk
         other.path == @path && other.section == @section && other.key == @key
       end
     end
+
+    class ConfContext
+      attr_reader :path
+      attr_reader :app
+      attr_reader :stanza
+      attr_reader :key
+
+      def initialize(path, app = nil, stanza = nil, key = nil)
+        @path = Pathname.new path
+        @app = app || /local|default|metadata$/.match(@path.parent.to_s) && @path.parent.parent.basename.to_s
+        @stanza = stanza
+        @key = key
+      end
+
+      def ==(other)
+        other.path == @path && other.app == @app && other.stanza == @stanza && other.key == @key
+      end
+    end
   end unless defined?(ConfHelpers)
 end

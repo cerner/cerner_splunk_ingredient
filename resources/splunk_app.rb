@@ -94,6 +94,7 @@ class SplunkApp < Chef::Resource
 
     def apply_config
       node.run_state['splunk_ingredient']['conf_override'] = {
+        app: name,
         conf_path: (Pathname.new('apps') + name + config_scope).to_s,
         install_dir: install_dir,
         scope: :none

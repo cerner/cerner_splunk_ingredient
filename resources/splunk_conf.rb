@@ -49,6 +49,10 @@ class SplunkConf < Chef::Resource
     path((Pathname.new(base_path) + Pathname.new(path).basename).to_s)
   end
 
+  def app(app_name)
+    @app = app_name
+  end
+
   load_current_value do |desired|
     if property_is_set? :install_dir
       install_dir desired.install_dir
