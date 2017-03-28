@@ -3,15 +3,21 @@
 module CernerSplunk
   # Helper methods for reading and evaluating Splunk config
   module ConfHelpers
-    def self.evaluate_config(context, current_config, desired_config)
-      desired_config = desired_config.call(context, current_config) if desired_config.is_a? Proc
+    def self.evaluate_config(path, current_config, desired_config)
+      context = ConfContext.new(path)
+      desired_config = desired_config.call(context.freeze, current_config) if desired_config.is_a? Proc
+
       desired_config.map do |section, props|
-        local_context = ConfContext.new(context.path, context.app, section)
-        mapout = props.is_a?(Proc) ? props.call(local_context, current_config[section] || {}) : [section, props]
+        section_context = context.dup
+        section_context.stanza = section
+        mapout = props.is_a?(Proc) ? props.call(section_context.freeze, current_config[section] || {}) : [section, props]
+
         mapout[1] = mapout[1].map do |key, value|
-          local_context = ConfContext.new(context.path, context.app, section, key)
-          value.is_a?(Proc) ? value.call(local_context, (current_config[section] || {})[key]) : [key, value]
+          key_context = section_context.dup
+          key_context.key = key
+          value.is_a?(Proc) ? value.call(key_context.freeze, (current_config[section] || {})[key]) : [key, value]
         end.to_h
+
         mapout
       end.to_h
     end
@@ -64,14 +70,19 @@ module CernerSplunk
     class ConfContext
       attr_reader :path
       attr_reader :app
-      attr_reader :stanza
-      attr_reader :key
+      attr_accessor :stanza
+      attr_accessor :key
 
-      def initialize(path, app = nil, stanza = nil, key = nil)
-        @path = Pathname.new path
-        @app = app || /local|default|metadata$/.match(@path.parent.to_s) && @path.parent.parent.basename.to_s
-        @stanza = stanza
-        @key = key
+      def initialize(path, stanza = nil, key = nil)
+        self.path = path
+        self.stanza = stanza
+        self.key = key
+      end
+
+      def path=(path)
+        @path = path
+        pathname = Pathname.new @path
+        @app = /local|default|metadata$/.match(pathname.parent.to_s) && pathname.parent.parent.basename.to_s
       end
 
       def ==(other)

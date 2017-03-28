@@ -49,10 +49,6 @@ class SplunkConf < Chef::Resource
     path((Pathname.new(base_path) + Pathname.new(path).basename).to_s)
   end
 
-  def app(app_name)
-    @app = app_name
-  end
-
   load_current_value do |desired|
     if property_is_set? :install_dir
       install_dir desired.install_dir
@@ -79,8 +75,7 @@ class SplunkConf < Chef::Resource
     desired.path = Pathname.new(install_dir) + 'etc' + real_path.sub(%r{^/}, '')
     current_config = existing_config(desired.path)
 
-    context = CernerSplunk::ConfHelpers::ConfContext.new(desired.path, @app)
-    evaluated_config = CernerSplunk::ConfHelpers.evaluate_config(context, current_config, desired.config)
+    evaluated_config = CernerSplunk::ConfHelpers.evaluate_config(desired.path, current_config, desired.config)
     desired.config = CernerSplunk::ConfHelpers.stringify_config(evaluated_config)
 
     config reset ? current_config : current_config.select { |key, _| desired.config.keys.include? key.to_s }

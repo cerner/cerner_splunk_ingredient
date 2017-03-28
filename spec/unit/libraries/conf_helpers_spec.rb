@@ -17,8 +17,7 @@ describe 'ConfHelpers' do
   end
 
   describe 'evaluate_config' do
-    let(:conf_context) { CernerSplunk::ConfHelpers::ConfContext.new(conf_path) }
-    subject { CernerSplunk::ConfHelpers.evaluate_config(conf_context, existing_config, config) }
+    subject { CernerSplunk::ConfHelpers.evaluate_config(conf_path, existing_config, config) }
 
     context 'with top-level proc' do
       let!(:actual_context) {}
@@ -27,7 +26,7 @@ describe 'ConfHelpers' do
           conf.map { |section, props| [section.upcase, props] }.to_h.merge('context' => { 'context' => context })
         end
       end
-      let(:expected_context) { CernerSplunk::ConfHelpers::ConfContext.new(conf_path, 'system') }
+      let(:expected_context) { CernerSplunk::ConfHelpers::ConfContext.new(conf_path) }
       let(:expected_config) do
         {
           'context' => { 'context' => expected_context },
@@ -53,7 +52,7 @@ describe 'ConfHelpers' do
           'other' => ->(context, props) { [context.stanza.upcase, props.merge('context' => context)] }
         }
       end
-      let(:expected_context) { CernerSplunk::ConfHelpers::ConfContext.new(conf_path, 'system', 'other') }
+      let(:expected_context) { CernerSplunk::ConfHelpers::ConfContext.new(conf_path, 'other') }
       let(:expected_config) do
         {
           'default' => {
@@ -76,18 +75,18 @@ describe 'ConfHelpers' do
             'second' => 'false'
           },
           'other' => {
-            'something' => ->(context, _) { [context.key, context] }
+            'something' => ->(context, _) { [context.app, context] }
           }
         }
       end
-      let(:expected_context) { CernerSplunk::ConfHelpers::ConfContext.new(conf_path, 'system', 'other', 'something') }
+      let(:expected_context) { CernerSplunk::ConfHelpers::ConfContext.new(conf_path, 'other', 'something') }
       let(:expected_config) do
         {
           'default' => {
             'second' => 'false'
           },
           'other' => {
-            'something' => expected_context
+            'system' => expected_context
           }
         }
       end
