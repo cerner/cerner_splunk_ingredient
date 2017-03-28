@@ -98,14 +98,19 @@ module CernerSplunk
     class ConfContext
       attr_reader :path
       attr_reader :app
-      attr_reader :stanza
-      attr_reader :key
+      attr_accessor :stanza
+      attr_accessor :key
 
-      def initialize(path, app = nil, stanza = nil, key = nil)
-        @path = Pathname.new path
-        @app = app || /local|default|metadata$/.match(@path.parent.to_s) && @path.parent.parent.basename.to_s
-        @stanza = stanza
-        @key = key
+      def initialize(path, stanza = nil, key = nil)
+        self.path = path
+        self.stanza = stanza
+        self.key = key
+      end
+
+      def path=(path)
+        @path = path
+        pathname = Pathname.new @path
+        @app = /local|default|metadata$/.match(pathname.parent.to_s) && pathname.parent.parent.basename.to_s
       end
 
       def ==(other)

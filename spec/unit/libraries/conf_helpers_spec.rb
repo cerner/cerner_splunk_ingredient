@@ -86,7 +86,7 @@ describe 'ConfHelpers' do
             'second' => 'false'
           },
           'other' => {
-            'something' => expected_context
+            'system' => expected_context
           }
         }
       end
