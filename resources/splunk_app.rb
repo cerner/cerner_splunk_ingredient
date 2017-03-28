@@ -6,7 +6,9 @@
 # Resource for installing and configuring Splunk apps
 
 class SplunkApp < Chef::Resource
-  include CernerSplunk::PlatformHelpers, CernerSplunk::PathHelpers, CernerSplunk::ResourceHelpers
+  include CernerSplunk::PlatformHelpers
+  include CernerSplunk::PathHelpers
+  include CernerSplunk::ResourceHelpers
 
   property :name, String, name_property: true, identity: true
   property :install_dir, String, required: true, desired_state: false

@@ -6,7 +6,9 @@
 # Resource for managing the installation of Splunk
 
 class SplunkInstall < Chef::Resource
-  include CernerSplunk::PlatformHelpers, CernerSplunk::PathHelpers, CernerSplunk::ResourceHelpers
+  include CernerSplunk::PlatformHelpers
+  include CernerSplunk::PathHelpers
+  include CernerSplunk::ResourceHelpers
 
   resource_name :splunk_install
 

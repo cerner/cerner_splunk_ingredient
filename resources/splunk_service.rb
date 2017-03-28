@@ -6,8 +6,10 @@
 # Resource for managing Splunk as a system service
 
 class SplunkService < Chef::Resource
-  include CernerSplunk::PlatformHelpers, CernerSplunk::ResourceHelpers,
-          CernerSplunk::ServiceHelpers, CernerSplunk::RestartHelpers
+  include CernerSplunk::PlatformHelpers
+  include CernerSplunk::ResourceHelpers
+  include CernerSplunk::ServiceHelpers
+  include CernerSplunk::RestartHelpers
 
   resource_name :splunk_service
 
