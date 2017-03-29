@@ -95,26 +95,28 @@ module CernerSplunk
       end
     end
 
+    ##
+    # Data object that provides contextual information when working within a Splunk .conf file.
     class ConfContext
       attr_reader :path
       attr_reader :app
-      attr_accessor :stanza
+      attr_accessor :section
       attr_accessor :key
 
-      def initialize(path, stanza = nil, key = nil)
+      def initialize(path, section = nil, key = nil)
         self.path = path
-        self.stanza = stanza
+        self.section = section
         self.key = key
       end
 
       def path=(path)
         @path = path
         pathname = Pathname.new @path
-        @app = /local|default|metadata$/.match(pathname.parent.to_s) && pathname.parent.parent.basename.to_s
+        @app = pathname.parent.parent.basename.to_s if %r{[/\\](?:local|default|metadata)$} =~ pathname.parent.to_s
       end
 
       def ==(other)
-        other.path == @path && other.app == @app && other.stanza == @stanza && other.key == @key
+        other.path == @path && other.section == @section && other.key == @key
       end
     end
   end unless defined?(ConfHelpers)

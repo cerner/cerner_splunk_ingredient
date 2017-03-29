@@ -241,11 +241,12 @@ end
 
 ###### Section-level Evaluation
 
-Section-level evaluation allows you to evaluate the config key values for a specific section without being
+section-level evaluation allows you to evaluate the config key values for a specific section without being
 responsible for regurgitating all of the config you didn't want to modify.
 
 In this example, only a specific section's contents are turned into lowercase strings. The rest is
-merged as usual.
+merged as usual. **Note that the section-level proc receives the context and a props hash, and expects
+a pair (array) of the desired section name and props hash to be returned.**
 
 ```Ruby
 splunk_conf 'system/test.conf' do
