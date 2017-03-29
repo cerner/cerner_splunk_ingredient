@@ -9,7 +9,7 @@ module CernerSplunk
 
       desired_config.map do |section, props|
         section_context = context.dup
-        section_context.stanza = section
+        section_context.section = section
         mapout = props.is_a?(Proc) ? props.call(section_context.freeze, current_config[section] || {}) : [section, props]
 
         mapout[1] = mapout[1].map do |key, value|
@@ -36,15 +36,15 @@ module CernerSplunk
     end
 
     def self.parse_config(conf_body)
-      current_stanza = 'default'
+      current_section = 'default'
       current_config = {}
 
       conf_body.each_line do |ln|
         case ln
         when /^\s*\[([^#]+)\]\s*/
-          current_stanza = Regexp.last_match[1]
+          current_section = Regexp.last_match[1]
         when /^\s*([^#]+?)\s*=\s*([^#]+?)\s*(?:#.*)?$/
-          (current_config[current_stanza] ||= {})[Regexp.last_match[1]] = Regexp.last_match[2]
+          (current_config[current_section] ||= {})[Regexp.last_match[1]] = Regexp.last_match[2]
         end
       end
 
@@ -67,26 +67,28 @@ module CernerSplunk
       stream.string
     end
 
+    ##
+    # Data object that provides contextual information when working within a Splunk .conf file.
     class ConfContext
       attr_reader :path
       attr_reader :app
-      attr_accessor :stanza
+      attr_accessor :section
       attr_accessor :key
 
-      def initialize(path, stanza = nil, key = nil)
+      def initialize(path, section = nil, key = nil)
         self.path = path
-        self.stanza = stanza
+        self.section = section
         self.key = key
       end
 
       def path=(path)
         @path = path
         pathname = Pathname.new @path
-        @app = /local|default|metadata$/.match(pathname.parent.to_s) && pathname.parent.parent.basename.to_s
+        @app = pathname.parent.parent.basename.to_s if %r{[/\\](?:local|default|metadata)$} =~ pathname.parent.to_s
       end
 
       def ==(other)
-        other.path == @path && other.app == @app && other.stanza == @stanza && other.key == @key
+        other.path == @path && other.section == @section && other.key == @key
       end
     end
   end unless defined?(ConfHelpers)

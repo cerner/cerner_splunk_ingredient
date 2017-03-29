@@ -156,7 +156,7 @@ Properties:
 | package      | `:splunk` or `:universal_forwarder` |            No           | Package of the current install in run state      | Specifies the installed Splunk package. If you did not specify the install\_dir, then you may specify the package (`:splunk` or `:universal_forwarder`) otherwise the resource will refer to the most recently evaluated splunk\_install resource |
 | install\_dir |                String               |            No           | Path of the current install in run state         | The install directory of Splunk. If you installed to a different directory than the default, you should provide this. If install\_dir is given, you do not need package.                                                                          |
 | scope        |   `:local`, `:none`, or `:default`  |            No           | `:local`                                         | Scope of the configuration to modify. In most circumstances, you should *not* change this. `:none` will disable checking or modifying scope in the path.                                                                                          |
-| config       |                 Hash                |         **Yes**         |                                                  | Configuration to apply to the .conf file. This hash is structured as follows: `{ stanza: { key: 'value' } }`. See below for more detailed explanation of the config property.                                                                     |
+| config       |                 Hash                |         **Yes**         |                                                  | Configuration to apply to the .conf file. This hash is structured as follows: `{ section: { key: 'value' } }`. See below for more detailed explanation of the config property.                                                                    |
 | user         |            String or nil            |            No           | Owner of the current Splunk installation, if any | User that will be used to write to the .conf files.                                                                                                                                                                                               |
 | group        |            String or nil            |            No           | Group of the current Splunk installation, if any | Group that will be used to write to the .conf files.                                                                                                                                                                                              |
 | reset        |            true or false            |            No           | false                                            | When specified as true, entirely replaces existing config. By default, config is merged into the existing conf file.                                                                                                                              |
@@ -170,7 +170,7 @@ Some things to be aware of when using the configuration resource:
 
 ##### **"Global" properties are evaluated under `[default]`**
 
-Properties defined at the top of the .conf file and not considered to be part of a stanza are assumed to be `[default]`
+Properties defined at the top of the .conf file and not considered to be part of a section are assumed to be `[default]`
 per Splunk documentation: <http://docs.splunk.com/Documentation/Splunk/6.4.2/Admin/Propsconf#GLOBAL_SETTINGS>
 
 ##### **Comments are not preserved**
@@ -188,7 +188,7 @@ splunk_conf 'system/test.conf' do
       two: 2,
       three: 3
     },
-    stanza: {
+    section: {
       key: :value
     }
   )
@@ -206,7 +206,7 @@ one = 1
 two = 2
 three = 3
 
-[stanza]
+[section]
 key = value
 ```
 
@@ -217,7 +217,8 @@ This approach is beneficial if you want to write your config based on the curren
 you don't know all of your configuration values at compile time but can evaluate them at
 converge time.
 
-There are two approaches you can take to configuring with procs or lambdas: Top-level and Stanza-level.
+There are three approaches you can take to configuring with procs or lambdas: Top-level, Section-level, and Key-level.
+Each level provides a context object, providing the path of the current file and the app, section, and key when applicable.
 
 ###### Top-level Evaluation
 
@@ -229,7 +230,7 @@ In this example, all of the keys and values in the conf file are turned into low
 ```Ruby
 splunk_conf 'system/test.conf' do
   config(
-    lambda do |conf|
+    lambda do |_, conf|
       conf.map do |section, props|
         [section.to_s.downcase, props.map { |k, v| [k.to_s.downcase, v.to_s.downcase] }.to_h]
       end.to_h
@@ -238,14 +239,14 @@ splunk_conf 'system/test.conf' do
 end
 ```
 
-###### Stanza-level Evaluation
+###### Section-level Evaluation
 
-Stanza-level evaluation allows you to evaluate the config key values for a specific stanza without being
+section-level evaluation allows you to evaluate the config key values for a specific section without being
 responsible for regurgitating all of the config you didn't want to modify.
 
-In this example, only a specific stanza's contents are turned into lowercase strings. The rest is
-merged as usual. **Note that the Stanza-level proc receives the section string and a props hash, and expects
-a pair (array) of the desired section string and props hash.**
+In this example, only a specific section's contents are turned into lowercase strings. The rest is
+merged as usual. **Note that the section-level proc receives the context and a props hash, and expects
+a pair (array) of the desired section name and props hash to be returned.**
 
 ```Ruby
 splunk_conf 'system/test.conf' do
@@ -254,30 +255,63 @@ splunk_conf 'system/test.conf' do
       one: 1,
       four: 4
     },
-    stanza: ->(section, props) { [section.to_s.downcase, props.map { |k, v| [k.to_s.downcase, v.to_s.downcase] }.to_h] }
+    section: ->(context, props) { [context.section.to_s.downcase, props.map { |k, v| [k.to_s.downcase, v.to_s.downcase] }.to_h] }
   )
 end
 ```
 
 ###### Value-level Evaluation
 
-Value-level evaluation, while possible from a Stanza-level lambda, is the more common case and thus is supported for sheer
+Value-level evaluation, while possible from a section-level lambda, is the more common case and thus is supported for sheer
 ease of use. This is especially handy when you want to produce some value for a particular key and don't want to bother with
-nesting the rest of the stanza in your Proc. If there is a case where you're applying a Proc to values whose keys you don't know,
+nesting the rest of the section in your Proc. If there is a case where you're applying a Proc to values whose keys you don't know,
 this becomes a necessary functionality.
 
 In this example, if the value is an Array object, it is converted into a comma spaced string using join. **Note that the Value-level proc
-receives the key and value, and expects a pair (array) of the desired key and value (similar to the Stanza-level proc).**
+receives the context and value, and expects a pair (array) of the desired key and value to be returned (similar to the section-level proc).**
 
 ```Ruby
 splunk_conf 'system/test.conf' do
   config(
     testing: {
-      servers: ->(key, value) { [key, value.is_a?(Array) ? value.join(', ') : value] }
+      servers: ->(context, value) { [context.key, value.is_a?(Array) ? value.join(', ') : value] }
     }
   )
 end
 ```
+
+###### The Context object
+
+A ConfContext object is passed as the first parameter to any splunk_conf proc. It contains contextual information such as
+path of the current file, current section (for section-level and key-level procs), and current key (for key-level procs).
+It also attempts to determine the current app from the path, if any.
+
+The available accessors are `#path`, `#app`, `#section`, and `#key`. Note that the context object will be frozen when provided to the proc.
+
+Consider the value-level example above:
+
+```Ruby
+splunk_conf 'system/test.conf' do
+  config(
+    testing: {
+      servers: ->(context, value) { [context.key, value.is_a?(Array) ? value.join(', ') : value] }
+    }
+  )
+end
+```
+
+The following statements would be true for the context object:
+
+```Ruby
+lambda do |context, value|
+  context.path == '/opt/splunk/etc/system/test.conf'
+  context.app == nil
+  context.section == 'testing'
+  context.key == 'servers'
+  [context.key, value]
+end
+```
+
 
 ### splunk\_restart
 
@@ -375,7 +409,7 @@ Properties:
 #### Metadata
 
 The metadata property accepts a config hash, just as `splunk_conf` would (it basically calls `splunk_conf` behind the scenes), but there is one
-important operation that is performed before writing the config. It looks in each stanza for an `access` key, and checks if the value is a hash.
+important operation that is performed before writing the config. It looks in each section for an `access` key, and checks if the value is a hash.
 If this is the case, then it parses this hash into a string. This is part of a special syntax to make configuring read/write permissions via Chef easier.
 
 For example, if I want to set the following permissions for all views on the app, I might write:

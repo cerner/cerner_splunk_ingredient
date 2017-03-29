@@ -43,13 +43,13 @@ describe 'ConfHelpers' do
       it { is_expected.to eq(expected_config) }
     end
 
-    context 'with stanza-level proc' do
+    context 'with section-level proc' do
       let(:config) do
         {
           'default' => {
             'second' => 'false'
           },
-          'other' => ->(context, props) { [context.stanza.upcase, props.merge('context' => context)] }
+          'other' => ->(context, props) { [context.section.upcase, props.merge('context' => context)] }
         }
       end
       let(:expected_context) { CernerSplunk::ConfHelpers::ConfContext.new(conf_path, 'other') }
