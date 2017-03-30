@@ -304,8 +304,8 @@ The following statements would be true for the context object:
 
 ```Ruby
 lambda do |context, value|
-  context.path == '/opt/splunk/etc/system/test.conf'
-  context.app == nil
+  context.path == '/opt/splunk/etc/system/local/test.conf'
+  context.app == 'system'
   context.section == 'testing'
   context.key == 'servers'
   [context.key, value]
