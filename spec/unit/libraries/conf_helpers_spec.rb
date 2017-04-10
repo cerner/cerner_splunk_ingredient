@@ -23,18 +23,18 @@ describe 'ConfHelpers' do
       let!(:actual_context) {}
       let(:config) do
         lambda do |context, conf|
-          conf.map { |section, props| [section.upcase, props] }.to_h.merge('context' => { 'context' => context })
+          conf.merge('context' => { 'context' => context })
         end
       end
       let(:expected_context) { CernerSplunk::ConfHelpers::ConfContext.new(conf_path) }
       let(:expected_config) do
         {
           'context' => { 'context' => expected_context },
-          'DEFAULT' => {
+          'default' => {
             'first' => 'true',
             'second' => 'true'
           },
-          'OTHER' => {
+          'other' => {
             'something' => 'here'
           }
         }
@@ -49,7 +49,7 @@ describe 'ConfHelpers' do
           'default' => {
             'second' => 'false'
           },
-          'other' => ->(context, props) { [context.section.upcase, props.merge('context' => context)] }
+          'other' => ->(context, props) { props.merge('context' => context) }
         }
       end
       let(:expected_context) { CernerSplunk::ConfHelpers::ConfContext.new(conf_path, 'other') }
@@ -58,7 +58,7 @@ describe 'ConfHelpers' do
           'default' => {
             'second' => 'false'
           },
-          'OTHER' => {
+          'other' => {
             'context' => expected_context,
             'something' => 'here'
           }
@@ -75,7 +75,7 @@ describe 'ConfHelpers' do
             'second' => 'false'
           },
           'other' => {
-            'something' => ->(context, _) { [context.app, context] }
+            'something' => ->(context, _) { context }
           }
         }
       end
@@ -86,7 +86,7 @@ describe 'ConfHelpers' do
             'second' => 'false'
           },
           'other' => {
-            'system' => expected_context
+            'something' => expected_context
           }
         }
       end
@@ -179,6 +179,7 @@ describe 'ConfHelpers' do
   end
 
   describe 'merge_config' do
+    subject { CernerSplunk::ConfHelpers.merge_config(existing_config, config) }
     let(:config) do
       {
         'default' => {
@@ -191,9 +192,7 @@ describe 'ConfHelpers' do
     end
     let(:expected_config) { IO.read('spec/reference/write_test.conf') }
 
-    it 'should write the config with new and old properties' do
-      expect(CernerSplunk::ConfHelpers.merge_config(existing_config, config)).to eq expected_config
-    end
+    it { is_expected.to eq expected_config }
 
     context 'when current_config is empty' do
       let(:expected_config) { IO.read('spec/reference/write_test_overwrite.conf') }
@@ -201,6 +200,42 @@ describe 'ConfHelpers' do
       it 'should write only the given config to the file' do
         expect(CernerSplunk::ConfHelpers.merge_config({}, config)).to eq expected_config
       end
+    end
+
+    context 'when a given section is nil' do
+      let(:config) do
+        {
+          'default' => {
+            'first' => 'false'
+          },
+          'other' => nil,
+          'another' => {
+            'something' => 'there'
+          }
+        }
+      end
+      let(:expected_config) { IO.read('spec/reference/write_test_delete_section.conf') }
+
+      it { is_expected.to eq expected_config }
+    end
+
+    context 'when a given value is nil' do
+      let(:config) do
+        {
+          'default' => {
+            'first' => 'false'
+          },
+          'other' => {
+            'something' => nil
+          },
+          'another' => {
+            'something' => 'there'
+          }
+        }
+      end
+      let(:expected_config) { IO.read('spec/reference/write_test_delete_value.conf') }
+
+      it { is_expected.to eq expected_config }
     end
   end
 end

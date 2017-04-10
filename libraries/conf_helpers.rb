@@ -3,23 +3,26 @@
 module CernerSplunk
   # Helper methods for reading and evaluating Splunk config
   module ConfHelpers
-    def self.evaluate_config(path, current_config, desired_config)
+    private_class_method def self.evaluate(config, context, data)
+      return config.call(context, data) if config.is_a?(Proc)
+      config
+    end
+
+    def self.evaluate_config(path, current_config, config)
       context = ConfContext.new(path)
-      desired_config = desired_config.call(context.freeze, current_config) if desired_config.is_a? Proc
+      evaluted_config = evaluate(config, context.freeze, current_config) || {}
 
-      desired_config.map do |section, props|
-        section_context = context.dup
-        section_context.section = section
-        mapout = props.is_a?(Proc) ? props.call(section_context.freeze, current_config[section] || {}) : [section, props]
+      evaluted_config.merge(evaluted_config) do |section, props|
+        (section_context = context.dup).section = section
 
-        mapout[1] = mapout[1].map do |key, value|
-          key_context = section_context.dup
-          key_context.key = key
-          value.is_a?(Proc) ? value.call(key_context.freeze, (current_config[section] || {})[key]) : [key, value]
-        end.to_h
+        evaluted_props = evaluate(props, section_context.freeze, current_config.dig(section))
+        next if evaluted_props.nil?
 
-        mapout
-      end.to_h
+        evaluted_props.merge(evaluted_props) do |key, value|
+          (key_context = section_context.dup).key = key
+          evaluate(value, key_context.freeze, current_config.dig(section, key))
+        end
+      end
     end
 
     def self.stringify_config(config)
@@ -52,14 +55,28 @@ module CernerSplunk
     end
 
     def self.merge_config(current_config, desired_config)
+      merged_config = {}
       (current_config.keys + desired_config.keys).uniq.each do |section|
-        (current_config[section] ||= {}).merge! desired_config[section] if desired_config[section]
+        merged_config[section] = (current_config[section] || {}).merge(desired_config[section] || {})
+      end
+
+      # Delete nil sections and values
+      merged_config.delete_if do |section, props|
+        next false unless desired_config.key? section
+        next true if desired_config[section].nil?
+
+        props.delete_if do |key, _|
+          next false unless desired_config[section].key? key
+          desired_config[section][key].nil?
+        end
+
+        false
       end
 
       stream = StringIO.new
       stream.puts '# Warning: This file is managed by Chef!'
       stream.puts '# Comments will not be preserved and configuration may be overwritten.'
-      current_config.each do |section, props|
+      merged_config.each do |section, props|
         stream.puts ''
         stream.puts "[#{section}]"
         props.each { |key, value| stream.puts "#{key} = #{value}" }

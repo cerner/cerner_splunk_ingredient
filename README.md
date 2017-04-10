@@ -241,12 +241,11 @@ end
 
 ###### Section-level Evaluation
 
-section-level evaluation allows you to evaluate the config key values for a specific section without being
+Section-level evaluation allows you to evaluate the config key values for a specific section without being
 responsible for regurgitating all of the config you didn't want to modify.
 
 In this example, only a specific section's contents are turned into lowercase strings. The rest is
-merged as usual. **Note that the section-level proc receives the context and a props hash, and expects
-a pair (array) of the desired section name and props hash to be returned.**
+merged as usual.
 
 ```Ruby
 splunk_conf 'system/test.conf' do
@@ -255,7 +254,7 @@ splunk_conf 'system/test.conf' do
       one: 1,
       four: 4
     },
-    section: ->(context, props) { [context.section.to_s.downcase, props.map { |k, v| [k.to_s.downcase, v.to_s.downcase] }.to_h] }
+    section: ->(context, props) { props.map { |k, v| [k.to_s.downcase, v.to_s.downcase] }.to_h }
   )
 end
 ```
@@ -267,14 +266,13 @@ ease of use. This is especially handy when you want to produce some value for a 
 nesting the rest of the section in your Proc. If there is a case where you're applying a Proc to values whose keys you don't know,
 this becomes a necessary functionality.
 
-In this example, if the value is an Array object, it is converted into a comma spaced string using join. **Note that the Value-level proc
-receives the context and value, and expects a pair (array) of the desired key and value to be returned (similar to the section-level proc).**
+In this example, if the value is an Array object, it is converted into a comma spaced string using join.
 
 ```Ruby
 splunk_conf 'system/test.conf' do
   config(
     testing: {
-      servers: ->(context, value) { [context.key, value.is_a?(Array) ? value.join(', ') : value] }
+      servers: ->(context, value) { value.is_a?(Array) ? value.join(', ') : value }
     }
   )
 end
@@ -282,7 +280,7 @@ end
 
 ###### The Context object
 
-A ConfContext object is passed as the first parameter to any splunk_conf proc. It contains contextual information such as
+A ConfContext object is passed as the first parameter to any splunk\_conf proc. It contains contextual information such as
 path of the current file, current section (for section-level and key-level procs), and current key (for key-level procs).
 It also attempts to determine the current app from the path, if any.
 
@@ -294,7 +292,7 @@ Consider the value-level example above:
 splunk_conf 'system/test.conf' do
   config(
     testing: {
-      servers: ->(context, value) { [context.key, value.is_a?(Array) ? value.join(', ') : value] }
+      servers: ->(context, value) { value.is_a?(Array) ? value.join(', ') : value }
     }
   )
 end
@@ -311,7 +309,6 @@ lambda do |context, value|
   [context.key, value]
 end
 ```
-
 
 ### splunk\_restart
 
