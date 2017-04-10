@@ -13,7 +13,7 @@ class SplunkInstall < Chef::Resource
   resource_name :splunk_install
 
   property :name, String, name_property: true, identity: true
-  property :package, %i(splunk universal_forwarder), required: true
+  property :package, %i[splunk universal_forwarder], required: true
   property :version, String, required: true
   property :build, String, required: true
   property :install_dir, String, required: true, desired_state: false
@@ -151,7 +151,7 @@ end
 
 class ArchiveInstall < SplunkInstall
   resource_name :splunk_install_archive
-  provides :splunk_install, os: %w(linux windows)
+  provides :splunk_install, os: %w[linux windows]
 
   def kernel_string
     case node['os']

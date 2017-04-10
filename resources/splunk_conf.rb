@@ -11,8 +11,8 @@ class SplunkConf < Chef::Resource
 
   property :path, [String, Pathname], name_property: true, desired_state: false, identity: true
   property :install_dir, String, required: true, desired_state: false
-  property :package, %i(splunk universal_forwarder), required: true, desired_state: false
-  property :scope, %i(local default none), desired_state: false, default: :local
+  property :package, %i[splunk universal_forwarder], required: true, desired_state: false
+  property :scope, %i[local default none], desired_state: false, default: :local
   property :config, Hash, required: true
   property :user, String, default: lazy { current_owner }
   property :group, String, default: lazy { current_group }

@@ -15,7 +15,7 @@ module CernerSplunk
       return unless pid_file.exist?
 
       pid = pid_file.readlines.first.to_i
-      pid > 0 ? pid : nil
+      pid.positive? ? pid : nil
     end
 
     # Reports if the daemon for the current package is running

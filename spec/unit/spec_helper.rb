@@ -4,7 +4,7 @@ require 'rspec/expectations'
 require 'chefspec'
 require 'chefspec/berkshelf'
 require 'chef/application'
-%w(path platform resource restart service conf file provider).each { |helper| require_relative "../../libraries/#{helper}_helpers" }
+%w[path platform resource restart service conf file provider].each { |helper| require_relative "../../libraries/#{helper}_helpers" }
 
 RSpec.configure do |config|
   config.extend(ChefSpec::Cacher)

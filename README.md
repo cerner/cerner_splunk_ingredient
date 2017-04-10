@@ -9,7 +9,7 @@ These resources can:
 
 ## Requirements
 
-Chef >= 12.13.37
+Chef >= 12.14
 Ruby >= 2.3.1
 
 Supports Linux and Windows based systems with package support for Debian, Redhat,
@@ -30,7 +30,7 @@ Note: There are more specific resources available if you wish to override how Sp
 For example, if you want to force install from .rpm you can use splunk\_install\_redhat, or to install
 from archive (tgz for Linux and zip for Windows) use splunk\_install\_archive.
 
-#### Action *:install*
+#### Action _:install_
 
 Installs Splunk or Universal Forwarder.
 
@@ -51,7 +51,7 @@ Specific to splunk\_install\_archive
 | :----------- | :-----: | :------: | :------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------ |
 | install\_dir |  String |    No    | Depends on platform and package | Manually specify the install directory for Splunk. This can only be done when installing from an archive, otherwise it will raise an error. |
 
-#### Action *:uninstall*
+#### Action _:uninstall_
 
 Removes Splunk or Universal Forwarder and all its configuration.
 
@@ -63,7 +63,7 @@ Properties:
 
 ##### Run State
 
-`splunk_install` *stores the current installation state to the [run state](https://docs.chef.io/recipes.html#node-run-state).*
+`splunk_install` _stores the current installation state to the [run state](https://docs.chef.io/recipes.html#node-run-state)._
 This contains data such as install directory and package so that subsequent resources can assume these values and avoid
 repetition. For example, you would be able to execute `splunk_conf` after a `splunk_install` and it will inherit the
 package of that last evaluated resource. If the install resource does nothing (installation already exists), it will
@@ -97,12 +97,12 @@ Manages an installation of Splunk. Requires splunk\_install to be evaluated firs
 
 **The following actions (start and restart) share the same properties:**
 
-#### Action *:start*
+#### Action _:start_
 
 Starts the Splunk daemon if not already running.
 If the ulimit is changed, invokes a restart of the daemon at the end of the run.
 
-#### Action *:restart*
+#### Action _:restart_
 
 Restarts the Splunk daemon, or starts it if not already running.
 
@@ -114,7 +114,7 @@ Properties:
 | install\_dir |                String               |                   No                  | Same as splunk\_install               | The install directory of Splunk. If you installed to a different directory than the default, you should provide this. If install\_dir is given, you do not need package.                                                                      |
 | ulimit       |               Integer               |                   No                  | Start up script ulimit or user ulimit | Open file ulimit to give Splunk. This sets the ulimit in the start up script (if it exists) and for the given user in `/etc/security/limits.d/`. -1 translates to `'unlimited'`                                                               |
 
-#### Action *:stop*
+#### Action _:stop_
 
 Stop the Splunk daemon if it is running.
 
@@ -125,7 +125,7 @@ Properties:
 | package      | `:splunk` or `:universal_forwarder` | **Yes, unless install\_dir is given** |                         | Specifies the installed Splunk package. If you did not specify the install\_dir, then you must specify the package, or name the resource for the package; for example, `package :splunk` or `splunk_service 'universal_forwarder' do ... end` |
 | install\_dir |                String               |                   No                  | Same as splunk\_install | The install directory of Splunk. If you installed to a different directory than the default, you should provide this. If install\_dir is given, you do not need package.                                                                      |
 
-#### Action *:init*
+#### Action _:init_
 
 Executes Splunk's first time run, accepting the license agreement if applicable. This does not start Splunk, only runs its initial setup.
 
@@ -140,7 +140,7 @@ Properties:
 
 Manages configuration for an installation of Splunk. Requires splunk\_install to be evaluated first.
 
-#### Action *:configure*
+#### Action _:configure_
 
 Applies configuration to .conf files.
 You should know where the .conf file is that you wish to modify, as you must provide the path from `$SPLUNK_HOME/etc`.
@@ -155,7 +155,7 @@ Properties:
 | path         |          String or Pathname         | **Yes (resource name)** |                                                  | Path of the .conf file from `$SPLUNK_HOME/etc`. The intermediate directory determining scope is optional. Examples: `system/indexes.conf` or `system/local/indexes.conf`.                                                                         |
 | package      | `:splunk` or `:universal_forwarder` |            No           | Package of the current install in run state      | Specifies the installed Splunk package. If you did not specify the install\_dir, then you may specify the package (`:splunk` or `:universal_forwarder`) otherwise the resource will refer to the most recently evaluated splunk\_install resource |
 | install\_dir |                String               |            No           | Path of the current install in run state         | The install directory of Splunk. If you installed to a different directory than the default, you should provide this. If install\_dir is given, you do not need package.                                                                          |
-| scope        |   `:local`, `:none`, or `:default`  |            No           | `:local`                                         | Scope of the configuration to modify. In most circumstances, you should *not* change this. `:none` will disable checking or modifying scope in the path.                                                                                          |
+| scope        |   `:local`, `:none`, or `:default`  |            No           | `:local`                                         | Scope of the configuration to modify. In most circumstances, you should _not_ change this. `:none` will disable checking or modifying scope in the path.                                                                                          |
 | config       |                 Hash                |         **Yes**         |                                                  | Configuration to apply to the .conf file. This hash is structured as follows: `{ section: { key: 'value' } }`. See below for more detailed explanation of the config property.                                                                    |
 | user         |            String or nil            |            No           | Owner of the current Splunk installation, if any | User that will be used to write to the .conf files.                                                                                                                                                                                               |
 | group        |            String or nil            |            No           | Group of the current Splunk installation, if any | Group that will be used to write to the .conf files.                                                                                                                                                                                              |
@@ -318,18 +318,18 @@ Chef run, it will notify a delayed restart as was intended in the previous run. 
 
 **The following actions all share the same properties:**
 
-#### Action *:ensure*
+#### Action _:ensure_
 
 Ensure that Splunk is restarted. This will notify for a delayed restart as well as place the file marker in case the Chef run fails
 before restarting Splunk. You should run this action in your cookbook when you intend to restart Splunk after a config change.
 
-*Note: When notifying this resource, do so with `:immediately`, otherwise it will effectively be the same as a normal delayed restart.*
+_Note: When notifying this resource, do so with `:immediately`, otherwise it will effectively be the same as a normal delayed restart._
 
-#### Action *:check*
+#### Action _:check_
 
 Checks if the file marker exists, and notifies for a delayed restart.
 
-#### Action *:clear*
+#### Action _:clear_
 
 Removes the file marker.
 
@@ -359,7 +359,7 @@ set a version in app.conf.
 
 Installs or updates a Splunk app from a package/archive.
 
-#### Action *:install*
+#### Action _:install_
 
 Install or upgrade a Splunk App.
 
@@ -390,7 +390,7 @@ Install or upgrade a Splunk App.
 | files        |                   Proc                   |              No             |                                             | Proc containing miscellaneous resources for manipulating the app directory. This is ideally directories, templates, and files. The Proc will be given an absolute app path parameter for you to use in these resources.                           |
 | metadata     |                   Hash                   |              No             | {}                                          | Configuration to apply to the metadata (local.meta for non-custom apps). See splunk\_conf for more info, and also below for special handling of the `access` key.                                                                                 |
 
-#### Action *:uninstall*
+#### Action _:uninstall_
 
 Uninstalls an app, completely removing it and its files.
 Note: You can use any sub-resource or `splunk_app` to uninstall apps.
@@ -425,7 +425,7 @@ splunk_app 'test_app' do
 end
 ```
 
-This helps when using programmatic values or large arrays of roles, though you *can* still use the appropriate string instead of the Hash syntax.
+This helps when using programmatic values or large arrays of roles, though you _can_ still use the appropriate string instead of the Hash syntax.
 
 ---
 

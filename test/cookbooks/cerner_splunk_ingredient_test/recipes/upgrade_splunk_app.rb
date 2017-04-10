@@ -11,7 +11,7 @@ splunk_app_package 'test_app' do
     end
   end)
   metadata(
-    views: { access: { read: '*', write: %w(admin power) } },
+    views: { access: { read: '*', write: %w[admin power] } },
     'views/index_check' => { access: { read: 'admin', write: 'admin' } }
   )
 end

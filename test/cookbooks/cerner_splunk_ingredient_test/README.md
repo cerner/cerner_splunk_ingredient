@@ -1,3 +1,3 @@
-cerner_splunk_ingredient_test Cookbook
-=================================
+# cerner\_splunk\_ingredient\_test Cookbook
+
 Recipes for unit and integration testing

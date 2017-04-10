@@ -25,7 +25,7 @@ describe 'splunk_app' do
     }
   end
 
-  %w(splunk_app splunk_app_custom splunk_app_package).each do |resource|
+  %w[splunk_app splunk_app_custom splunk_app_package].each do |resource|
     describe resource do
       let(:test_resource) { resource }
       let(:test_recipe) { 'app_unit_test' }
@@ -69,7 +69,7 @@ describe 'splunk_app' do
             },
             'views' => {
               'owner' => 'admin',
-              'access' => { 'read' => '*', 'write' => %w(admin power) }
+              'access' => { 'read' => '*', 'write' => %w[admin power] }
             }
           }
         end

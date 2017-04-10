@@ -12,7 +12,7 @@ class SplunkApp < Chef::Resource
 
   property :name, String, name_property: true, identity: true
   property :install_dir, String, required: true, desired_state: false
-  property :package, %i(splunk universal_forwarder), required: true, desired_state: false
+  property :package, %i[splunk universal_forwarder], required: true, desired_state: false
   property :app_root, [String, :shcluster, :master_apps], default: 'apps', desired_state: false
   property :version, [String, CernerSplunk::SplunkVersion]
   property :configs, Proc
@@ -143,7 +143,7 @@ class CustomApp < SplunkApp
       action :create
     end
 
-    %w(default local lookups metadata).each do |subdir|
+    %w[default local lookups metadata].each do |subdir|
       directory((app_path + subdir).to_s) do
         user current_owner
         group current_owner
