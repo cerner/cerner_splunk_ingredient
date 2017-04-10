@@ -86,7 +86,7 @@ describe 'ConfHelpers' do
             'second' => 'false'
           },
           'other' => {
-            'system' => expected_context
+            'something' => expected_context
           }
         }
       end
@@ -213,6 +213,42 @@ describe 'ConfHelpers' do
       it 'should return only the given config' do
         expect(CernerSplunk::ConfHelpers.merge_config({}, config)).to eq config
       end
+    end
+
+    context 'when a given section is nil' do
+      let(:config) do
+        {
+          'default' => {
+            'first' => 'false'
+          },
+          'other' => nil,
+          'another' => {
+            'something' => 'there'
+          }
+        }
+      end
+      let(:expected_config) { IO.read('spec/reference/write_test_delete_section.conf') }
+
+      it { is_expected.to eq expected_config }
+    end
+
+    context 'when a given value is nil' do
+      let(:config) do
+        {
+          'default' => {
+            'first' => 'false'
+          },
+          'other' => {
+            'something' => nil
+          },
+          'another' => {
+            'something' => 'there'
+          }
+        }
+      end
+      let(:expected_config) { IO.read('spec/reference/write_test_delete_value.conf') }
+
+      it { is_expected.to eq expected_config }
     end
   end
 
