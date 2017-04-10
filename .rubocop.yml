@@ -26,8 +26,5 @@ Metrics/MethodLength:
 Style/MultilineIfModifier:
   Enabled: false
 
-Style/TrivialAccessors:
- AllowDSLWriters: true
-
 Documentation:
   Enabled: false
