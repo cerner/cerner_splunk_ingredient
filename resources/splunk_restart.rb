@@ -36,8 +36,10 @@ class SplunkRestart < Chef::Resource
       install_dir desired.install_dir
       package desired.package = install_state['package']
     else
+      current_state = node.run_state['splunk_ingredient']['current_installation'] || {}
+      desired.package = current_state['package'] unless property_is_set? :package
       package desired.package
-      install_dir default_install_dir
+      install_dir desired.install_dir = (current_state['path'] || default_install_dir)
       install_state
     end
 
