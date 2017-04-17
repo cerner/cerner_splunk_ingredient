@@ -214,42 +214,35 @@ describe 'ConfHelpers' do
         expect(CernerSplunk::ConfHelpers.merge_config({}, config)).to eq config
       end
     end
+  end
 
-    context 'when a given section is nil' do
-      let(:config) do
-        {
-          'default' => {
-            'first' => 'false'
-          },
-          'other' => nil,
-          'another' => {
-            'something' => 'there'
-          }
+  describe 'filter_config' do
+    subject { CernerSplunk::ConfHelpers.filter_config(config) }
+    let(:config) do
+      {
+        'default' => {
+          'first' => ''
+        },
+        'other' => nil,
+        'another' => {
+          'something' => 'there',
+          'else' => nil
         }
-      end
-      let(:expected_config) { IO.read('spec/reference/write_test_delete_section.conf') }
-
-      it { is_expected.to eq expected_config }
+      }
     end
 
-    context 'when a given value is nil' do
-      let(:config) do
-        {
-          'default' => {
-            'first' => 'false'
-          },
-          'other' => {
-            'something' => nil
-          },
-          'another' => {
-            'something' => 'there'
-          }
+    let(:expected_config) do
+      {
+        'default' => {
+          'first' => ''
+        },
+        'another' => {
+          'something' => 'there'
         }
-      end
-      let(:expected_config) { IO.read('spec/reference/write_test_delete_value.conf') }
-
-      it { is_expected.to eq expected_config }
+      }
     end
+
+    it { is_expected.to eq expected_config }
   end
 
   describe 'filter_config' do
