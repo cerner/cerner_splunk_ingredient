@@ -59,6 +59,7 @@ module CernerSplunk
       (current_config.keys + desired_config.keys).uniq.each do |section|
         merged_config[section] = (current_config[section] || {}).merge(desired_config[section] || {})
       end
+      merged_config
     end
 
     def self.filter_config(config)

@@ -195,7 +195,7 @@ describe 'ConfHelpers' do
     let(:expected_config) do
       {
         'default' => {
-          'first' => 'false',
+          'first' => nil,
           'second' => 'true'
         },
         'another' => {

@@ -111,6 +111,7 @@ class SplunkConf < Chef::Resource
 
     template new_resource.path.to_s do # ~FC033 https://github.com/acrmp/foodcritic/issues/449
       source 'conf.erb'
+      cookbook 'cerner_splunk_ingredient'
       owner config_user
       group config_group
       variables config: CernerSplunk::ConfHelpers.filter_config(merged_config)
