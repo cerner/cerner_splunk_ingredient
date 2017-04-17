@@ -27,7 +27,7 @@ module CernerSplunk
 
     def self.stringify_config(config)
       config.map do |section, props|
-        [section.to_s, props.map { |k, v| [k.to_s, v.to_s] }.to_h]
+        [section.to_s, props.map { |k, v| [k.to_s, v.nil? ? nil : v.to_s] }.to_h]
       end.to_h
     end
 
@@ -59,29 +59,14 @@ module CernerSplunk
       (current_config.keys + desired_config.keys).uniq.each do |section|
         merged_config[section] = (current_config[section] || {}).merge(desired_config[section] || {})
       end
+    end
 
-      # Delete nil sections and values
-      merged_config.delete_if do |section, props|
-        next false unless desired_config.key? section
-        next true if desired_config[section].nil?
-
-        props.delete_if do |key, _|
-          next false unless desired_config[section].key? key
-          desired_config[section][key].nil?
-        end
-
+    def self.filter_config(config)
+      config.delete_if do |_, props|
+        next true if props.nil?
+        props.delete_if { |_, value| value.nil? }
         false
       end
-
-      stream = StringIO.new
-      stream.puts '# Warning: This file is managed by Chef!'
-      stream.puts '# Comments will not be preserved and configuration may be overwritten.'
-      merged_config.each do |section, props|
-        stream.puts ''
-        stream.puts "[#{section}]"
-        props.each { |key, value| stream.puts "#{key} = #{value}" }
-      end
-      stream.string
     end
 
     ##

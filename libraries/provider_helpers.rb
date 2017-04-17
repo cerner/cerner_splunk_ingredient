@@ -27,6 +27,7 @@ module CernerSplunk
       end
 
       def backup_app
+        return unless app_path.exist?
         converge_by 'backing up existing app' do # ~FC005
           FileUtils.cp_r(app_path, app_cache_path + 'current')
         end

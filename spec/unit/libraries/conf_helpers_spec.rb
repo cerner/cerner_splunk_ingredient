@@ -103,7 +103,8 @@ describe 'ConfHelpers' do
           b: 1000,
           c: {
             deep: :deep
-          }
+          },
+          d: nil
         },
         'two' => {
           even: 'more'
@@ -115,7 +116,8 @@ describe 'ConfHelpers' do
         'one' => {
           'a' => 'string',
           'b' => '1000',
-          'c' => '{:deep=>:deep}'
+          'c' => '{:deep=>:deep}',
+          'd' => nil
         },
         'two' => {
           'even' => 'more'
@@ -183,59 +185,63 @@ describe 'ConfHelpers' do
     let(:config) do
       {
         'default' => {
-          'first' => 'false'
+          'first' => nil
         },
         'another' => {
           'something' => 'there'
         }
       }
     end
-    let(:expected_config) { IO.read('spec/reference/write_test.conf') }
+    let(:expected_config) do
+      {
+        'default' => {
+          'first' => 'false',
+          'second' => 'true'
+        },
+        'another' => {
+          'something' => 'there'
+        },
+        'other' => {
+          'something' => 'here'
+        }
+      }
+    end
 
     it { is_expected.to eq expected_config }
 
     context 'when current_config is empty' do
-      let(:expected_config) { IO.read('spec/reference/write_test_overwrite.conf') }
-
-      it 'should write only the given config to the file' do
-        expect(CernerSplunk::ConfHelpers.merge_config({}, config)).to eq expected_config
+      it 'should return only the given config' do
+        expect(CernerSplunk::ConfHelpers.merge_config({}, config)).to eq config
       end
     end
+  end
 
-    context 'when a given section is nil' do
-      let(:config) do
-        {
-          'default' => {
-            'first' => 'false'
-          },
-          'other' => nil,
-          'another' => {
-            'something' => 'there'
-          }
+  describe 'filter_config' do
+    subject { CernerSplunk::ConfHelpers.filter_config(config) }
+    let(:config) do
+      {
+        'default' => {
+          'first' => ''
+        },
+        'other' => nil,
+        'another' => {
+          'something' => 'there',
+          'else' => nil
         }
-      end
-      let(:expected_config) { IO.read('spec/reference/write_test_delete_section.conf') }
-
-      it { is_expected.to eq expected_config }
+      }
     end
 
-    context 'when a given value is nil' do
-      let(:config) do
-        {
-          'default' => {
-            'first' => 'false'
-          },
-          'other' => {
-            'something' => nil
-          },
-          'another' => {
-            'something' => 'there'
-          }
+    let(:expected_config) do
+      {
+        'default' => {
+          'first' => ''
+        },
+        'another' => {
+          'something' => 'there'
         }
-      end
-      let(:expected_config) { IO.read('spec/reference/write_test_delete_value.conf') }
-
-      it { is_expected.to eq expected_config }
+      }
     end
+
+    it { is_expected.to eq expected_config }
   end
 end

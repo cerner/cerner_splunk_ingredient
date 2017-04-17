@@ -107,10 +107,13 @@ class SplunkConf < Chef::Resource
       action :create
     end
 
-    file new_resource.path.to_s do
+    merged_config = CernerSplunk::ConfHelpers.merge_config(reset ? {} : existing_config(new_resource.path), config)
+
+    template new_resource.path.to_s do # ~FC033 https://github.com/acrmp/foodcritic/issues/449
+      source 'conf.erb'
       owner config_user
       group config_group
-      content CernerSplunk::ConfHelpers.merge_config(reset ? {} : existing_config(new_resource.path), config)
+      variables config: CernerSplunk::ConfHelpers.filter_config(merged_config)
     end if changed?(:config)
   end
 end
