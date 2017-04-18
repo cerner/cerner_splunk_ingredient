@@ -127,8 +127,8 @@ describe 'splunk_app' do
             case resource
             when 'splunk_app_package'
               let(:package_path) { Pathname.new(app_cache_path) + 'my_app.tgz' }
-              let(:existing_cache_path) { Pathname.new(app_cache_path) + 'current' }
-              let(:new_cache_path) { Pathname.new(app_cache_path) + 'new' }
+              let(:existing_cache_path) { Pathname.new(app_cache_path) + 'current/test_app' }
+              let(:new_cache_path) { Pathname.new(app_cache_path) + 'new/test_app' }
               it do
                 if upgrade
                   is_expected.to run_ruby_block('upgrade app')
