@@ -29,6 +29,9 @@ module CernerSplunk
     end
 
     def prerelease?
+      Chef::Log.warn @meta
+      Chef::Log.warn @meta.empty?
+      Chef::Log.warn !@meta.empty?
       !@meta.empty?
     end
 
