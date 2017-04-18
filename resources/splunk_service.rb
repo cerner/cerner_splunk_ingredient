@@ -1,18 +1,21 @@
 # frozen_string_literal: true
+
 # Cookbook Name:: cerner_splunk_ingredient
 # Resource:: splunk_service
 #
 # Resource for managing Splunk as a system service
 
 class SplunkService < Chef::Resource
-  include CernerSplunk::PlatformHelpers, CernerSplunk::ResourceHelpers,
-          CernerSplunk::ServiceHelpers, CernerSplunk::RestartHelpers
+  include CernerSplunk::PlatformHelpers
+  include CernerSplunk::ResourceHelpers
+  include CernerSplunk::ServiceHelpers
+  include CernerSplunk::RestartHelpers
 
   resource_name :splunk_service
 
   property :name, String, name_property: true, desired_state: false, identity: true
   property :install_dir, String, required: true, desired_state: false
-  property :package, [:splunk, :universal_forwarder], required: true
+  property :package, %i[splunk universal_forwarder], required: true
   property :ulimit, Integer
 
   default_action :start
@@ -51,7 +54,7 @@ class SplunkService < Chef::Resource
     unless node['os'] == 'windows'
       if init_script_path.exist?
         limit = init_script_path.read[/ulimit -n (\d+)/, 1].to_i
-        ulimit limit if limit > 0
+        ulimit limit if limit.positive?
       end
     end
   end

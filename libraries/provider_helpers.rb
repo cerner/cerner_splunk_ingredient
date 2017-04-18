@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 module CernerSplunk
   # Mixin Helper methods for Splunk Ingredient resources' providers
   module ProviderHelpers
@@ -26,22 +27,15 @@ module CernerSplunk
       end
 
       def backup_app
-        converge_by 'backing up existing app' do # ~FC005
-          FileUtils.cp_r(app_path, app_cache_path + 'current')
+        ruby_block 'backing up existing app' do
+          block do
+            FileUtils.cp_r(app_path, app_cache_path + 'current')
+          end
         end
       end
 
       def upgrade_keep_existing
-        declare_resource(:directory, app_path.to_s) do
-          action :nothing
-          recursive true
-        end.run_action :delete
-
-        converge_by 'installing new app version' do
-          FileUtils.mv(new_cache_path, app_path)
-        end
-
-        converge_by 'restoring local config' do
+        converge_by 'restoring local config' do # ~FC005
           existing_local = existing_cache_path + 'local'
           existing_local_meta = existing_cache_path + 'metadata/local.meta'
           new_local = new_cache_path + 'local'
@@ -53,6 +47,15 @@ module CernerSplunk
 
         converge_by "changing ownership of app to #{current_owner}:#{current_group}" do
           CernerSplunk::FileHelpers.deep_change_ownership(new_cache_path, current_owner, current_group)
+        end
+
+        declare_resource(:directory, app_path.to_s) do
+          action :nothing
+          recursive true
+        end.run_action :delete
+
+        converge_by 'installing new app version' do
+          FileUtils.mv(new_cache_path, app_path)
         end
       end
 

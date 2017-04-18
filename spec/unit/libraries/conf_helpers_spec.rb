@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require_relative '../spec_helper'
 
 describe 'ConfHelpers' do
@@ -16,19 +17,24 @@ describe 'ConfHelpers' do
   end
 
   describe 'evaluate_config' do
-    subject { CernerSplunk::ConfHelpers.evaluate_config(existing_config, config) }
+    subject { CernerSplunk::ConfHelpers.evaluate_config(conf_path, existing_config, config) }
 
     context 'with top-level proc' do
+      let!(:actual_context) {}
       let(:config) do
-        ->(conf) { conf.map { |section, props| [section.upcase, props] }.to_h }
+        lambda do |context, conf|
+          conf.merge('context' => { 'context' => context })
+        end
       end
+      let(:expected_context) { CernerSplunk::ConfHelpers::ConfContext.new(conf_path) }
       let(:expected_config) do
         {
-          'DEFAULT' => {
+          'context' => { 'context' => expected_context },
+          'default' => {
             'first' => 'true',
             'second' => 'true'
           },
-          'OTHER' => {
+          'other' => {
             'something' => 'here'
           }
         }
@@ -37,21 +43,23 @@ describe 'ConfHelpers' do
       it { is_expected.to eq(expected_config) }
     end
 
-    context 'with stanza-level proc' do
+    context 'with section-level proc' do
       let(:config) do
         {
           'default' => {
             'second' => 'false'
           },
-          'other' => ->(section, props) { [section.upcase, props] }
+          'other' => ->(context, props) { props.merge('context' => context) }
         }
       end
+      let(:expected_context) { CernerSplunk::ConfHelpers::ConfContext.new(conf_path, 'other') }
       let(:expected_config) do
         {
           'default' => {
             'second' => 'false'
           },
-          'OTHER' => {
+          'other' => {
+            'context' => expected_context,
             'something' => 'here'
           }
         }
@@ -67,17 +75,18 @@ describe 'ConfHelpers' do
             'second' => 'false'
           },
           'other' => {
-            'something' => ->(key, value) { [key, value.upcase] }
+            'something' => ->(context, _) { context }
           }
         }
       end
+      let(:expected_context) { CernerSplunk::ConfHelpers::ConfContext.new(conf_path, 'other', 'something') }
       let(:expected_config) do
         {
           'default' => {
             'second' => 'false'
           },
           'other' => {
-            'something' => 'HERE'
+            'something' => expected_context
           }
         }
       end
@@ -94,7 +103,8 @@ describe 'ConfHelpers' do
           b: 1000,
           c: {
             deep: :deep
-          }
+          },
+          d: nil
         },
         'two' => {
           even: 'more'
@@ -106,7 +116,8 @@ describe 'ConfHelpers' do
         'one' => {
           'a' => 'string',
           'b' => '1000',
-          'c' => '{:deep=>:deep}'
+          'c' => '{:deep=>:deep}',
+          'd' => nil
         },
         'two' => {
           'even' => 'more'
@@ -170,28 +181,67 @@ describe 'ConfHelpers' do
   end
 
   describe 'merge_config' do
+    subject { CernerSplunk::ConfHelpers.merge_config(existing_config, config) }
     let(:config) do
       {
         'default' => {
-          'first' => 'false'
+          'first' => nil
         },
         'another' => {
           'something' => 'there'
         }
       }
     end
-    let(:expected_config) { IO.read('spec/reference/write_test.conf') }
-
-    it 'should write the config with new and old properties' do
-      expect(CernerSplunk::ConfHelpers.merge_config(existing_config, config)).to eq expected_config
+    let(:expected_config) do
+      {
+        'default' => {
+          'first' => nil,
+          'second' => 'true'
+        },
+        'another' => {
+          'something' => 'there'
+        },
+        'other' => {
+          'something' => 'here'
+        }
+      }
     end
+
+    it { is_expected.to eq expected_config }
 
     context 'when current_config is empty' do
-      let(:expected_config) { IO.read('spec/reference/write_test_overwrite.conf') }
-
-      it 'should write only the given config to the file' do
-        expect(CernerSplunk::ConfHelpers.merge_config({}, config)).to eq expected_config
+      it 'should return only the given config' do
+        expect(CernerSplunk::ConfHelpers.merge_config({}, config)).to eq config
       end
     end
+  end
+
+  describe 'filter_config' do
+    subject { CernerSplunk::ConfHelpers.filter_config(config) }
+    let(:config) do
+      {
+        'default' => {
+          'first' => ''
+        },
+        'other' => nil,
+        'another' => {
+          'something' => 'there',
+          'else' => nil
+        }
+      }
+    end
+
+    let(:expected_config) do
+      {
+        'default' => {
+          'first' => ''
+        },
+        'another' => {
+          'something' => 'there'
+        }
+      }
+    end
+
+    it { is_expected.to eq expected_config }
   end
 end

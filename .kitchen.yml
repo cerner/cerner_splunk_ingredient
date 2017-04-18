@@ -1,4 +1,21 @@
 ---
+_script: &PACKAGE_APP_SCRIPT
+    driver:
+      # Package the app for the test. Extra checks are necessary because we _must_ use GNU Tar for extracting in Windows.
+      pre_create_command: |
+        echo '## Packing test app...'
+        case "$(uname -s)" in
+          Darwin)
+            echo '## Mac detected, using gtar'
+            command -v gtar >/dev/null 2>&1 || { echo "You need to install gnu-tar to test app_upgrade. 'brew install gnu-tar'" >&2; exit 1; }
+            gtar -czvf test/files/pkg-app.spl -C test/files ./test_app
+            ;;
+          *)
+            echo '## Using tar'
+            tar -czvf test/files/pkg-app.spl -C test/files ./test_app
+            ;;
+        esac
+
 driver:
   name: vagrant
 
@@ -29,6 +46,7 @@ suites:
       - recipe[cerner_splunk_ingredient_test::splunk]
       - recipe[cerner_splunk_ingredient_test::uninstall_splunk]
   - name: install_forwarder
+    <<: *PACKAGE_APP_SCRIPT
     run_list:
       - recipe[cerner_splunk_ingredient_test::universal_forwarder]
   - name: uninstall_forwarder
@@ -43,21 +61,7 @@ suites:
       - recipe[cerner_splunk_ingredient_test::splunk_archive]
       - recipe[cerner_splunk_ingredient_test::uninstall_splunk_archive]
   - name: app_upgrade
-    driver:
-      # Package the app for the upgrade test. Extra checks are necessary because we _must_ use GNU Tar for extracting in Windows.
-      pre_create_command: |
-        echo '## Packing test app...'
-        case "$(uname -s)" in
-          Darwin)
-            echo '## Mac detected, using gtar'
-            command -v gtar >/dev/null 2>&1 || { echo "You need to install gnu-tar to test app_upgrade. 'brew install gnu-tar'" >&2; exit 1; }
-            gtar -czvf test/files/pkg-app.spl -C test/files ./test_app
-            ;;
-          *)
-            echo '## Using tar'
-            tar -czvf test/files/pkg-app.spl -C test/files ./test_app
-            ;;
-        esac
+    <<: *PACKAGE_APP_SCRIPT
     run_list:
       - recipe[cerner_splunk_ingredient_test::splunk]
       - recipe[cerner_splunk_ingredient_test::upgrade_splunk_app]

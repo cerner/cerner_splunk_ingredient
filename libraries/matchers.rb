@@ -1,9 +1,12 @@
 # frozen_string_literal: true
+
 if defined?(ChefSpec)
   ChefSpec.define_matcher :splunk_install
   ChefSpec.define_matcher :splunk_service
   ChefSpec.define_matcher :splunk_conf
   ChefSpec.define_matcher :splunk_restart
+  ChefSpec.define_matcher :splunk_app_custom
+  ChefSpec.define_matcher :splunk_app_package
 
   def install_splunk(name)
     ChefSpec::Matchers::ResourceMatcher.new(:splunk_install, :install, name)

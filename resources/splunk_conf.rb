@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 # Cookbook Name:: cerner_splunk_ingredient
 # Resource:: splunk_conf
 #
@@ -10,8 +11,8 @@ class SplunkConf < Chef::Resource
 
   property :path, [String, Pathname], name_property: true, desired_state: false, identity: true
   property :install_dir, String, required: true, desired_state: false
-  property :package, [:splunk, :universal_forwarder], required: true, desired_state: false
-  property :scope, [:local, :default, :none], desired_state: false, default: :local
+  property :package, %i[splunk universal_forwarder], required: true, desired_state: false
+  property :scope, %i[local default none], desired_state: false, default: :local
   property :config, Hash, required: true
   property :user, String, default: lazy { current_owner }
   property :group, String, default: lazy { current_group }
@@ -74,7 +75,7 @@ class SplunkConf < Chef::Resource
     desired.path = Pathname.new(install_dir) + 'etc' + real_path.sub(%r{^/}, '')
     current_config = existing_config(desired.path)
 
-    evaluated_config = CernerSplunk::ConfHelpers.evaluate_config(current_config, desired.config)
+    evaluated_config = CernerSplunk::ConfHelpers.evaluate_config(desired.path, current_config, desired.config)
     desired.config = CernerSplunk::ConfHelpers.stringify_config(evaluated_config)
 
     config reset ? current_config : current_config.select { |key, _| desired.config.keys.include? key.to_s }
@@ -106,10 +107,14 @@ class SplunkConf < Chef::Resource
       action :create
     end
 
-    file new_resource.path.to_s do
+    merged_config = CernerSplunk::ConfHelpers.merge_config(reset ? {} : existing_config(new_resource.path), config)
+
+    template new_resource.path.to_s do # ~FC033 https://github.com/acrmp/foodcritic/issues/449
+      source 'conf.erb'
+      cookbook 'cerner_splunk_ingredient'
       owner config_user
       group config_group
-      content CernerSplunk::ConfHelpers.merge_config(reset ? {} : existing_config(new_resource.path), config)
+      variables config: CernerSplunk::ConfHelpers.filter_config(merged_config)
     end if changed?(:config)
   end
 end

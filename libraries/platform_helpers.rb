@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 module CernerSplunk
   # Helper methods for platform oddities in Chef
   module PlatformHelpers
@@ -6,7 +7,7 @@ module CernerSplunk
     #
     # @return [Boolean] whether or not the current system supports 64-bit
     def x64_support
-      %w(amd64 x86_64).include? node['kernel']['machine']
+      %w[amd64 x86_64].include? node['kernel']['machine']
     end
 
     # Provides constant defaults for Splunk's package names based on platform and package.

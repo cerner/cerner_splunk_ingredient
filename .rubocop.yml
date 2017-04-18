@@ -17,10 +17,6 @@ Metrics/AbcSize:
 Metrics/ClassLength:
   Max: 120
 
-# Disabled for the Chef 12.13 integration tests which use an older Ruby.
-Style/NumericPredicate:
-  Enabled: false
-
 Style/FormatString:
   EnforcedStyle: percent
 

@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require_relative '../spec_helper'
 include CernerSplunk::ResourceHelpers
 
@@ -35,6 +36,7 @@ shared_examples 'splunk_conf' do |platform, version, package|
       expect_any_instance_of(Chef::Resource).to receive(:load_installation_state).and_return true
       expect(CernerSplunk::ConfHelpers).to receive(:read_config).with(conf_path).and_return(existing_config)
       expect(CernerSplunk::ConfHelpers).to receive(:merge_config).with(existing_config, expected_config).and_return 'merged config'
+      expect(CernerSplunk::ConfHelpers).to receive(:filter_config).with('merged config').and_return 'merged config'
       allow_any_instance_of(Chef::Resource).to receive(:current_owner).and_return(platform == 'windows' ? 'administrator' : 'fauxhai')
       allow_any_instance_of(Chef::Resource).to receive(:current_group).and_return(platform == 'windows' ? 'host\NONE' : 'fauxhai')
     end
@@ -65,7 +67,7 @@ shared_examples 'splunk_conf' do |platform, version, package|
       end
 
       it { is_expected.to configure_splunk('system/test.conf').with expected_params }
-      it { is_expected.to create_file(conf_path).with(content: 'merged config', owner: package.to_s) }
+      it { is_expected.to create_template(conf_path).with(source: 'conf.erb', variables: { config: 'merged config' }, owner: package.to_s) }
       it { is_expected.to init_splunk_service('init_before_config') }
     end
 
@@ -181,7 +183,7 @@ shared_examples 'splunk_conf' do |platform, version, package|
         end
 
         it { is_expected.to configure_splunk('system/test.conf').with expected_params }
-        it { is_expected.to create_file(conf_path).with(content: 'merged config', owner: package.to_s) }
+        it { is_expected.to create_template(conf_path).with(source: 'conf.erb', variables: { config: 'merged config' }, owner: package.to_s) }
         it { is_expected.to init_splunk_service('init_before_config') }
       end
 
@@ -255,7 +257,7 @@ shared_examples 'splunk_conf' do |platform, version, package|
       end
 
       it { is_expected.to configure_splunk('system/test.conf') }
-      it { is_expected.to create_file(conf_path).with(content: 'merged config', owner: platform == 'windows' ? 'administrator' : 'fauxhai') }
+      it { is_expected.to create_template(conf_path).with(source: 'conf.erb', variables: { config: 'merged config' }, owner: platform == 'windows' ? 'administrator' : 'fauxhai') }
     end
 
     chef_context 'when reset is specified' do
@@ -274,11 +276,12 @@ shared_examples 'splunk_conf' do |platform, version, package|
         expect_any_instance_of(Chef::Resource).to receive(:load_installation_state).and_return true
         expect(CernerSplunk::ConfHelpers).to receive(:read_config).with(conf_path).and_return(existing_config)
         expect(CernerSplunk::ConfHelpers).to receive(:merge_config).with({}, expected_config).and_return 'just my config'
+        expect(CernerSplunk::ConfHelpers).to receive(:filter_config).with('just my config').and_return 'just my config'
         allow_any_instance_of(Chef::Resource).to receive(:current_group).and_return(platform == 'windows' ? 'host\NONE' : 'fauxhai')
       end
 
       it { is_expected.to configure_splunk('system/test.conf') }
-      it { is_expected.to create_file(conf_path).with(content: 'just my config', owner: package.to_s) }
+      it { is_expected.to create_template(conf_path).with(source: 'conf.erb', variables: { config: 'just my config' }, owner: package.to_s) }
     end
 
     chef_context 'when conf_override is set in the run state' do
@@ -320,7 +323,7 @@ shared_examples 'splunk_conf' do |platform, version, package|
       let(:conf_path) { Pathname.new(install_dir) + 'etc/apps/test_app/local/test.conf' }
 
       it { is_expected.to configure_splunk('system/test.conf') }
-      it { is_expected.to create_file(conf_path).with(content: 'merged config', owner: 'otherbody') }
+      it { is_expected.to create_template(conf_path).with(source: 'conf.erb', variables: { config: 'merged config' }, owner: 'otherbody') }
     end
   end
 end

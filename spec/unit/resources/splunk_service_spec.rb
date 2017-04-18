@@ -1,6 +1,8 @@
 # frozen_string_literal: true
+
 require_relative '../spec_helper'
-include CernerSplunk::ServiceHelpers, CernerSplunk::RestartHelpers
+include CernerSplunk::ServiceHelpers
+include CernerSplunk::RestartHelpers
 
 shared_examples '*start examples' do |action, platform, _, package|
   is_windows = platform == 'windows'

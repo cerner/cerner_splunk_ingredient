@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require_relative '../spec_helper'
 include CernerSplunk::ResourceHelpers
 
@@ -24,7 +25,7 @@ describe 'splunk_app' do
     }
   end
 
-  %w(splunk_app splunk_app_custom splunk_app_package).each do |resource|
+  %w[splunk_app splunk_app_custom splunk_app_package].each do |resource|
     describe resource do
       let(:test_resource) { resource }
       let(:test_recipe) { 'app_unit_test' }
@@ -68,7 +69,7 @@ describe 'splunk_app' do
             },
             'views' => {
               'owner' => 'admin',
-              'access' => { 'read' => '*', 'write' => %w(admin power) }
+              'access' => { 'read' => '*', 'write' => %w[admin power] }
             }
           }
         end
@@ -128,17 +129,13 @@ describe 'splunk_app' do
               let(:package_path) { Pathname.new(app_cache_path) + 'my_app.tgz' }
               let(:existing_cache_path) { Pathname.new(app_cache_path) + 'current' }
               let(:new_cache_path) { Pathname.new(app_cache_path) + 'new' }
-              let(:action_stubs) do
-                if upgrade
-                  # Backup App
-                  expect(FileUtils).to receive(:cp_r).with(app_path, existing_cache_path)
-                end
-              end
               it do
                 if upgrade
                   is_expected.to run_ruby_block('upgrade app')
+                  is_expected.to run_ruby_block('backing up existing app')
                 else
                   is_expected.not_to run_ruby_block('upgrade app')
+                  is_expected.not_to run_ruby_block('backing up existing app')
                 end
               end
               it { is_expected.to create_remote_file(package_path).with(source: source_url) }

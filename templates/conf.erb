@@ -1,0 +1,9 @@
+# Warning: This file is managed by Chef!
+# Comments will not be preserved and configuration may be overwritten.
+
+<% @config.each do |section, props| -%>
+[<%=section%>]
+<%   props.each do |key, value| -%>
+<%=key%> = <%=value%>
+<%   end -%>
+<% end -%>

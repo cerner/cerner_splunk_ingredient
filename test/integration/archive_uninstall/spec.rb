@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 windows = os.windows?
 
 describe service(windows ? 'splunkd' : 'splunk') do

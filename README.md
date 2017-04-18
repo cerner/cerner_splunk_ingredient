@@ -9,7 +9,7 @@ These resources can:
 
 ## Requirements
 
-Chef >= 12.13.37
+Chef >= 12.14
 Ruby >= 2.3.1
 
 Supports Linux and Windows based systems with package support for Debian, Redhat,
@@ -30,7 +30,7 @@ Note: There are more specific resources available if you wish to override how Sp
 For example, if you want to force install from .rpm you can use splunk\_install\_redhat, or to install
 from archive (tgz for Linux and zip for Windows) use splunk\_install\_archive.
 
-#### Action *:install*
+#### Action _:install_
 
 Installs Splunk or Universal Forwarder.
 
@@ -51,7 +51,7 @@ Specific to splunk\_install\_archive
 | :----------- | :-----: | :------: | :------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------ |
 | install\_dir |  String |    No    | Depends on platform and package | Manually specify the install directory for Splunk. This can only be done when installing from an archive, otherwise it will raise an error. |
 
-#### Action *:uninstall*
+#### Action _:uninstall_
 
 Removes Splunk or Universal Forwarder and all its configuration.
 
@@ -63,7 +63,7 @@ Properties:
 
 ##### Run State
 
-`splunk_install` *stores the current installation state to the [run state](https://docs.chef.io/recipes.html#node-run-state).*
+`splunk_install` _stores the current installation state to the [run state](https://docs.chef.io/recipes.html#node-run-state)._
 This contains data such as install directory and package so that subsequent resources can assume these values and avoid
 repetition. For example, you would be able to execute `splunk_conf` after a `splunk_install` and it will inherit the
 package of that last evaluated resource. If the install resource does nothing (installation already exists), it will
@@ -97,12 +97,12 @@ Manages an installation of Splunk. Requires splunk\_install to be evaluated firs
 
 **The following actions (start and restart) share the same properties:**
 
-#### Action *:start*
+#### Action _:start_
 
 Starts the Splunk daemon if not already running.
 If the ulimit is changed, invokes a restart of the daemon at the end of the run.
 
-#### Action *:restart*
+#### Action _:restart_
 
 Restarts the Splunk daemon, or starts it if not already running.
 
@@ -114,7 +114,7 @@ Properties:
 | install\_dir |                String               |                   No                  | Same as splunk\_install               | The install directory of Splunk. If you installed to a different directory than the default, you should provide this. If install\_dir is given, you do not need package.                                                                      |
 | ulimit       |               Integer               |                   No                  | Start up script ulimit or user ulimit | Open file ulimit to give Splunk. This sets the ulimit in the start up script (if it exists) and for the given user in `/etc/security/limits.d/`. -1 translates to `'unlimited'`                                                               |
 
-#### Action *:stop*
+#### Action _:stop_
 
 Stop the Splunk daemon if it is running.
 
@@ -125,7 +125,7 @@ Properties:
 | package      | `:splunk` or `:universal_forwarder` | **Yes, unless install\_dir is given** |                         | Specifies the installed Splunk package. If you did not specify the install\_dir, then you must specify the package, or name the resource for the package; for example, `package :splunk` or `splunk_service 'universal_forwarder' do ... end` |
 | install\_dir |                String               |                   No                  | Same as splunk\_install | The install directory of Splunk. If you installed to a different directory than the default, you should provide this. If install\_dir is given, you do not need package.                                                                      |
 
-#### Action *:init*
+#### Action _:init_
 
 Executes Splunk's first time run, accepting the license agreement if applicable. This does not start Splunk, only runs its initial setup.
 
@@ -140,7 +140,7 @@ Properties:
 
 Manages configuration for an installation of Splunk. Requires splunk\_install to be evaluated first.
 
-#### Action *:configure*
+#### Action _:configure_
 
 Applies configuration to .conf files.
 You should know where the .conf file is that you wish to modify, as you must provide the path from `$SPLUNK_HOME/etc`.
@@ -155,8 +155,8 @@ Properties:
 | path         |          String or Pathname         | **Yes (resource name)** |                                                  | Path of the .conf file from `$SPLUNK_HOME/etc`. The intermediate directory determining scope is optional. Examples: `system/indexes.conf` or `system/local/indexes.conf`.                                                                         |
 | package      | `:splunk` or `:universal_forwarder` |            No           | Package of the current install in run state      | Specifies the installed Splunk package. If you did not specify the install\_dir, then you may specify the package (`:splunk` or `:universal_forwarder`) otherwise the resource will refer to the most recently evaluated splunk\_install resource |
 | install\_dir |                String               |            No           | Path of the current install in run state         | The install directory of Splunk. If you installed to a different directory than the default, you should provide this. If install\_dir is given, you do not need package.                                                                          |
-| scope        |   `:local`, `:none`, or `:default`  |            No           | `:local`                                         | Scope of the configuration to modify. In most circumstances, you should *not* change this. `:none` will disable checking or modifying scope in the path.                                                                                          |
-| config       |                 Hash                |         **Yes**         |                                                  | Configuration to apply to the .conf file. This hash is structured as follows: `{ stanza: { key: 'value' } }`. See below for more detailed explanation of the config property.                                                                     |
+| scope        |   `:local`, `:none`, or `:default`  |            No           | `:local`                                         | Scope of the configuration to modify. In most circumstances, you should _not_ change this. `:none` will disable checking or modifying scope in the path.                                                                                          |
+| config       |                 Hash                |         **Yes**         |                                                  | Configuration to apply to the .conf file. This hash is structured as follows: `{ section: { key: 'value' } }`. See below for more detailed explanation of the config property.                                                                    |
 | user         |            String or nil            |            No           | Owner of the current Splunk installation, if any | User that will be used to write to the .conf files.                                                                                                                                                                                               |
 | group        |            String or nil            |            No           | Group of the current Splunk installation, if any | Group that will be used to write to the .conf files.                                                                                                                                                                                              |
 | reset        |            true or false            |            No           | false                                            | When specified as true, entirely replaces existing config. By default, config is merged into the existing conf file.                                                                                                                              |
@@ -170,7 +170,7 @@ Some things to be aware of when using the configuration resource:
 
 ##### **"Global" properties are evaluated under `[default]`**
 
-Properties defined at the top of the .conf file and not considered to be part of a stanza are assumed to be `[default]`
+Properties defined at the top of the .conf file and not considered to be part of a section are assumed to be `[default]`
 per Splunk documentation: <http://docs.splunk.com/Documentation/Splunk/6.4.2/Admin/Propsconf#GLOBAL_SETTINGS>
 
 ##### **Comments are not preserved**
@@ -188,7 +188,7 @@ splunk_conf 'system/test.conf' do
       two: 2,
       three: 3
     },
-    stanza: {
+    section: {
       key: :value
     }
   )
@@ -206,7 +206,7 @@ one = 1
 two = 2
 three = 3
 
-[stanza]
+[section]
 key = value
 ```
 
@@ -217,7 +217,8 @@ This approach is beneficial if you want to write your config based on the curren
 you don't know all of your configuration values at compile time but can evaluate them at
 converge time.
 
-There are two approaches you can take to configuring with procs or lambdas: Top-level and Stanza-level.
+There are three approaches you can take to configuring with procs or lambdas: Top-level, Section-level, and Key-level.
+Each level provides a context object, providing the path of the current file and the app, section, and key when applicable.
 
 ###### Top-level Evaluation
 
@@ -229,7 +230,7 @@ In this example, all of the keys and values in the conf file are turned into low
 ```Ruby
 splunk_conf 'system/test.conf' do
   config(
-    lambda do |conf|
+    lambda do |_, conf|
       conf.map do |section, props|
         [section.to_s.downcase, props.map { |k, v| [k.to_s.downcase, v.to_s.downcase] }.to_h]
       end.to_h
@@ -238,14 +239,13 @@ splunk_conf 'system/test.conf' do
 end
 ```
 
-###### Stanza-level Evaluation
+###### Section-level Evaluation
 
-Stanza-level evaluation allows you to evaluate the config key values for a specific stanza without being
+Section-level evaluation allows you to evaluate the config key values for a specific section without being
 responsible for regurgitating all of the config you didn't want to modify.
 
-In this example, only a specific stanza's contents are turned into lowercase strings. The rest is
-merged as usual. **Note that the Stanza-level proc receives the section string and a props hash, and expects
-a pair (array) of the desired section string and props hash.**
+In this example, only a specific section's contents are turned into lowercase strings. The rest is
+merged as usual.
 
 ```Ruby
 splunk_conf 'system/test.conf' do
@@ -254,28 +254,59 @@ splunk_conf 'system/test.conf' do
       one: 1,
       four: 4
     },
-    stanza: ->(section, props) { [section.to_s.downcase, props.map { |k, v| [k.to_s.downcase, v.to_s.downcase] }.to_h] }
+    section: ->(context, props) { props.map { |k, v| [k.to_s.downcase, v.to_s.downcase] }.to_h }
   )
 end
 ```
 
 ###### Value-level Evaluation
 
-Value-level evaluation, while possible from a Stanza-level lambda, is the more common case and thus is supported for sheer
+Value-level evaluation, while possible from a section-level lambda, is the more common case and thus is supported for sheer
 ease of use. This is especially handy when you want to produce some value for a particular key and don't want to bother with
-nesting the rest of the stanza in your Proc. If there is a case where you're applying a Proc to values whose keys you don't know,
+nesting the rest of the section in your Proc. If there is a case where you're applying a Proc to values whose keys you don't know,
 this becomes a necessary functionality.
 
-In this example, if the value is an Array object, it is converted into a comma spaced string using join. **Note that the Value-level proc
-receives the key and value, and expects a pair (array) of the desired key and value (similar to the Stanza-level proc).**
+In this example, if the value is an Array object, it is converted into a comma spaced string using join.
 
 ```Ruby
 splunk_conf 'system/test.conf' do
   config(
     testing: {
-      servers: ->(key, value) { [key, value.is_a?(Array) ? value.join(', ') : value] }
+      servers: ->(context, value) { value.is_a?(Array) ? value.join(', ') : value }
     }
   )
+end
+```
+
+###### The Context object
+
+A ConfContext object is passed as the first parameter to any splunk\_conf proc. It contains contextual information such as
+path of the current file, current section (for section-level and key-level procs), and current key (for key-level procs).
+It also attempts to determine the current app from the path, if any.
+
+The available accessors are `#path`, `#app`, `#section`, and `#key`. Note that the context object will be frozen when provided to the proc.
+
+Consider the value-level example above:
+
+```Ruby
+splunk_conf 'system/test.conf' do
+  config(
+    testing: {
+      servers: ->(context, value) { value.is_a?(Array) ? value.join(', ') : value }
+    }
+  )
+end
+```
+
+The following statements would be true for the context object:
+
+```Ruby
+lambda do |context, value|
+  context.path == '/opt/splunk/etc/system/local/test.conf'
+  context.app == 'system'
+  context.section == 'testing'
+  context.key == 'servers'
+  [context.key, value]
 end
 ```
 
@@ -287,18 +318,18 @@ Chef run, it will notify a delayed restart as was intended in the previous run. 
 
 **The following actions all share the same properties:**
 
-#### Action *:ensure*
+#### Action _:ensure_
 
 Ensure that Splunk is restarted. This will notify for a delayed restart as well as place the file marker in case the Chef run fails
 before restarting Splunk. You should run this action in your cookbook when you intend to restart Splunk after a config change.
 
-*Note: When notifying this resource, do so with `:immediately`, otherwise it will effectively be the same as a normal delayed restart.*
+_Note: When notifying this resource, do so with `:immediately`, otherwise it will effectively be the same as a normal delayed restart._
 
-#### Action *:check*
+#### Action _:check_
 
 Checks if the file marker exists, and notifies for a delayed restart.
 
-#### Action *:clear*
+#### Action _:clear_
 
 Removes the file marker.
 
@@ -328,7 +359,7 @@ set a version in app.conf.
 
 Installs or updates a Splunk app from a package/archive.
 
-#### Action *:install*
+#### Action _:install_
 
 Install or upgrade a Splunk App.
 
@@ -359,7 +390,7 @@ Install or upgrade a Splunk App.
 | files        |                   Proc                   |              No             |                                             | Proc containing miscellaneous resources for manipulating the app directory. This is ideally directories, templates, and files. The Proc will be given an absolute app path parameter for you to use in these resources.                           |
 | metadata     |                   Hash                   |              No             | {}                                          | Configuration to apply to the metadata (local.meta for non-custom apps). See splunk\_conf for more info, and also below for special handling of the `access` key.                                                                                 |
 
-#### Action *:uninstall*
+#### Action _:uninstall_
 
 Uninstalls an app, completely removing it and its files.
 Note: You can use any sub-resource or `splunk_app` to uninstall apps.
@@ -375,7 +406,7 @@ Properties:
 #### Metadata
 
 The metadata property accepts a config hash, just as `splunk_conf` would (it basically calls `splunk_conf` behind the scenes), but there is one
-important operation that is performed before writing the config. It looks in each stanza for an `access` key, and checks if the value is a hash.
+important operation that is performed before writing the config. It looks in each section for an `access` key, and checks if the value is a hash.
 If this is the case, then it parses this hash into a string. This is part of a special syntax to make configuring read/write permissions via Chef easier.
 
 For example, if I want to set the following permissions for all views on the app, I might write:
@@ -394,7 +425,7 @@ splunk_app 'test_app' do
 end
 ```
 
-This helps when using programmatic values or large arrays of roles, though you *can* still use the appropriate string instead of the Hash syntax.
+This helps when using programmatic values or large arrays of roles, though you _can_ still use the appropriate string instead of the Hash syntax.
 
 ---
 

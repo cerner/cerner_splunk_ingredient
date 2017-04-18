@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 module CernerSplunk
   # Class object for parsing and encapsulating Splunk app versions
   class SplunkVersion
@@ -58,7 +59,7 @@ module CernerSplunk
       return 0 if self == other
 
       release_comp = compare_release_version(other)
-      release_comp == 0 && compare_prerelease(other) || release_comp
+      release_comp.zero? && compare_prerelease(other) || release_comp
     end
 
     private

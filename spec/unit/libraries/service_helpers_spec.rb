@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require_relative '../spec_helper'
 
 describe 'ServiceHelpers' do
@@ -45,7 +46,7 @@ describe 'ServiceHelpers' do
         end
 
         it 'should return nil if a valid pid is not read' do
-          expect(splunk_pid_path).to receive(:readlines).and_return %w(abcd5 g g)
+          expect(splunk_pid_path).to receive(:readlines).and_return %w[abcd5 g g]
           expect(service_pid).to be_nil
         end
       end

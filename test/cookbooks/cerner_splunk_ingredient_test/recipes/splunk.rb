@@ -1,8 +1,13 @@
 # frozen_string_literal: true
+
 splunk_install 'splunk' do
   version '6.3.4'
   build 'cae2458f4aef'
   base_url 'http://download.splunk.com/products'
+end
+
+splunk_restart 'splunk' do
+  action :nothing
 end
 
 splunk_conf 'system/indexes.conf' do
@@ -36,7 +41,8 @@ splunk_app_custom 'test_app' do
     end
   end)
   metadata(
-    views: { access: { read: '*', write: %w(admin power) } },
+    views: { access: { read: '*', write: %w[admin power] } },
     'views/index_check' => { access: { read: 'admin', write: 'admin' } }
   )
+  notifies :ensure, 'splunk_restart[splunk]', :immediately
 end
