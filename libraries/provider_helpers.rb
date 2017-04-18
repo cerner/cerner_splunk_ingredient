@@ -13,7 +13,6 @@ module CernerSplunk
         unless @app_cache_path
           @app_cache_path = Pathname.new(Chef::Config['file_cache_path']) + 'splunk_ingredient/app_cache'
           [@app_cache_path, new_cache_path, existing_cache_path].each(&:mkpath)
-          [@app_cache_path, new_cache_path, existing_cache_path].each { |pth| Chef::Log.warn "#{pth.exist?}   #{pth}" }
         end
 
         @app_cache_path
@@ -37,8 +36,6 @@ module CernerSplunk
 
       def upgrade_keep_existing
         converge_by 'restoring local config' do # ~FC005
-          [@app_cache_path, new_cache_path, existing_cache_path].each { |pth| Chef::Log.warn "#{pth.exist?}   #{pth}" }
-
           existing_local = existing_cache_path + 'local'
           existing_local_meta = existing_cache_path + 'metadata/local.meta'
           new_local = new_cache_path + 'local'
@@ -48,10 +45,7 @@ module CernerSplunk
           new_local_meta.parent.mkpath && FileUtils.cp(existing_local_meta, new_local_meta) if existing_local_meta.exist?
         end
 
-        [@app_cache_path, new_cache_path, existing_cache_path].each { |pth| Chef::Log.warn "#{pth.exist?}   #{pth}" }
-
         converge_by "changing ownership of app to #{current_owner}:#{current_group}" do
-          [@app_cache_path, new_cache_path, existing_cache_path].each { |pth| Chef::Log.warn "#{pth.exist?}   #{pth}" }
           CernerSplunk::FileHelpers.deep_change_ownership(new_cache_path, current_owner, current_group)
         end
 
@@ -61,7 +55,6 @@ module CernerSplunk
         end.run_action :delete
 
         converge_by 'installing new app version' do
-          Chef::Log.warn 'Moved the cached app!'
           FileUtils.mv(new_cache_path, app_path)
         end
       end
@@ -80,6 +73,10 @@ module CernerSplunk
         pkg_app_conf = CernerSplunk::ConfHelpers.read_config(new_cache_path + 'default/app.conf')
         return true unless app_version && pkg_app_conf.key?('launcher')
         pkg_version = CernerSplunk::SplunkVersion.from_string(pkg_app_conf['launcher']['version'])
+        Chef::Log.warn app_version.inspect
+        Chef::Log.warn pkg_version.inspect
+        Chef::Log.warn pkg_version == app_version
+        Chef::Log.warn app_version.prerelease?
 
         # Check that the package's version matches the desired base version.
         unless pkg_version == app_version || !app_version.prerelease? && pkg_version.release_version == app_version.release_version
