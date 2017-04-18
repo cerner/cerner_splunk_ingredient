@@ -76,6 +76,10 @@ module CernerSplunk
         Chef::Log.warn app_version.inspect
         Chef::Log.warn pkg_version.inspect
         Chef::Log.warn("pkg and app versions are equal: #{pkg_version == app_version}")
+        Chef::Log.warn("is prerelease: #{app_version.prerelease?}")
+        Chef::Log.warn(": #{app_version.release_version}")
+        Chef::Log.warn(": #{pkg_version.release_version}")
+        Chef::Log.warn("pkg and app versions are equal: #{pkg_version.release_version == app_version.release_version}")
 
         Chef::Log.warn('THIS REALLY SHOULDNT BE NIL')
         Chef::Log.warn(app_version.prerelease?)
