@@ -75,7 +75,7 @@ module CernerSplunk
         pkg_version = CernerSplunk::SplunkVersion.from_string(pkg_app_conf['launcher']['version'])
         Chef::Log.warn app_version.inspect
         Chef::Log.warn pkg_version.inspect
-        Chef::Log.warn(pkg_version == app_version)
+        Chef::Log.warn("pkg and app versions are equal: #{pkg_version == app_version}")
         Chef::Log.warn(app_version.prerelease?)
 
         # Check that the package's version matches the desired base version.
