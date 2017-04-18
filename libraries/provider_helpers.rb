@@ -73,28 +73,17 @@ module CernerSplunk
         pkg_app_conf = CernerSplunk::ConfHelpers.read_config(new_cache_path + 'default/app.conf')
         return true unless app_version && pkg_app_conf.key?('launcher')
         pkg_version = CernerSplunk::SplunkVersion.from_string(pkg_app_conf['launcher']['version'])
-        Chef::Log.warn app_version.inspect
-        Chef::Log.warn pkg_version.inspect
-        Chef::Log.warn("pkg and app versions are equal: #{pkg_version == app_version}")
-        Chef::Log.warn("is prerelease: #{app_version.prerelease?}")
-        Chef::Log.warn(": #{app_version.release_version}")
-        Chef::Log.warn(": #{pkg_version.release_version}")
-        Chef::Log.warn("pkg and app versions are equal: #{pkg_version.release_version == app_version.release_version}")
-
-        Chef::Log.warn('THIS REALLY SHOULDNT BE NIL')
-        Chef::Log.warn(app_version.prerelease?)
-        Chef::Log.warn('WHATH APPEN')
-
-        Chef::Log.warn(pkg_version == app_version || !app_version.prerelease? && pkg_version.release_version == app_version.release_version)
-        Chef::Log.warn("Same expression: #{pkg_version == app_version || !app_version.prerelease? && pkg_version.release_version == app_version.release_version}")
 
         # Check that the package's version matches the desired base version.
         unless pkg_version == app_version || !app_version.prerelease? && pkg_version.release_version == app_version.release_version
           raise "Downloaded app version does not match intended version to install (#{pkg_version} vs. #{version})"
         end
 
+        Chef::Log.warn(version.inspect)
+        Chef::Log.warn(current_resource.version.inspect)
+        Chef::Log.warn(new_resource.version.inspect)
         # Check that the package's version is not a pre-release when we really expect a release
-        if !app_version.prerelease? && pkg_version.prerelease?
+        if !current_resource.version.prerelease? && pkg_version.prerelease?
           raise "Downloaded app version was unexpectedly a pre-release version (#{pkg_version} vs. #{app_version})"
         end
 
