@@ -167,7 +167,7 @@ class PackagedApp < SplunkApp
 
     remote_file package_path.to_s do
       source source_url
-      show_progress true if defined? show_progress # Chef 12.9 feature
+      show_progress true
     end
 
     directory app_path.to_s do
@@ -176,8 +176,10 @@ class PackagedApp < SplunkApp
 
     backup_app if changed? :version
 
+    temp_path = new_cache_path.to_s
+
     poise_archive package_path.to_s do
-      destination((app_cache_path + 'new').to_s)
+      destination temp_path
       user current_owner
       group current_owner
     end

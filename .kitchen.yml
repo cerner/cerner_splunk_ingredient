@@ -8,11 +8,11 @@ _script: &PACKAGE_APP_SCRIPT
           Darwin)
             echo '## Mac detected, using gtar'
             command -v gtar >/dev/null 2>&1 || { echo "You need to install gnu-tar to test app_upgrade. 'brew install gnu-tar'" >&2; exit 1; }
-            gtar -czvf test/files/pkg-app.spl -C test/files ./test_app
+            gtar -czvf test/files/pkg-app.spl -C test/files/test_app .
             ;;
           *)
             echo '## Using tar'
-            tar -czvf test/files/pkg-app.spl -C test/files ./test_app
+            tar -czvf test/files/pkg-app.spl -C test/files/test_app .
             ;;
         esac
 
