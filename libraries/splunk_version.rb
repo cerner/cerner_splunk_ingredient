@@ -37,7 +37,7 @@ module CernerSplunk
     end
 
     def release_version
-      @meta.empty? ? self : SplunkVersion.new(@major, @minor, @patch)
+      SplunkVersion.new(@major, @minor, @patch)
     end
 
     def to_s
