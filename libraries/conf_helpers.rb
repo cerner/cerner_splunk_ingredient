@@ -10,15 +10,15 @@ module CernerSplunk
 
     def self.evaluate_config(path, current_config, config)
       context = ConfContext.new(path)
-      evaluted_config = evaluate(config, context.freeze, current_config) || {}
+      evaluated_config = evaluate(config, context.freeze, current_config) || {}
 
-      evaluted_config.merge(evaluted_config) do |section, props|
+      evaluated_config.merge(evaluated_config) do |section, props|
         (section_context = context.dup).section = section
 
-        evaluted_props = evaluate(props, section_context.freeze, current_config.dig(section))
-        next if evaluted_props.nil?
+        evaluated_props = evaluate(props, section_context.freeze, current_config.dig(section))
+        next if evaluated_props.nil?
 
-        evaluted_props.merge(evaluted_props) do |key, value|
+        evaluated_props.merge(evaluated_props) do |key, value|
           (key_context = section_context.dup).key = key
           evaluate(value, key_context.freeze, current_config.dig(section, key))
         end
