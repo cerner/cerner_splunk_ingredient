@@ -79,11 +79,8 @@ module CernerSplunk
           raise "Downloaded app version does not match intended version to install (#{pkg_version} vs. #{version})"
         end
 
-        Chef::Log.warn(version.inspect)
-        Chef::Log.warn(current_resource.version.inspect)
-        Chef::Log.warn(new_resource.version.inspect)
         # Check that the package's version is not a pre-release when we really expect a release
-        if !current_resource.version.prerelease? && pkg_version.prerelease?
+        if current_resource.version && !current_resource.version.prerelease? && pkg_version.prerelease?
           raise "Downloaded app version was unexpectedly a pre-release version (#{pkg_version} vs. #{app_version})"
         end
 
