@@ -13,6 +13,7 @@ module CernerSplunk
         unless @app_cache_path
           @app_cache_path = Pathname.new(Chef::Config['file_cache_path']) + 'splunk_ingredient/app_cache'
           [@app_cache_path, new_cache_path, existing_cache_path].each(&:mkpath)
+          [@app_cache_path, new_cache_path, existing_cache_path].each { |pth| Chef::Log.warn pth.inspect }
         end
 
         @app_cache_path
@@ -36,6 +37,8 @@ module CernerSplunk
 
       def upgrade_keep_existing
         converge_by 'restoring local config' do # ~FC005
+          [@app_cache_path, new_cache_path, existing_cache_path].each { |pth| Chef::Log.warn pth.inspect }
+          
           existing_local = existing_cache_path + 'local'
           existing_local_meta = existing_cache_path + 'metadata/local.meta'
           new_local = new_cache_path + 'local'
@@ -45,7 +48,12 @@ module CernerSplunk
           new_local_meta.parent.mkpath && FileUtils.cp(existing_local_meta, new_local_meta) if existing_local_meta.exist?
         end
 
+        [@app_cache_path, new_cache_path, existing_cache_path].each { |pth| Chef::Log.warn pth.inspect }
+        
+
         converge_by "changing ownership of app to #{current_owner}:#{current_group}" do
+          [@app_cache_path, new_cache_path, existing_cache_path].each { |pth| Chef::Log.warn pth.inspect }
+          
           CernerSplunk::FileHelpers.deep_change_ownership(new_cache_path, current_owner, current_group)
         end
 
