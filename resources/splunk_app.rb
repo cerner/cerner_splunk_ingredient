@@ -140,6 +140,7 @@ class CustomApp < SplunkApp
     directory app_path.to_s do
       user current_owner
       group current_owner
+      recursive true
       action :create
     end
 
@@ -172,8 +173,8 @@ class PackagedApp < SplunkApp
 
     directory 'ensure app path exists' do
       path app_path.to_s
-      action :create
       recursive true
+      action :create
     end
 
     backup_app if changed? :version
