@@ -137,6 +137,8 @@ class CustomApp < SplunkApp
   action :install do
     return unless !version || changed?(:version)
 
+    Chef::Log.warn 'real life'
+
     directory app_path.to_s do
       user current_owner
       group current_owner
