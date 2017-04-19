@@ -170,8 +170,10 @@ class PackagedApp < SplunkApp
       show_progress true
     end
 
-    directory app_path.to_s do
+    directory 'ensure app path exists' do
+      path app_path.to_s
       action :create
+      recursive true
     end
 
     backup_app if changed? :version
