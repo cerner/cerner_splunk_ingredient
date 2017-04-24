@@ -46,14 +46,14 @@ describe 'splunk_restart' do
           it { is_expected.to create_file_if_missing((Pathname.new(install_dir) + 'restart_on_chef_client').to_s) }
 
           it 'should notify the Splunk service to restart' do
-            expect(subject.splunk_restart(package.to_s)).to notify("splunk_service[#{package}]").to(:restart).delayed
+            expect(subject.splunk_restart(package.to_s)).to notify("splunk_restart[#{package}]").to(:check).delayed
           end
 
-          chef_context 'when name is provided' do
-            let(:test_params) { { resource_name: package.to_s, package: package, name: 'splunk service', action: :ensure } }
+          chef_context 'when service_name is provided' do
+            let(:test_params) { { resource_name: package.to_s, package: package, service_name: 'splunk service', action: :ensure } }
 
             it 'should notify the Splunk service to restart' do
-              expect(subject.splunk_restart(package.to_s)).to notify('splunk_service[splunk service]').to(:restart).delayed
+              expect(subject.splunk_restart(package.to_s)).to notify("splunk_restart[#{package}]").to(:check).delayed
             end
           end
 
@@ -83,6 +83,14 @@ describe 'splunk_restart' do
 
             it 'should notify the Splunk service to restart' do
               expect(subject.splunk_restart(package.to_s)).to notify("splunk_service[#{package}]").to(:restart).delayed
+            end
+
+            chef_context 'when service_name is provided' do
+              let(:test_params) { { resource_name: package.to_s, package: package, service_name: 'splunk service', action: :check } }
+
+              it 'should notify the Splunk service to restart' do
+                expect(subject.splunk_restart(package.to_s)).to notify('splunk_service[splunk service]').to(:restart).delayed
+              end
             end
           end
 
