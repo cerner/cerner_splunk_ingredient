@@ -10,7 +10,7 @@ class SplunkRestart < Chef::Resource
 
   resource_name :splunk_restart
 
-  property :name, String, name_property: true, desired_state: false, identity: true
+  property :service_name, String, name_property: true, desired_state: false, identity: true
   property :install_dir, String, required: true, desired_state: false
   property :package, %i[splunk universal_forwarder], required: true
 
@@ -43,7 +43,7 @@ class SplunkRestart < Chef::Resource
       install_state
     end
 
-    raise 'Attempted to reference resource for Splunk service that does not exist' unless resources(splunk_service: name)
+    raise 'Attempted to reference resource for Splunk service that does not exist' unless resources(splunk_service: service_name)
   end
 
   action_class do
@@ -55,11 +55,14 @@ class SplunkRestart < Chef::Resource
       action :create_if_missing
     end
 
-    notifies :restart, resources(splunk_service: name)
+    notifies :check, resources(splunk_restart: name)
   end
 
   action :check do
-    notifies :restart, resources(splunk_service: name) if marker_path.exist?
+    if marker_path.exist?
+      updated_by_last_action true
+      notifies :restart, resources(splunk_service: service_name)
+    end
   end
 
   action :clear do
