@@ -8,10 +8,6 @@ shared_examples 'positive service examples' do |action, override_name|
     it { is_expected.to __guarded_restart_splunk_service(override_name || resource_name) }
   end
 
-  # it 'should clear the restart marker' do
-  #   service = chef_run.service(service_name)
-  #   expect(service).to notify("file[#{marker_path}]").to(:delete).immediately
-  # end
   it { is_expected.to delete_file(marker_path.to_s) }
 
   case action
@@ -54,10 +50,6 @@ shared_examples '*start examples' do |action, platform, _, package|
         expect_any_instance_of(Chef::Provider).to receive(:write_initd_ulimit).with(4096)
       end
 
-      # it 'should clear the restart marker' do
-      #   service = chef_run.service(service_name)
-      #   expect(service).to notify("file[#{marker_path}]").to(:delete).immediately
-      # end
       it { is_expected.to delete_file(marker_path.to_s) }
       it { is_expected.not_to desired_restart_splunk_service(service_name) }
 
@@ -68,10 +60,6 @@ shared_examples '*start examples' do |action, platform, _, package|
             expect_any_instance_of(Chef::Provider).to receive(:write_initd_ulimit).with(4096)
           end
 
-          # it 'should not clear the restart marker' do
-          #   service = chef_run.service(service_name)
-          #   expect(service).not_to notify("file[#{marker_path}]").to(:delete).immediately
-          # end
           it { is_expected.not_to delete_file(marker_path.to_s) }
           it { is_expected.to desired_restart_splunk_service(resource_name) }
         end
@@ -86,10 +74,6 @@ shared_examples '*start examples' do |action, platform, _, package|
           expect_any_instance_of(Chef::Provider).not_to receive(:write_initd_ulimit)
         end
 
-        # it 'should clear the restart marker' do
-        #   service = chef_run.service(service_name)
-        #   expect(service).to notify("file[#{marker_path}]").to(:delete).immediately
-        # end
         it { is_expected.to delete_file(marker_path.to_s) }
         it { is_expected.not_to desired_restart_splunk_service(resource_name) }
       end
@@ -213,10 +197,6 @@ describe 'splunk_service' do
           chef_context 'when the restart marker is present' do
             let(:marker_exists) { true }
             it { is_expected.to restart_splunk_service(resource_name) }
-            # it 'should clear the restart marker' do
-            #   service = chef_run.service(service_name)
-            #   expect(service).to notify("file[#{marker_path}]").to(:delete).immediately
-            # end
             it { is_expected.to delete_file(marker_path.to_s) }
           end
         end
