@@ -4,7 +4,6 @@ if defined?(ChefSpec)
   ChefSpec.define_matcher :splunk_install
   ChefSpec.define_matcher :splunk_service
   ChefSpec.define_matcher :splunk_conf
-  ChefSpec.define_matcher :splunk_restart
   ChefSpec.define_matcher :splunk_app_custom
   ChefSpec.define_matcher :splunk_app_package
 
@@ -20,6 +19,10 @@ if defined?(ChefSpec)
     ChefSpec::Matchers::ResourceMatcher.new(:splunk_conf, :configure, path)
   end
 
+  def init_splunk_service(name)
+    ChefSpec::Matchers::ResourceMatcher.new(:splunk_service, :init, name)
+  end
+
   def start_splunk_service(name)
     ChefSpec::Matchers::ResourceMatcher.new(:splunk_service, :start, name)
   end
@@ -32,20 +35,12 @@ if defined?(ChefSpec)
     ChefSpec::Matchers::ResourceMatcher.new(:splunk_service, :restart, name)
   end
 
-  def init_splunk_service(name)
-    ChefSpec::Matchers::ResourceMatcher.new(:splunk_service, :init, name)
+  def desired_restart_splunk_service(name)
+    ChefSpec::Matchers::ResourceMatcher.new(:splunk_service, :desired_restart, name)
   end
 
-  def ensure_splunk_restart(name)
-    ChefSpec::Matchers::ResourceMatcher.new(:splunk_restart, :ensure, name)
-  end
-
-  def check_splunk_restart(name)
-    ChefSpec::Matchers::ResourceMatcher.new(:splunk_restart, :check, name)
-  end
-
-  def clear_splunk_restart(name)
-    ChefSpec::Matchers::ResourceMatcher.new(:splunk_restart, :clear, name)
+  def __guarded_restart_splunk_service(name)
+    ChefSpec::Matchers::ResourceMatcher.new(:splunk_service, :__guarded_restart, name)
   end
 
   def install_splunk_app_custom(name)

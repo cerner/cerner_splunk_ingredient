@@ -9,7 +9,6 @@ class SplunkService < Chef::Resource
   include CernerSplunk::PlatformHelpers
   include CernerSplunk::ResourceHelpers
   include CernerSplunk::ServiceHelpers
-  include CernerSplunk::RestartHelpers
 
   resource_name :splunk_service
 
@@ -22,10 +21,16 @@ class SplunkService < Chef::Resource
 
   def after_created
     package_from_name unless property_is_set?(:package) || property_is_set?(:install_dir)
+    delayed_action :__guarded_restart if run_context.parent_run_context.nil?
   end
 
   def service_name
     @service_name ||= service_names[package][node['os'].to_sym]
+  end
+
+  def marker_path
+    @marker_path ||= Pathname.new(install_dir) + 'restart_on_chef_client'
+    # @marker_path
   end
 
   def install_state
@@ -49,8 +54,6 @@ class SplunkService < Chef::Resource
       install_state
     end
 
-    check_restart unless defined?(performed_actions) && !performed_actions.empty?
-
     unless node['os'] == 'windows'
       if init_script_path.exist?
         limit = init_script_path.read[/ulimit -n (\d+)/, 1].to_i
@@ -62,12 +65,28 @@ class SplunkService < Chef::Resource
   action_class do
     include CernerSplunk::ProviderHelpers
 
-    def service_action(desired_action)
+    # Provide file and service resources from methods to eliminate accidental resource cloning
+    def marker_resource
+      resources(file: marker_path.to_s)
+    rescue Chef::Exceptions::ResourceNotFound
+      file(marker_path.to_s) do
+        action :nothing
+      end
+    end
+
+    def service_resource
+      resources(service: service_name)
+    rescue Chef::Exceptions::ResourceNotFound
       service service_name do
         provider Chef::Provider::Service::Systemd if systemd_is_init?
         supports start: true, stop: true, restart: true, status: true
-        action desired_action
+        action :nothing
       end
+    end
+
+    def service_action(desired_action)
+      service_resource.run_action(desired_action)
+      marker_resource.run_action(:delete)
     end
 
     def initialize_service
@@ -93,7 +112,16 @@ class SplunkService < Chef::Resource
   action :restart do
     initialize_service
     service_action :restart
-    clear_restart
+  end
+
+  action :desired_restart do
+    file marker_path.to_s do
+      action :create_if_missing
+    end
+  end
+
+  action :__guarded_restart do
+    run_context.add_delayed_action(Notification.new(current_resource, :restart, current_resource)) if marker_path.exist?
   end
 
   action :init do
@@ -114,10 +142,10 @@ class LinuxService < SplunkService
 
     if changed? :ulimit
       write_initd_ulimit ulimit
-      ensure_restart if service_running
+      run_context.notifies_immediately(Notification.new(current_resource, :desired_restart, current_resource)) if service_running
     end
 
-    service_action :start
+    service_action :start unless changed?(:ulimit) && service_running
   end
 
   action :restart do
@@ -126,6 +154,5 @@ class LinuxService < SplunkService
     write_initd_ulimit ulimit if changed? :ulimit
 
     service_action :restart
-    clear_restart
   end
 end
