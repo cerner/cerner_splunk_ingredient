@@ -8,7 +8,10 @@ shared_examples 'positive service examples' do |action, override_name|
     it { is_expected.to __guarded_restart_splunk_service(override_name || resource_name) }
   end
 
-  it { is_expected.to delete_file(marker_path.to_s) }
+  it 'should delete the restart marker file' do
+    expect(subject.service(service_name)).to notify("file[#{marker_path}]").to(:delete).immediately
+  end
+  # it { is_expected.to delete_file(marker_path.to_s) }
 
   case action
   when :start then it { is_expected.to start_service(service_name) }
@@ -50,7 +53,10 @@ shared_examples '*start examples' do |action, platform, _, package|
         expect_any_instance_of(Chef::Provider).to receive(:write_initd_ulimit).with(4096)
       end
 
-      it { is_expected.to delete_file(marker_path.to_s) }
+      it 'should delete the restart marker file' do
+        expect(subject.service(service_name)).to notify("file[#{marker_path}]").to(:delete).immediately
+      end
+      # it { is_expected.to delete_file(marker_path.to_s) }
       it { is_expected.not_to desired_restart_splunk_service(service_name) }
 
       if action == :start
@@ -74,7 +80,10 @@ shared_examples '*start examples' do |action, platform, _, package|
           expect_any_instance_of(Chef::Provider).not_to receive(:write_initd_ulimit)
         end
 
-        it { is_expected.to delete_file(marker_path.to_s) }
+        it 'should delete the restart marker file' do
+          expect(subject.service(service_name)).to notify("file[#{marker_path}]").to(:delete).immediately
+        end
+        # it { is_expected.to delete_file(marker_path.to_s) }
         it { is_expected.not_to desired_restart_splunk_service(resource_name) }
       end
     end
@@ -197,7 +206,10 @@ describe 'splunk_service' do
           chef_context 'when the restart marker is present' do
             let(:marker_exists) { true }
             it { is_expected.to restart_splunk_service(resource_name) }
-            it { is_expected.to delete_file(marker_path.to_s) }
+            it 'should delete the restart marker file' do
+              expect(subject.service(service_name)).to notify("file[#{marker_path}]").to(:delete).immediately
+            end
+            # it { is_expected.to delete_file(marker_path.to_s) }
           end
         end
       end

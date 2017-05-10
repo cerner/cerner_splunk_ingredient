@@ -81,14 +81,13 @@ class SplunkService < Chef::Resource
     rescue Chef::Exceptions::ResourceNotFound
       service service_name do
         provider Chef::Provider::Service::Systemd if systemd_is_init?
-        supports start: true, stop: true, restart: true, status: true
         action :nothing
+        notifies :delete, marker_resource, :immediately
       end
     end
 
     def service_action(desired_action)
       service_resource.run_action(desired_action)
-      marker_resource.run_action(:delete)
     end
 
     def initialize_service
