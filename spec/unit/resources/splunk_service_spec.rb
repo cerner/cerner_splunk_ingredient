@@ -11,7 +11,6 @@ shared_examples 'positive service examples' do |action, override_name|
   it 'should delete the restart marker file' do
     expect(subject.service(service_name)).to notify("file[#{marker_path}]").to(:delete).immediately
   end
-  # it { is_expected.to delete_file(marker_path.to_s) }
 
   case action
   when :start then it { is_expected.to start_service(service_name) }
@@ -56,7 +55,6 @@ shared_examples '*start examples' do |action, platform, _, package|
       it 'should delete the restart marker file' do
         expect(subject.service(service_name)).to notify("file[#{marker_path}]").to(:delete).immediately
       end
-      # it { is_expected.to delete_file(marker_path.to_s) }
       it { is_expected.not_to desired_restart_splunk_service(service_name) }
 
       if action == :start
@@ -83,7 +81,6 @@ shared_examples '*start examples' do |action, platform, _, package|
         it 'should delete the restart marker file' do
           expect(subject.service(service_name)).to notify("file[#{marker_path}]").to(:delete).immediately
         end
-        # it { is_expected.to delete_file(marker_path.to_s) }
         it { is_expected.not_to desired_restart_splunk_service(resource_name) }
       end
     end
@@ -209,7 +206,6 @@ describe 'splunk_service' do
             it 'should delete the restart marker file' do
               expect(subject.service(service_name)).to notify("file[#{marker_path}]").to(:delete).immediately
             end
-            # it { is_expected.to delete_file(marker_path.to_s) }
           end
         end
       end
