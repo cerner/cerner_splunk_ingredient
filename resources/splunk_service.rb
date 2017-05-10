@@ -21,6 +21,9 @@ class SplunkService < Chef::Resource
 
   def after_created
     package_from_name unless property_is_set?(:package) || property_is_set?(:install_dir)
+    # Check for a restart marker at the end of the Chef run. Only do this if we're in the root run context;
+    # if there is a parent run context, we are actually in another resource and the delayed action would run
+    # at the end of that resource instead of the end of the Chef run.
     delayed_action :__guarded_restart if run_context.parent_run_context.nil?
   end
 
@@ -30,7 +33,6 @@ class SplunkService < Chef::Resource
 
   def marker_path
     @marker_path ||= Pathname.new(install_dir) + 'restart_on_chef_client'
-    # @marker_path
   end
 
   def install_state
