@@ -3,7 +3,7 @@
 source 'https://rubygems.org'
 
 gem 'berkshelf', '~> 5.6'
-gem 'chef', '~> 12.16'
+gem 'chef', '~> 12.16', '< 12.17'
 gem 'chefspec', '~> 6.0'
 gem 'fauxhai', '~> 4.1'
 gem 'foodcritic', '~> 10.4'

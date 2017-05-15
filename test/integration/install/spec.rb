@@ -68,14 +68,14 @@ describe file((test_app_path + 'metadata/default.meta').to_s) do
   its('content') { is_expected.to match(/access = read : \[ admin \], write : \[ admin \]/) }
 end
 
+describe file("#{splunk_path}/restart_on_chef_client") do
+  it { is_expected.not_to exist }
+end
+
 unless windows
   describe file('/etc/init.d/splunk') do
     it { is_expected.to be_file }
     its('content') { is_expected.to match(/RETVAL=0\s+ulimit -n 4000/m) }
-  end
-
-  describe file("#{splunk_path}/restart_on_chef_client") do
-    it { is_expected.not_to exist }
   end
 
   describe command('cat /proc/$(pgrep splunkd | sed -n 1p)/limits') do

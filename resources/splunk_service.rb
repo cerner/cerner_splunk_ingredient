@@ -67,27 +67,15 @@ class SplunkService < Chef::Resource
   action_class do
     include CernerSplunk::ProviderHelpers
 
-    # Provide file and service resources from methods to eliminate accidental resource cloning
-    def marker_resource
-      resources(file: marker_path.to_s)
-    rescue Chef::Exceptions::ResourceNotFound
-      file(marker_path.to_s) do
+    def service_action(desired_action)
+      marker = file(marker_path.to_s) do
         action :nothing
       end
-    end
-
-    def service_resource
-      resources(service: service_name)
-    rescue Chef::Exceptions::ResourceNotFound
       service service_name do
         provider Chef::Provider::Service::Systemd if systemd_is_init?
-        action :nothing
-        notifies :delete, marker_resource, :immediately
+        action desired_action
+        notifies :delete, marker, :immediately
       end
-    end
-
-    def service_action(desired_action)
-      service_resource.run_action(desired_action)
     end
 
     def initialize_service
