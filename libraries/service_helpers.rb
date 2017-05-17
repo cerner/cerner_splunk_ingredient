@@ -5,25 +5,6 @@ module CernerSplunk
   module ServiceHelpers
     include ResourceHelpers
 
-    # Returns the process id of the daemon or nil if is not running.
-    # @return [Integer, nil]
-    def service_pid
-      install_state = node.run_state['splunk_ingredient']['installations'][install_dir]
-      return unless install_state
-
-      pid_file = Pathname.new(install_dir) + 'var/run/splunk/splunkd.pid'
-      return unless pid_file.exist?
-
-      pid = pid_file.readlines.first.to_i
-      pid.positive? ? pid : nil
-    end
-
-    # Reports if the daemon for the current package is running
-    # @return [Boolean]
-    def service_running
-      !service_pid.nil?
-    end
-
     # Returns a Pathname of the init.d script for Splunk
     # @return [Pathname] Splunk init.d script location
     def init_script_path

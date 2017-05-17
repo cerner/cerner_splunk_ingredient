@@ -11,7 +11,7 @@ version           '0.1.0'
 source_url        'https://github.com/cerner/cerner_splunk_ingredient'
 issues_url        'https://github.com/cerner/cerner_splunk_ingredient/issues'
 
-chef_version      '~> 12.14'
+chef_version      '~> 12.16'
 
 supports          'redhat', '>= 6.8'
 supports          'ubuntu', '>= 12.04'

@@ -9,7 +9,7 @@ These resources can:
 
 ## Requirements
 
-Chef >= 12.14
+Chef >= 12.16
 Ruby >= 2.3.1
 
 Supports Linux and Windows based systems with package support for Debian, Redhat,
@@ -135,6 +135,16 @@ Properties:
 | :----------- | :---------------------------------: | :-----------------------------------: | :---------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | package      | `:splunk` or `:universal_forwarder` | **Yes, unless install\_dir is given** |                         | Specifies the installed Splunk package. If you did not specify the install\_dir, then you must specify the package, or name the resource for the package; for example, `package :splunk` or `splunk_service 'universal_forwarder' do ... end` |
 | install\_dir |                String               |                   No                  | Same as splunk\_install | The install directory of Splunk. If you installed to a different directory than the default, you should provide this. If install\_dir is given, you do not need package.                                                                      |
+
+#### Action _:desired\_restart_
+
+Intended to be run or notified immediately. This action creates a marker file that triggers a delayed restart later.
+The splunk\_service always checks for this marker file at the end of the run. This is very useful when you perform an action
+that should cancel an unnecessary restart (such as stopping or starting the service). The marker file is removed in these
+cases and the delayed restart is effectively cancelled. It also helps when the run fails attempting to restart, because it
+will try to restart again on the next run (assuming the marker is not cleared beforehand).
+
+You should notify this action :immediately when you have changes that demand a restart of Splunk.
 
 ### splunk\_conf
 
@@ -309,37 +319,6 @@ lambda do |context, value|
   [context.key, value]
 end
 ```
-
-### splunk\_restart
-
-Places a file marker to indicate a pending Splunk restart. Useful when using an unstable cookbook that can crash the Chef run,
-preventing delayed restarts from taking place. If a file marker exists, and the splunk\_service resource is referenced in a future
-Chef run, it will notify a delayed restart as was intended in the previous run. The marker is removed on a successful restart.
-
-**The following actions all share the same properties:**
-
-#### Action _:ensure_
-
-Ensure that Splunk is restarted. This will notify for a delayed restart as well as place the file marker in case the Chef run fails
-before restarting Splunk. You should run this action in your cookbook when you intend to restart Splunk after a config change.
-
-_Note: When notifying this resource, do so with `:immediately`, otherwise it will effectively be the same as a normal delayed restart._
-
-#### Action _:check_
-
-Checks if the file marker exists, and notifies for a delayed restart.
-
-#### Action _:clear_
-
-Removes the file marker.
-
-Properties:
-
-| Name         |               Type(s)               |                Required               | Default                 | Description                                                                                                                                                                                                                                   |
-| :----------- | :---------------------------------: | :-----------------------------------: | :---------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| service_name |                String               |                   No                  | Resource Name           | Name of the splunk\_service resource to notify when a restart is triggered. By default, this is the name given to this resource.                                                                                                              |
-| package      | `:splunk` or `:universal_forwarder` | **Yes, unless install\_dir is given** |                         | Specifies the installed Splunk package. If you did not specify the install\_dir, then you must specify the package, or name the resource for the package; for example, `package :splunk` or `splunk_restart 'universal_forwarder' do ... end` |
-| install\_dir |                String               |                   No                  | Same as splunk\_install | The install directory of Splunk. If you installed to a different directory than the default, you should provide this. If install\_dir is given, you do not need package.                                                                      |
 
 ### splunk\_app\_\*
 
