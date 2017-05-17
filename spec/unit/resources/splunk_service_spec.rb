@@ -48,25 +48,15 @@ shared_examples '*start examples' do |action, platform, _, package|
     chef_context 'when the ulimit is specified' do
       let(:test_params) { { resource_name: resource_name, package: package, action: action, ulimit: 4096 } }
       let(:action_stubs) do
-        expect_any_instance_of(Chef::Provider).to receive(:service_running).at_least(:once).and_return(nil) if action == :start
         expect_any_instance_of(Chef::Provider).to receive(:write_initd_ulimit).with(4096)
+      end
+
+      if action == :start
+        it { is_expected.to create_file_if_missing(marker_path.to_s) }
       end
 
       it 'should delete the restart marker file' do
         expect(subject.service(service_name)).to notify("file[#{marker_path}]").to(:delete).immediately
-      end
-      it { is_expected.not_to desired_restart_splunk_service(service_name) }
-
-      if action == :start
-        chef_context 'when the service is running' do
-          let(:action_stubs) do
-            expect_any_instance_of(Chef::Provider).to receive(:service_running).at_least(:once).and_return(true)
-            expect_any_instance_of(Chef::Provider).to receive(:write_initd_ulimit).with(4096)
-          end
-
-          it { is_expected.not_to delete_file(marker_path.to_s) }
-          it { is_expected.to desired_restart_splunk_service(resource_name) }
-        end
       end
 
       chef_context 'when the ulimit is the same' do
@@ -74,14 +64,14 @@ shared_examples '*start examples' do |action, platform, _, package|
         let(:init_script_exists) { true }
         let(:action_stubs) do
           expect(init_script).to receive(:read).at_least(:once).and_return(IO.read('spec/reference/splunk_initd'))
-          expect_any_instance_of(Chef::Provider).not_to receive(:service_running)
           expect_any_instance_of(Chef::Provider).not_to receive(:write_initd_ulimit)
         end
 
         it 'should delete the restart marker file' do
           expect(subject.service(service_name)).to notify("file[#{marker_path}]").to(:delete).immediately
         end
-        it { is_expected.not_to desired_restart_splunk_service(resource_name) }
+
+        it { is_expected.not_to create_file_if_missing(marker_path.to_s) }
       end
     end
   end

@@ -131,10 +131,12 @@ class LinuxService < SplunkService
 
     if changed? :ulimit
       write_initd_ulimit ulimit
-      run_context.notifies_immediately(Notification.new(current_resource, :desired_restart, current_resource)) if service_running
+      file marker_path.to_s do
+        action :create_if_missing
+      end
     end
 
-    service_action :start unless changed?(:ulimit) && service_running
+    service_action :start
   end
 
   action :restart do
