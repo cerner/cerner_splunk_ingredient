@@ -6,10 +6,6 @@ splunk_install 'splunk' do
   base_url 'http://download.splunk.com/products'
 end
 
-splunk_restart 'splunk' do
-  action :nothing
-end
-
 splunk_conf 'system/indexes.conf' do
   config(
     test_index: {
@@ -44,5 +40,5 @@ splunk_app_custom 'test_app' do
     views: { access: { read: '*', write: %w[admin power] } },
     'views/index_check' => { access: { read: 'admin', write: 'admin' } }
   )
-  notifies :ensure, 'splunk_restart[splunk]', :immediately
+  notifies :desired_restart, 'splunk_service[splunk]', :immediately
 end

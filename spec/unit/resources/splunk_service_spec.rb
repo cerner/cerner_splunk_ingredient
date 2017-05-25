@@ -2,91 +2,76 @@
 
 require_relative '../spec_helper'
 include CernerSplunk::ServiceHelpers
-include CernerSplunk::RestartHelpers
 
-shared_examples '*start examples' do |action, platform, _, package|
-  is_windows = platform == 'windows'
-  let(:action_stubs) do
-    expect_any_instance_of(Chef::Provider).not_to receive(:write_initd_ulimit)
-    expect_any_instance_of(Chef::Provider).not_to receive(:ensure_restart)
-    expect_any_instance_of(Chef::Provider).to receive(:clear_restart).and_call_original if action == :restart
+shared_examples 'positive service examples' do |action, override_name|
+  chef_context 'when splunk_service is created' do
+    it { is_expected.to __guarded_restart_splunk_service(override_name || resource_name) }
+  end
+
+  it 'should delete the restart marker file' do
+    expect(subject.service(service_name)).to notify("file[#{marker_path}]").to(:delete).immediately
   end
 
   case action
   when :start then it { is_expected.to start_service(service_name) }
   when :restart then it { is_expected.to restart_service(service_name) }
+  when :stop then it { is_expected.to stop_service(service_name) }
   end
+end
+
+shared_examples '*start examples' do |action, platform, _, package|
+  is_windows = platform == 'windows'
+  let(:action_stubs) do
+    expect_any_instance_of(Chef::Provider).not_to receive(:write_initd_ulimit)
+  end
+
+  include_examples 'positive service examples', action
 
   chef_context 'when the service has not been run for the first time' do
     let(:ftr_exists) { true }
-    let(:action_stubs) do
-      expect_any_instance_of(Chef::Provider).not_to receive(:write_initd_ulimit)
-      expect_any_instance_of(Chef::Provider).not_to receive(:ensure_restart)
-      expect_any_instance_of(Chef::Provider).to receive(:clear_restart).and_call_original if action == :restart
-    end
-
     it { is_expected.to run_execute("#{cmd_prefix} enable boot-start#{is_windows ? '' : ' -user fauxhai'} --accept-license --no-prompt").with(cwd: "#{install_dir}/bin") }
-
-    case action
-    when :start then it { is_expected.to start_service(service_name) }
-    when :restart then it { is_expected.to restart_service(service_name) }
-    end
+    include_examples 'positive service examples', action
   end
 
   chef_context 'when install_dir is provided without package' do
     let(:install_dir) { platform == 'windows' ? 'C:\\Splunk' : '/etc/splunk' }
-    let(:test_params) { { resource_name: "service_#{action}", install_dir: install_dir, action: action } }
+    let(:test_params) { { resource_name: resource_name, install_dir: install_dir, action: action } }
+    include_examples 'positive service examples', action
+  end
 
-    case action
-    when :start then it { is_expected.to start_service(service_name) }
-    when :restart then it { is_expected.to restart_service(service_name) }
-    end
+  chef_context 'when the package is provided as the name' do
+    let(:test_params) { { resource_name: package.to_s, action: action } }
+    include_examples 'positive service examples', action, package.to_s
   end
 
   unless is_windows
     chef_context 'when the ulimit is specified' do
-      let!(:original_stubs) { action_stubs }
-
-      let(:test_params) { { resource_name: package.to_s, action: action, ulimit: 4096 } }
+      let(:test_params) { { resource_name: resource_name, package: package, action: action, ulimit: 4096 } }
       let(:action_stubs) do
-        expect_any_instance_of(Chef::Provider).to receive(:service_running).and_return(nil) if action == :start
         expect_any_instance_of(Chef::Provider).to receive(:write_initd_ulimit).with(4096)
-        expect_any_instance_of(Chef::Provider).not_to receive(:ensure_restart)
-        expect_any_instance_of(Chef::Provider).to receive(:clear_restart).and_call_original if action == :restart
-      end
-
-      it 'should set the ulimit' do
-        subject
       end
 
       if action == :start
-        chef_context 'when the service is running' do
-          let(:action_stubs) do
-            expect_any_instance_of(Chef::Provider).to receive(:service_running).at_least(:once).and_return(true)
-            expect_any_instance_of(Chef::Provider).to receive(:write_initd_ulimit).with(4096)
-            expect_any_instance_of(Chef::Provider).to receive(:ensure_restart).and_call_original
-          end
+        it { is_expected.to create_file_if_missing(marker_path.to_s) }
+      end
 
-          it 'should ensure a service restart' do
-            subject
-          end
-        end
+      it 'should delete the restart marker file' do
+        expect(subject.service(service_name)).to notify("file[#{marker_path}]").to(:delete).immediately
       end
 
       chef_context 'when the ulimit is the same' do
-        let(:test_params) { { resource_name: package.to_s, action: action, ulimit: 1024 } }
+        let(:test_params) { { resource_name: resource_name, package: package, action: action, ulimit: 1024 } }
         let(:init_script_exists) { true }
         let(:action_stubs) do
-          expect(init_script).to receive(:read).and_return(IO.read('spec/reference/splunk_initd'))
-          expect_any_instance_of(Chef::Provider).not_to receive(:service_running)
+          expect(init_script).to receive(:read).at_least(:once).and_return(IO.read('spec/reference/splunk_initd'))
           expect_any_instance_of(Chef::Provider).not_to receive(:write_initd_ulimit)
-          expect_any_instance_of(Chef::Provider).not_to receive(:ensure_restart)
-          expect_any_instance_of(Chef::Provider).to receive(:clear_restart).and_call_original if action == :restart
         end
 
-        it 'should not change the ulimit' do
-          subject
+        it 'should delete the restart marker file' do
+          expect(subject.service(service_name)).to notify("file[#{marker_path}]").to(:delete).immediately
         end
+
+        it { is_expected.not_to create_file_if_missing(marker_path.to_s) }
       end
     end
   end
@@ -104,6 +89,7 @@ describe 'splunk_service' do
 
         let(:has_run) { true }
         let(:ftr) { double('ftr_pathname') }
+        let(:marker_double) { double('marker_path') }
         let(:init_script) { double('init_script_path') }
         let(:service_name) do
           if is_windows
@@ -114,6 +100,7 @@ describe 'splunk_service' do
         end
         let(:cmd_prefix) { is_windows ? 'splunk.exe' : './splunk' }
         let(:install_dir) { CernerSplunk::PathHelpers.default_install_dirs[package][platform == 'windows' ? :windows : :linux] }
+        let(:marker_path) { Pathname.new(install_dir) + 'restart_on_chef_client' }
 
         let(:mock_run_state) do
           install = {
@@ -134,17 +121,21 @@ describe 'splunk_service' do
         end
 
         let(:ftr_exists) { false }
+        let(:marker_exists) { false }
         let(:init_script_exists) { false }
         let(:common_stubs) do
-          expect_any_instance_of(Chef::Resource).to receive(:check_restart).and_call_original
-          expect(CernerSplunk::PathHelpers).to receive(:ftr_pathname).and_return ftr
-          expect(ftr).to receive(:exist?).and_return ftr_exists
+          allow(CernerSplunk::PathHelpers).to receive(:ftr_pathname).and_return ftr
+          allow(ftr).to receive(:exist?).and_return ftr_exists
+
+          allow_any_instance_of(Chef::Provider).to receive(:marker_path).and_return marker_double
+          allow(marker_double).to receive(:exist?).and_return marker_exists
+          allow(marker_double).to receive(:to_s).and_return marker_path.to_s
 
           allow_any_instance_of(Chef::Provider).to receive(:current_owner).and_return(is_windows ? 'administrator' : 'fauxhai')
-          expect_any_instance_of(Chef::Resource).to receive(:load_installation_state).and_return true
+          allow_any_instance_of(Chef::Resource).to receive(:load_installation_state).and_return true
           unless is_windows
-            expect_any_instance_of(Chef::Resource).to receive(:init_script_path).at_least(:once).and_return(init_script)
-            expect(init_script).to receive(:exist?).and_return init_script_exists
+            allow_any_instance_of(Chef::Resource).to receive(:init_script_path).and_return(init_script)
+            expect(init_script).to receive(:exist?).at_least(:once).and_return(init_script_exists)
           end
         end
 
@@ -154,20 +145,22 @@ describe 'splunk_service' do
         end
 
         chef_describe 'action :start' do
-          let(:test_params) { { resource_name: package.to_s, action: :start } }
+          let(:resource_name) { 'start_service' }
+          let(:test_params) { { resource_name: resource_name, package: package, action: :start } }
           include_examples '*start examples', :start, platform, version, package
         end
 
         chef_describe 'action :restart' do
-          let(:test_params) { { resource_name: package.to_s, action: :restart } }
+          let(:resource_name) { 'restart_service' }
+          let(:test_params) { { resource_name: resource_name, package: package, action: :restart } }
           include_examples '*start examples', :restart, platform, version, package
         end
 
         chef_describe 'action :stop' do
+          let(:resource_name) { 'stop_service' }
           let(:action_stubs) {}
-          let(:test_params) { { resource_name: package.to_s, action: :stop } }
-
-          it { is_expected.to stop_service(service_name) }
+          let(:test_params) { { resource_name: resource_name, package: package, action: :stop } }
+          include_examples 'positive service examples', :stop
 
           chef_context 'when the service has not been run for the first time' do
             let(:ftr_exists) { true }
@@ -176,9 +169,33 @@ describe 'splunk_service' do
 
           chef_context 'when install_dir is provided without package' do
             let(:install_dir) { platform == 'windows' ? 'C:\\Splunk' : '/etc/splunk' }
-            let(:test_params) { { resource_name: 'service_stop', install_dir: install_dir, action: :stop } }
+            let(:test_params) { { resource_name: resource_name, install_dir: install_dir, action: :stop } }
 
-            it { is_expected.to stop_service(service_name) }
+            include_examples 'positive service examples', :stop
+          end
+        end
+
+        chef_describe 'action :desired_restart' do
+          let(:resource_name) { 'desired_restart' }
+          let(:action_stubs) {}
+          let(:test_params) { { resource_name: resource_name, package: package, action: :desired_restart } }
+
+          it { is_expected.to create_file_if_missing(marker_path.to_s) }
+        end
+
+        chef_describe 'action :__guarded_restart' do
+          let(:resource_name) { '__guarded_restart' }
+          let(:action_stubs) {}
+          let(:test_params) { { resource_name: resource_name, package: package, action: :__guarded_restart } }
+
+          it { is_expected.not_to restart_splunk_service(resource_name) }
+
+          chef_context 'when the restart marker is present' do
+            let(:marker_exists) { true }
+            it { is_expected.to restart_splunk_service(resource_name) }
+            it 'should delete the restart marker file' do
+              expect(subject.service(service_name)).to notify("file[#{marker_path}]").to(:delete).immediately
+            end
           end
         end
       end

@@ -8,12 +8,12 @@ bundler_args: --without local
 rvm:
   - 2.3.1
 env:
-  - TEST_GROUP=1 CHEF_VERSION="~> 12.14"
-  - TEST_GROUP=2 CHEF_VERSION="~> 12.14"
-  - TEST_GROUP=3 CHEF_VERSION="~> 12.14"
-  - TEST_GROUP=4 CHEF_VERSION="~> 12.14"
-  - TEST_GROUP=5 CHEF_VERSION="~> 12.14"
-  - TEST_GROUP=6 CHEF_VERSION="~> 12.14"
+  - TEST_GROUP=1
+  - TEST_GROUP=2
+  - TEST_GROUP=3
+  - TEST_GROUP=4
+  - TEST_GROUP=5
+  - TEST_GROUP=6
 script:
   - bundle exec rubocop
   - bundle exec foodcritic -f any .
