@@ -29,7 +29,7 @@ describe file((Pathname.new(splunk_path) + 'etc/system/local/server.conf').to_s)
   its('content') { is_expected.to match '[general]' }
   its('content') { is_expected.to match 'serverName = test-forwarder' }
   its('content') { is_expected.to match '[sslConfig]' }
-  its('content') { is_expected.to match(/sslKeysfilePassword = .+/) }
+  its('content') { is_expected.to match(/sslPassword = .+/) }
 end
 
 unless windows

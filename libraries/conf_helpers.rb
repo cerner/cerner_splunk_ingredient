@@ -46,7 +46,8 @@ module CernerSplunk
         case ln
         when /^\s*\[([^#]+)\]\s*/
           current_section = Regexp.last_match[1]
-        when /^\s*([^#]+?)\s*=\s*([^#]+?)\s*(?:#.*)?$/
+          current_config[current_section] ||= {}
+        when /^\s*([^#]+?)\s*=\s*([^#\v]*?)\s*(?:#.*)?$/
           (current_config[current_section] ||= {})[Regexp.last_match[1]] = Regexp.last_match[2]
         end
       end

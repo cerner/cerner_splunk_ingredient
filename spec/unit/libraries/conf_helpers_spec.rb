@@ -135,7 +135,10 @@ describe 'ConfHelpers' do
       {
         'default' => {
           'outside' => 'true',
-          'inside' => 'true'
+          'inside' => 'true',
+          'empty' => '',
+          'also_empty' => '',
+          'strange' => ''
         },
         'spacey! bit?' => {
           'some thing' => 'is here',
@@ -166,7 +169,10 @@ describe 'ConfHelpers' do
       {
         'default' => {
           'outside' => 'true',
-          'inside' => 'true'
+          'inside' => 'true',
+          'empty' => '',
+          'also_empty' => '',
+          'strange' => ''
         },
         'spacey! bit?' => {
           'some thing' => 'is here',
