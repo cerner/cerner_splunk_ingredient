@@ -188,11 +188,10 @@ class PackagedApp < SplunkApp
       destination temp_path
       user current_owner
       group current_owner
+      action :nothing
     end
 
-    ruby_block 'app extraction metadata' do
-      block { extraction_resource.updated_by_last_action false }
-    end
+    extraction_resource.run_action :unpack
 
     validate_extracted_app
 
