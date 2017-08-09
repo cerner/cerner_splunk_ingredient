@@ -135,7 +135,7 @@ class SplunkApp < Chef::Resource
     end
 
     def ignore_previous_resource_updates
-      @prior_resources = run_context.resource_collection.select(&:updated?)
+      @prior_resources = run_context.resource_collection.dup
     end
   end
 
