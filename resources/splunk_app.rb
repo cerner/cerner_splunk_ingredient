@@ -79,6 +79,7 @@ class SplunkApp < Chef::Resource
     if app_version
       raise 'Version to install must be specified when app has a version.' unless desired.version
       version CernerSplunk::SplunkVersion.from_string(app_version)
+      caller_locations(1, 1).first.tap{|loc| Chef::Log.warn "#{loc.path}:#{loc.lineno}:current version #{updated_by_last_action?}"}
 
       # Check that a pre-release version isn't being installed over a similar release version.
       raise "Attempted to install pre-release version over release version (#{desired.version} vs. #{version})" if desired.version.prerelease? && !version.prerelease?
@@ -137,8 +138,6 @@ class CustomApp < SplunkApp
   action :install do
     return unless !version || changed?(:version)
 
-    Chef::Log.warn 'real life'
-
     directory app_path.to_s do
       user current_owner
       group current_owner
@@ -164,6 +163,8 @@ class PackagedApp < SplunkApp
   resource_name :splunk_app_package
 
   action :install do
+    caller_locations(1, 1).first.tap{|loc| Chef::Log.warn "#{loc.path}:#{loc.lineno}:version? #{version} #{updated_by_last_action?}"}
+    caller_locations(1, 1).first.tap{|loc| Chef::Log.warn "#{loc.path}:#{loc.lineno}:changed? #{changed?(:version)} #{updated_by_last_action?}"}
     return unless !version || changed?(:version)
 
     package_path = app_cache_path + CernerSplunk::PathHelpers.filename_from_url(source_url).gsub(/.spl$/, '.tgz')
@@ -172,14 +173,17 @@ class PackagedApp < SplunkApp
       source source_url
       show_progress true
     end
+    caller_locations(1, 1).first.tap{|loc| Chef::Log.warn "#{loc.path}:#{loc.lineno}:downloaded #{updated_by_last_action?}"}
 
     directory 'ensure app path exists' do
       path app_path.to_s
       recursive true
       action :create
     end
+    caller_locations(1, 1).first.tap{|loc| Chef::Log.warn "#{loc.path}:#{loc.lineno}:directory'd #{updated_by_last_action?}"}
 
     backup_app if changed? :version
+    caller_locations(1, 1).first.tap{|loc| Chef::Log.warn "#{loc.path}:#{loc.lineno}:backed up #{updated_by_last_action?}"}
 
     temp_path = new_cache_path.to_s
 
@@ -188,16 +192,20 @@ class PackagedApp < SplunkApp
       user current_owner
       group current_owner
     end
+    caller_locations(1, 1).first.tap{|loc| Chef::Log.warn "#{loc.path}:#{loc.lineno}:unpacked #{updated_by_last_action?}"}
 
     converge_by 'validating the extracted app' do
       validate_extracted_app
+      caller_locations(1, 1).first.tap{|loc| Chef::Log.warn "#{loc.path}:#{loc.lineno}:validated #{updated_by_last_action?}"}
     end
 
     ruby_block 'upgrade app' do
       block { upgrade_keep_existing }
       only_if { validate_versions }
     end
+    caller_locations(1, 1).first.tap{|loc| Chef::Log.warn "#{loc.path}:#{loc.lineno}:upgraded #{updated_by_last_action?}"}
 
     apply_config
+    caller_locations(1, 1).first.tap{|loc| Chef::Log.warn "#{loc.path}:#{loc.lineno}:config'd #{updated_by_last_action?}"}
   end
 end

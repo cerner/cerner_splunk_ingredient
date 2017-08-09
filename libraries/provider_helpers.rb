@@ -46,7 +46,9 @@ module CernerSplunk
         end
 
         converge_by "changing ownership of app to #{current_owner}:#{current_group}" do
+          caller_locations(1, 1).first.tap{|loc| puts "#{loc.path}:#{loc.lineno}:deep change pre"}
           CernerSplunk::FileHelpers.deep_change_ownership(new_cache_path, current_owner, current_group)
+          caller_locations(1, 1).first.tap{|loc| puts "#{loc.path}:#{loc.lineno}:deep change post"}
         end
 
         declare_resource(:directory, app_path.to_s) do
@@ -69,12 +71,11 @@ module CernerSplunk
       end
 
       def validate_versions # rubocop:disable Metrics/PerceivedComplexity, Metrics/CyclomaticComplexity
+        caller_locations(1, 1).first.tap{|loc| Chef::Log.warn "#{loc.path}:#{loc.lineno}:validation pre #{updated_by_last_action?}"}
         app_version = version
-        Chef::Log.warn "Requested version: #{version}"
         pkg_app_conf = CernerSplunk::ConfHelpers.read_config(new_cache_path + 'default/app.conf')
         return true unless app_version && pkg_app_conf.key?('launcher')
         pkg_version = CernerSplunk::SplunkVersion.from_string(pkg_app_conf['launcher']['version'])
-        Chef::Log.warn "Downloaded version: #{pkg_version}"
 
         # Check that the package's version matches the desired base version.
         unless pkg_version == app_version || !app_version.prerelease? && pkg_version.release_version == app_version.release_version
@@ -86,7 +87,7 @@ module CernerSplunk
           raise "Downloaded app version was unexpectedly a pre-release version (#{pkg_version} vs. #{app_version})"
         end
 
-        Chef::Log.warn "Installed version: #{current_resource.version}"
+        caller_locations(1, 1).first.tap{|loc| Chef::Log.warn "#{loc.path}:#{loc.lineno}:validation post #{updated_by_last_action?}"}
         pkg_version != current_resource.version
       end
     end unless defined? AppUpgrade
