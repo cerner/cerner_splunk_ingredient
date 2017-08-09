@@ -27,10 +27,15 @@ module CernerSplunk
       end
 
       def backup_app
-        ruby_block 'backing up existing app' do
+        ruby_resource = ruby_block 'backing up existing app' do
           block do
             FileUtils.cp_r(app_path, app_cache_path + 'current')
           end
+        end
+
+        # Necessary to prevent this from causing the app resource to be 'updated'
+        def ruby_resource.updated?
+          false
         end
       end
 
