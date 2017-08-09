@@ -173,39 +173,32 @@ class PackagedApp < SplunkApp
       source source_url
       show_progress true
     end
-    caller_locations(1, 1).first.tap{|loc| Chef::Log.warn "#{loc.path}:#{loc.lineno}:downloaded #{updated_by_last_action?}"}
 
     directory 'ensure app path exists' do
       path app_path.to_s
       recursive true
       action :create
     end
-    caller_locations(1, 1).first.tap{|loc| Chef::Log.warn "#{loc.path}:#{loc.lineno}:directory'd #{updated_by_last_action?}"}
 
     backup_app if changed? :version
-    caller_locations(1, 1).first.tap{|loc| Chef::Log.warn "#{loc.path}:#{loc.lineno}:backed up #{updated_by_last_action?}"}
 
     temp_path = new_cache_path.to_s
 
-    poise_archive package_path.to_s do
+    extraction_resource = poise_archive package_path.to_s do
       destination temp_path
       user current_owner
       group current_owner
     end
-    caller_locations(1, 1).first.tap{|loc| Chef::Log.warn "#{loc.path}:#{loc.lineno}:unpacked #{updated_by_last_action?}"}
 
-    converge_by 'validating the extracted app' do
-      validate_extracted_app
-      caller_locations(1, 1).first.tap{|loc| Chef::Log.warn "#{loc.path}:#{loc.lineno}:validated #{updated_by_last_action?}"}
-    end
+    extraction_resource.updated_by_last_action false
+
+    validate_extracted_app
 
     ruby_block 'upgrade app' do
       block { upgrade_keep_existing }
       only_if { validate_versions }
     end
-    caller_locations(1, 1).first.tap{|loc| Chef::Log.warn "#{loc.path}:#{loc.lineno}:upgraded #{updated_by_last_action?}"}
 
     apply_config
-    caller_locations(1, 1).first.tap{|loc| Chef::Log.warn "#{loc.path}:#{loc.lineno}:config'd #{updated_by_last_action?}"}
   end
 end
