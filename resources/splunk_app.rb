@@ -115,6 +115,28 @@ class SplunkApp < Chef::Resource
         reset true
       end
     end
+
+    # Create a child run_context, compile the block, and converge it.
+    #
+    # Really bad hack to prevent some resources from effecting an update
+    # in the app resource. Do not try this at home.
+    def compile_and_converge_action(&block)
+      old_run_context = run_context
+      @run_context = run_context.create_child
+      @prior_resources = []
+      return_value = instance_eval(&block)
+      Chef::Runner.new(run_context).converge
+      return_value
+    ensure
+      if run_context.resource_collection.any? { |r| r.updated? && !@prior_resources.include?(r) }
+        new_resource.updated_by_last_action(true)
+      end
+      @run_context = old_run_context
+    end
+
+    def ignore_previous_resource_updates
+      @prior_resources = run_context.resource_collection.select(&:updated?)
+    end
   end
 
   ### Inherited Actions
@@ -191,6 +213,8 @@ class PackagedApp < SplunkApp
     extraction_resource.run_action :unpack
 
     validate_extracted_app
+
+    ignore_previous_resource_updates
 
     ruby_block 'upgrade app' do
       block { upgrade_keep_existing }
