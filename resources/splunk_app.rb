@@ -128,6 +128,8 @@ class SplunkApp < Chef::Resource
       Chef::Runner.new(run_context).converge
       return_value
     ensure
+      Chef::Log.warn 'I am using the hack. Good job!'
+      Chef::Log.warn "#{@prior_resources}"
       if run_context.resource_collection.any? { |r| r.updated? && !@prior_resources.include?(r) }
         new_resource.updated_by_last_action(true)
       end
