@@ -70,9 +70,11 @@ module CernerSplunk
 
       def validate_versions # rubocop:disable Metrics/PerceivedComplexity, Metrics/CyclomaticComplexity
         app_version = version
+        Chef::Log.warn "Requested version: #{version}"
         pkg_app_conf = CernerSplunk::ConfHelpers.read_config(new_cache_path + 'default/app.conf')
         return true unless app_version && pkg_app_conf.key?('launcher')
         pkg_version = CernerSplunk::SplunkVersion.from_string(pkg_app_conf['launcher']['version'])
+        Chef::Log.warn "Downloaded version: #{pkg_version}"
 
         # Check that the package's version matches the desired base version.
         unless pkg_version == app_version || !app_version.prerelease? && pkg_version.release_version == app_version.release_version
@@ -84,6 +86,7 @@ module CernerSplunk
           raise "Downloaded app version was unexpectedly a pre-release version (#{pkg_version} vs. #{app_version})"
         end
 
+        Chef::Log.warn "Installed version: #{current_resource.version}"
         pkg_version != current_resource.version
       end
     end unless defined? AppUpgrade
