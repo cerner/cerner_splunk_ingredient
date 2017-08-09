@@ -79,7 +79,6 @@ class SplunkApp < Chef::Resource
     if app_version
       raise 'Version to install must be specified when app has a version.' unless desired.version
       version CernerSplunk::SplunkVersion.from_string(app_version)
-      caller_locations(1, 1).first.tap{|loc| Chef::Log.warn "#{loc.path}:#{loc.lineno}:current version #{updated_by_last_action?}"}
 
       # Check that a pre-release version isn't being installed over a similar release version.
       raise "Attempted to install pre-release version over release version (#{desired.version} vs. #{version})" if desired.version.prerelease? && !version.prerelease?
@@ -163,8 +162,6 @@ class PackagedApp < SplunkApp
   resource_name :splunk_app_package
 
   action :install do
-    caller_locations(1, 1).first.tap{|loc| Chef::Log.warn "#{loc.path}:#{loc.lineno}:version? #{version} #{updated_by_last_action?}"}
-    caller_locations(1, 1).first.tap{|loc| Chef::Log.warn "#{loc.path}:#{loc.lineno}:changed? #{changed?(:version)} #{updated_by_last_action?}"}
     return unless !version || changed?(:version)
 
     package_path = app_cache_path + CernerSplunk::PathHelpers.filename_from_url(source_url).gsub(/.spl$/, '.tgz')
@@ -201,5 +198,7 @@ class PackagedApp < SplunkApp
     end
 
     apply_config
+
+    Chef::Log.warn(run_context.resource_collection.select(&:updated?).to_s)
   end
 end
