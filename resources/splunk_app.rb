@@ -190,7 +190,9 @@ class PackagedApp < SplunkApp
       group current_owner
     end
 
-    extraction_resource.updated_by_last_action false
+    ruby_block 'app extraction metadata' do
+      block { extraction_resource.updated_by_last_action false }
+    end
 
     validate_extracted_app
 
