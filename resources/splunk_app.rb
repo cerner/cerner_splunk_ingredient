@@ -202,9 +202,9 @@ class PackagedApp < SplunkApp
 
     apply_config
 
-    # the_context = run_context
-    # ruby_block 'introspection' do
-    #   block { Chef::Log.warn(the_context.resource_collection.select(&:updated?).to_s) }
-    # end
+    the_context = run_context
+    ruby_block 'introspection' do
+      block { Chef::Log.warn(the_context.resource_collection.select(&:updated?).to_s) }
+    end
   end
 end
