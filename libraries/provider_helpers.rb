@@ -35,6 +35,7 @@ module CernerSplunk
       end
 
       def upgrade_keep_existing
+        caller_locations(1, 1).first.tap{|loc| Chef::Log.warn "#{loc.path}:#{loc.lineno}:upgrading #{updated_by_last_action?}"}
         converge_by 'restoring local config' do # ~FC005
           existing_local = existing_cache_path + 'local'
           existing_local_meta = existing_cache_path + 'metadata/local.meta'
@@ -59,6 +60,7 @@ module CernerSplunk
         converge_by 'installing new app version' do
           FileUtils.mv(new_cache_path, app_path)
         end
+        caller_locations(1, 1).first.tap{|loc| Chef::Log.warn "#{loc.path}:#{loc.lineno}:upgraded #{updated_by_last_action?}"}
       end
 
       def validate_extracted_app
@@ -88,6 +90,7 @@ module CernerSplunk
         end
 
         caller_locations(1, 1).first.tap{|loc| Chef::Log.warn "#{loc.path}:#{loc.lineno}:validation post #{updated_by_last_action?}"}
+        caller_locations(1, 1).first.tap{|loc| Chef::Log.warn "#{loc.path}:#{loc.lineno}:validation result #{pkg_version != current_resource.version}"}
         pkg_version != current_resource.version
       end
     end unless defined? AppUpgrade
