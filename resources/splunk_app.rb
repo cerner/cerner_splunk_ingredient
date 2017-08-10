@@ -163,6 +163,9 @@ class PackagedApp < SplunkApp
 
   action :install do
     return unless !version || changed?(:version)
+    Chef::Log.warn @converge_actions.inspect
+    Chef::Log.warn converge_actions.inspect
+    Chef::Log.warn resource_updated?
     @converge_actions = nil
 
     package_path = app_cache_path + CernerSplunk::PathHelpers.filename_from_url(source_url).gsub(/.spl$/, '.tgz')
