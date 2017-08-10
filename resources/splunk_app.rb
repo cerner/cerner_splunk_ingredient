@@ -163,10 +163,7 @@ class PackagedApp < SplunkApp
 
   action :install do
     return unless !version || changed?(:version)
-    Chef::Log.warn "Converge actions: #{@converge_actions.inspect}"
-    Chef::Log.warn "Converge actions: #{converge_actions.inspect}"
-    Chef::Log.warn "Updated?: #{resource_updated?}"
-    @converge_actions = nil
+    @converge_actions = nil # Clear resource updates by property change
 
     package_path = app_cache_path + CernerSplunk::PathHelpers.filename_from_url(source_url).gsub(/.spl$/, '.tgz')
 
@@ -205,10 +202,5 @@ class PackagedApp < SplunkApp
     end
 
     apply_config
-
-    # the_context = run_context
-    # ruby_block 'introspection' do
-    #   block { Chef::Log.warn(the_context.resource_collection.select(&:updated?).to_s) }
-    # end
   end
 end

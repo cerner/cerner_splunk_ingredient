@@ -435,24 +435,6 @@ describe 'splunk_app' do
 
               include_examples 'app no-install'
             end
-
-            chef_context 'when version is pre-release' do
-              let(:version_config) { { 'launcher' => { 'version' => '1.0.0.SNAPSHOT' } } }
-              let(:upgrade) { true }
-              let(:test_params) do
-                {
-                  name: 'test_app',
-                  version: '1.0.0',
-                  configs: configs_proc,
-                  source_url: source_url,
-                  files: files_proc,
-                  metadata: meta_conf,
-                  action: action
-                }
-              end
-
-              include_examples 'app install'
-            end
           end
 
           chef_context 'when version is not provided' do
