@@ -14,7 +14,7 @@ class SplunkApp < Chef::Resource
   property :install_dir, String, required: true, desired_state: false
   property :package, %i[splunk universal_forwarder], required: true, desired_state: false
   property :app_root, [String, :shcluster, :master_apps], default: 'apps', desired_state: false
-  property :version, [String, CernerSplunk::SplunkVersion]
+  property :version, [String, CernerSplunk::SplunkVersion], desired_state: false
   property :configs, Proc
   property :files, Proc
   property :metadata, Hash, default: {}
@@ -78,6 +78,7 @@ class SplunkApp < Chef::Resource
     app_version = (app_conf['launcher'] ||= {})['version']
     if app_version
       raise 'Version to install must be specified when app has a version.' unless desired.version
+      Chef::Log.warn 'This is where the version is overridden'
       version CernerSplunk::SplunkVersion.from_string(app_version)
 
       # Check that a pre-release version isn't being installed over a similar release version.
