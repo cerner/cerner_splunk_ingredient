@@ -3,9 +3,16 @@
 module CernerSplunk
   # Mixin Helper methods for Splunk Ingredient resources' providers
   module ProviderHelpers
+    # Logic copied from Chef::Provider#converge_if_changed
     def changed?(*properties)
-      converge_if_changed(*properties) do
+      properties = new_resource.class.state_properties.map(&:name) if properties.empty?
+      properties = properties.map(&:to_sym)
+      if current_resource
+        specified_properties = properties.select { |property| new_resource.property_is_set?(property) }
+        modified = specified_properties.reject { |p| new_resource.send(p) == current_resource.send(p) }
+        return false if modified.empty?
       end
+      true
     end
 
     module AppUpgrade
@@ -40,7 +47,7 @@ module CernerSplunk
       end
 
       def upgrade_keep_existing
-        caller_locations(1, 1).first.tap{|loc| Chef::Log.warn "#{loc.path}:#{loc.lineno}:upgrading #{updated_by_last_action?}"}
+        caller_locations(1, 1).first.tap { |loc| Chef::Log.warn "#{loc.path}:#{loc.lineno}:upgrading #{updated_by_last_action?}" }
         converge_by 'restoring local config' do # ~FC005
           existing_local = existing_cache_path + 'local'
           existing_local_meta = existing_cache_path + 'metadata/local.meta'
@@ -52,9 +59,9 @@ module CernerSplunk
         end
 
         converge_by "changing ownership of app to #{current_owner}:#{current_group}" do
-          caller_locations(1, 1).first.tap{|loc| puts "#{loc.path}:#{loc.lineno}:deep change pre"}
+          caller_locations(1, 1).first.tap { |loc| puts "#{loc.path}:#{loc.lineno}:deep change pre" }
           CernerSplunk::FileHelpers.deep_change_ownership(new_cache_path, current_owner, current_group)
-          caller_locations(1, 1).first.tap{|loc| puts "#{loc.path}:#{loc.lineno}:deep change post"}
+          caller_locations(1, 1).first.tap { |loc| puts "#{loc.path}:#{loc.lineno}:deep change post" }
         end
 
         declare_resource(:directory, app_path.to_s) do
@@ -65,7 +72,7 @@ module CernerSplunk
         converge_by 'installing new app version' do
           FileUtils.mv(new_cache_path, app_path)
         end
-        caller_locations(1, 1).first.tap{|loc| Chef::Log.warn "#{loc.path}:#{loc.lineno}:upgraded #{updated_by_last_action?}"}
+        caller_locations(1, 1).first.tap { |loc| Chef::Log.warn "#{loc.path}:#{loc.lineno}:upgraded #{updated_by_last_action?}" }
       end
 
       def validate_extracted_app
@@ -78,7 +85,7 @@ module CernerSplunk
       end
 
       def validate_versions # rubocop:disable Metrics/PerceivedComplexity, Metrics/CyclomaticComplexity
-        caller_locations(1, 1).first.tap{|loc| Chef::Log.warn "#{loc.path}:#{loc.lineno}:validation pre #{updated_by_last_action?}"}
+        caller_locations(1, 1).first.tap { |loc| Chef::Log.warn "#{loc.path}:#{loc.lineno}:validation pre #{updated_by_last_action?}" }
         app_version = version
         pkg_app_conf = CernerSplunk::ConfHelpers.read_config(new_cache_path + 'default/app.conf')
         return true unless app_version && pkg_app_conf.key?('launcher')
@@ -94,8 +101,8 @@ module CernerSplunk
           raise "Downloaded app version was unexpectedly a pre-release version (#{pkg_version} vs. #{app_version})"
         end
 
-        caller_locations(1, 1).first.tap{|loc| Chef::Log.warn "#{loc.path}:#{loc.lineno}:validation post #{updated_by_last_action?}"}
-        caller_locations(1, 1).first.tap{|loc| Chef::Log.warn "#{loc.path}:#{loc.lineno}:validation result #{pkg_version != current_resource.version}"}
+        caller_locations(1, 1).first.tap { |loc| Chef::Log.warn "#{loc.path}:#{loc.lineno}:validation post #{updated_by_last_action?}" }
+        caller_locations(1, 1).first.tap { |loc| Chef::Log.warn "#{loc.path}:#{loc.lineno}:validation result #{pkg_version != current_resource.version}" }
         pkg_version != current_resource.version
       end
     end unless defined? AppUpgrade
