@@ -248,7 +248,7 @@ class WindowsInstall < SplunkInstall
     windows_package package_name do
       source package_path.to_s
       action :install
-      options "LAUNCHSPLUNK=0 INSTALL_SHORTCUT=0 AGREETOLICENSE=Yes INSTALLDIR=#{install_dir}"
+      options "LAUNCHSPLUNK=0 INSTALL_SHORTCUT=0 AGREETOLICENSE=Yes INSTALLDIR=\"#{install_dir}\""
     end if changed? :version, :build
 
     post_install
