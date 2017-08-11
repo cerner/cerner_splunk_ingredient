@@ -58,9 +58,7 @@ module CernerSplunk
         end
 
         converge_by "changing ownership of app to #{current_owner}:#{current_group}" do
-          caller_locations(1, 1).first.tap { |loc| puts "#{loc.path}:#{loc.lineno}:deep change pre" }
           CernerSplunk::FileHelpers.deep_change_ownership(new_cache_path, current_owner, current_group)
-          caller_locations(1, 1).first.tap { |loc| puts "#{loc.path}:#{loc.lineno}:deep change post" }
         end
 
         declare_resource(:directory, app_path.to_s) do
