@@ -41,7 +41,7 @@ module CernerSplunk
     end
 
     def to_s
-      @string ||= '%{major}.%{minor}%{patch_dot}%{patch}%{meta}' % {
+      @string ||= '%<major>s.%<minor>s%<patch_dot>s%<patch>s%<meta>s' % {
         major: @major,
         minor: @minor,
         patch_dot: @patch.nil? ? '' : '.',
