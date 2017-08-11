@@ -19,7 +19,7 @@ describe 'splunk_install' do
 
         let(:package_name) { package_names[package][platform == 'windows' ? :windows : :linux] }
         let(:install_dir) { CernerSplunk::PathHelpers.default_install_dirs[package][platform == 'windows' ? :windows : :linux] }
-        let(:windows_opts) { "LAUNCHSPLUNK=0 INSTALL_SHORTCUT=0 AGREETOLICENSE=Yes INSTALLDIR=#{install_dir}" }
+        let(:windows_opts) { "LAUNCHSPLUNK=0 INSTALL_SHORTCUT=0 AGREETOLICENSE=Yes INSTALLDIR=\"#{install_dir}\"" }
         let(:command_prefix) { platform == 'windows' ? 'splunk.exe' : './splunk' }
         let(:package_path) { "./test/unit/.cache/#{CernerSplunk::PathHelpers.filename_from_url(expected_url)}" }
 
