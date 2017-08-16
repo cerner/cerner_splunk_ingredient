@@ -81,6 +81,10 @@ module CernerSplunk
       end
 
       def validate_versions # rubocop:disable Metrics/PerceivedComplexity, Metrics/CyclomaticComplexity
+        unless new_cache_path.exist?
+          raise "Downloaded app is not structured correctly. Expected sub-directory named #{name}, got #{(app_cache_path + 'new').children(false)}"
+        end
+
         app_version = version
         pkg_app_conf = CernerSplunk::ConfHelpers.read_config(new_cache_path + 'default/app.conf')
         return true unless app_version && pkg_app_conf.key?('launcher')

@@ -128,7 +128,7 @@ describe 'splunk_app' do
             when 'splunk_app_package'
               let(:package_path) { Pathname.new(app_cache_path) + 'my_app.tgz' }
               let(:existing_cache_path) { Pathname.new(app_cache_path) + 'current/test_app' }
-              let(:new_cache_path) { Pathname.new(app_cache_path) + 'new/test_app' }
+              let(:new_cache_path) { Pathname.new(app_cache_path) + 'new' }
               it do
                 if upgrade
                   is_expected.to run_ruby_block('upgrade app')
@@ -139,7 +139,7 @@ describe 'splunk_app' do
                 end
               end
               it { is_expected.to create_remote_file(package_path).with(source: source_url) }
-              it { is_expected.to unpack_poise_archive(package_path).with(destination: new_cache_path.to_s) }
+              it { is_expected.to unpack_poise_archive(package_path).with(destination: new_cache_path.to_s, strip_components: 0) }
             when 'splunk_app_custom'
               let(:directory_params) { { owner: 'splunk', group: 'splunk' } }
               it { is_expected.to create_directory(app_path.to_s).with(directory_params) }
