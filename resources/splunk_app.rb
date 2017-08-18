@@ -180,10 +180,8 @@ class PackagedApp < SplunkApp
 
     backup_app if changed? :version
 
-    temp_path = (app_cache_path + 'new').to_s
-
     extraction_resource = poise_archive package_path.to_s do
-      destination temp_path
+      destination((app_cache_path + 'new').to_s)
       user current_owner
       group current_owner
       strip_components 0
