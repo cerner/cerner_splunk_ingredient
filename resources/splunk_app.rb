@@ -163,7 +163,17 @@ class PackagedApp < SplunkApp
 
   action :install do
     return unless !version || changed?(:version)
-    @converge_actions = nil # Clear resource updates by property change
+    # Clear the converge actions before doing anything else.
+    # This is necessary because the desired version may be something like 1.0.0
+    # and the existing version may be 1.0.0.SNAPSHOT, and Chef assumes
+    # that this difference equates to a change in the resource. This is not
+    # always the case, however, as the actual app we download could be
+    # 1.0.0.SNAPSHOT which is the same as the existing version and does not warrant
+    # a resource change. We want to ensure it does not flag the resource as
+    # changed unnecessarily because that will cause notifications on this
+    # resource to be triggered erroneously. The proper comparison to determine a change
+    # is handled below in the 'upgrade app' ruby block.
+    @converge_actions = nil
 
     package_path = app_cache_path + CernerSplunk::PathHelpers.filename_from_url(source_url).gsub(/.spl$/, '.tgz')
 
