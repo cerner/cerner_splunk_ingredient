@@ -33,6 +33,10 @@ module CernerSplunk
         app_cache_path + 'new' + name
       end
 
+      def app_installed?
+        app_path.exist?
+      end
+
       def backup_app
         ruby_resource = ruby_block 'backing up existing app' do
           block do
@@ -87,17 +91,15 @@ module CernerSplunk
 
         app_version = version
         pkg_app_conf = CernerSplunk::ConfHelpers.read_config(new_cache_path + 'default/app.conf')
-        return true unless app_version && pkg_app_conf.key?('launcher')
+
+        # If the version is not specified, or the version does not exist in the currently installed app, then continue to install.
+        return true unless app_version && pkg_app_conf.key?('launcher') && pkg_app_conf.dig('launcher', 'version')
+
         pkg_version = CernerSplunk::SplunkVersion.from_string(pkg_app_conf['launcher']['version'])
 
         # Check that the package's version matches the desired base version.
         unless pkg_version == app_version || !app_version.prerelease? && pkg_version.release_version == app_version.release_version
           raise "Downloaded app version does not match intended version to install (#{pkg_version} vs. #{version})"
-        end
-
-        # Check that the package's version is not a pre-release when we really expect a release
-        if current_resource.version && !current_resource.version.prerelease? && pkg_version.prerelease?
-          raise "Downloaded app version was unexpectedly a pre-release version (#{pkg_version} vs. #{app_version})"
         end
 
         pkg_version != current_resource.version

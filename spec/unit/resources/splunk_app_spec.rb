@@ -42,6 +42,7 @@ describe 'splunk_app' do
         allow_any_instance_of(Chef::Provider).to receive(:current_group).and_return('splunk')
 
         if resource == 'splunk_app_package'
+          allow_any_instance_of(CernerSplunk::ProviderHelpers::AppUpgrade).to receive(:app_installed?).and_return(app_exists)
           allow_any_instance_of(CernerSplunk::ProviderHelpers::AppUpgrade).to receive(:validate_extracted_app)
           allow_any_instance_of(CernerSplunk::ProviderHelpers::AppUpgrade).to receive(:validate_versions).and_return(upgrade)
         end
@@ -50,6 +51,7 @@ describe 'splunk_app' do
         action_stubs
       end
 
+      let(:app_exists) { false }
       let(:upgrade) { false }
 
       let(:app_cache_path) { './test/unit/.cache/splunk_ingredient/app_cache' }
@@ -409,6 +411,7 @@ describe 'splunk_app' do
         end
 
         chef_context 'when app.conf provides a version' do
+          let(:app_exists) { true }
           let(:version_config) { { 'launcher' => { 'version' => '1.0.0' } } }
           let(:version_stub) do
             expect(CernerSplunk::ConfHelpers).to receive(:read_config).with(app_path + 'default/app.conf').and_return(version_config)
@@ -438,19 +441,48 @@ describe 'splunk_app' do
           end
 
           chef_context 'when version is not provided' do
-            it 'should fail the chef run' do
-              expect { chef_run }.to raise_error RuntimeError, /Version to install must be specified when app has a version.$/
+            let(:upgrade) { true }
+            let(:test_params) do
+              {
+                name: 'test_app',
+                configs: configs_proc,
+                source_url: source_url,
+                files: files_proc,
+                metadata: meta_conf,
+                action: action
+              }
             end
+
+            include_examples 'app install'
           end
         end
 
         chef_context 'when app.conf does not provide a version' do
+          let(:app_exists) { true }
+          let(:version_config) { { 'launcher' => {} } }
+
           chef_context 'when version is provided' do
             let(:upgrade) { true }
             let(:test_params) do
               {
                 name: 'test_app',
                 version: '2.0.0',
+                configs: configs_proc,
+                source_url: source_url,
+                files: files_proc,
+                metadata: meta_conf,
+                action: action
+              }
+            end
+
+            include_examples 'app install'
+          end
+
+          chef_context 'when version is not provided' do
+            let(:upgrade) { true }
+            let(:test_params) do
+              {
+                name: 'test_app',
                 configs: configs_proc,
                 source_url: source_url,
                 files: files_proc,

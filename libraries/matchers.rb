@@ -11,6 +11,10 @@ if defined?(ChefSpec)
     ChefSpec::Matchers::ResourceMatcher.new(:splunk_conf, :configure, path)
   end
 
+  def delete_splunk_conf(path)
+    ChefSpec::Matchers::ResourceMatcher.new(:splunk_conf, :delete, path)
+  end
+
   def install_splunk(name)
     ChefSpec::Matchers::ResourceMatcher.new(:splunk_install, :install, name)
   end

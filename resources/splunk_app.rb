@@ -76,13 +76,8 @@ class SplunkApp < Chef::Resource
 
     app_conf = CernerSplunk::ConfHelpers.read_config(app_path + 'default/app.conf')
     app_version = (app_conf['launcher'] ||= {})['version']
-    if app_version
-      raise 'Version to install must be specified when app has a version.' unless desired.version
-      version CernerSplunk::SplunkVersion.from_string(app_version)
 
-      # Check that a pre-release version isn't being installed over a similar release version.
-      raise "Attempted to install pre-release version over release version (#{desired.version} vs. #{version})" if desired.version.prerelease? && !version.prerelease?
-    end
+    version CernerSplunk::SplunkVersion.from_string(app_version) if app_version
   end
 
   # Provider exclusive methods
@@ -135,7 +130,7 @@ class CustomApp < SplunkApp
   resource_name :splunk_app_custom
 
   action :install do
-    return unless !version || changed?(:version)
+    return unless !new_resource.version || changed?(:version)
 
     directory app_path.to_s do
       user current_owner
@@ -162,7 +157,7 @@ class PackagedApp < SplunkApp
   resource_name :splunk_app_package
 
   action :install do
-    return unless !version || changed?(:version)
+    return unless !new_resource.version || changed?(:version)
     # Clear the converge actions before doing anything else.
     # This is necessary because the desired version may be something like 1.0.0
     # and the existing version may be 1.0.0.SNAPSHOT, and Chef assumes
@@ -188,7 +183,7 @@ class PackagedApp < SplunkApp
       action :create
     end
 
-    backup_app if changed? :version
+    backup_app if app_installed?
 
     extraction_resource = poise_archive package_path.to_s do
       destination((app_cache_path + 'new').to_s)

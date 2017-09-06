@@ -326,6 +326,214 @@ shared_examples 'splunk_conf' do |platform, version, package|
       it { is_expected.to create_template(conf_path).with(source: 'conf.erb', variables: { config: 'merged config' }, owner: 'otherbody') }
     end
   end
+
+  chef_describe 'action :delete' do
+    let(:config) { { a: { 'foo' => 'bar', 'one' => 1 } } }
+    let(:existing_config) { { 'a' => { 'foo' => 'bar' } } }
+    let(:expected_state_config) { { 'a' => { 'foo' => 'bar', 'one' => 1 } } }
+    let(:expected_config) { { 'a' => { 'foo' => 'bar', 'one' => '1' } } }
+    let(:action) { :delete }
+
+    let(:install_dir) { CernerSplunk::PathHelpers.default_install_dirs[package][platform == 'windows' ? :windows : :linux] }
+    let(:mock_run_state) do
+      install = {
+        name: package.to_s,
+        path: install_dir,
+        package: package,
+        version: '6.3.4',
+        build: 'cae2458f4aef',
+        x64: true
+      }
+      {
+        'splunk_ingredient' => {
+          'installations' => {
+            install_dir => install
+          },
+          'current_installation' => install
+        }
+      }
+    end
+
+    let(:chef_run_stubs) do
+      expect_any_instance_of(Chef::Resource).to receive(:load_installation_state).and_return true
+    end
+
+    let(:conf_path) { Pathname.new(install_dir) + 'etc/system/local/test.conf' }
+
+    chef_context 'when all parameters provided' do
+      let(:test_params) do
+        {
+          path: 'system/test.conf',
+          package: package,
+          scope: :default,
+          config: config,
+          user: package.to_s,
+          action: action
+        }
+      end
+
+      let(:conf_path) { Pathname.new(install_dir) + 'etc/system/default/test.conf' }
+
+      it { is_expected.to delete_splunk_conf('system/test.conf').with path: conf_path }
+      it { is_expected.to delete_template(conf_path) }
+    end
+
+    chef_context 'when install_dir is provided' do
+      let(:install_dir) { platform == 'windows' ? 'C:\\Splunk' : '/etc/splunk' }
+      let(:conf_path) { Pathname.new(install_dir) + 'etc/system/default/test.conf' }
+
+      let(:test_params) do
+        {
+          path: 'system/test.conf',
+          package: package,
+          scope: :default,
+          config: config,
+          install_dir: install_dir,
+          user: package.to_s,
+          action: action
+        }
+      end
+
+      it { is_expected.to delete_splunk_conf('system/test.conf').with path: conf_path }
+
+      chef_context 'without package' do
+        let(:test_params) do
+          {
+            path: 'system/test.conf',
+            scope: :default,
+            config: config,
+            install_dir: install_dir,
+            user: package.to_s,
+            action: action
+          }
+        end
+
+        it { is_expected.to delete_splunk_conf('system/test.conf').with path: conf_path }
+      end
+    end
+
+    chef_context 'when scope is not provided' do
+      let(:test_params) do
+        {
+          path: 'system/local/test.conf',
+          package: package,
+          config: config,
+          user: package.to_s,
+          action: action
+        }
+      end
+
+      it { is_expected.to delete_splunk_conf('system/local/test.conf') }
+
+      chef_context 'when the path does not include scope' do
+        let(:test_params) do
+          {
+            path: 'system/test.conf',
+            package: package,
+            config: config,
+            user: package.to_s,
+            action: action
+          }
+        end
+
+        it { is_expected.to delete_splunk_conf('system/test.conf').with scope: :local }
+      end
+    end
+
+    chef_context 'when package is not provided' do
+      let(:test_params) do
+        {
+          path: 'system/test.conf',
+          scope: :local,
+          config: config,
+          user: package.to_s,
+          action: action
+        }
+      end
+
+      it { is_expected.to delete_splunk_conf('system/test.conf') }
+
+      chef_context 'when prior install is in a non-default location' do
+        let(:install_dir) { platform == 'windows' ? 'C:\Splunk' : '/etc/splunk' }
+        let(:conf_path) { Pathname.new(install_dir) + 'etc/system/local/test.conf' }
+
+        it { is_expected.to delete_splunk_conf('system/test.conf').with path: conf_path }
+        it { is_expected.to delete_template(conf_path) }
+      end
+
+      chef_context 'without a prior install' do
+        let(:chef_run_stubs) {}
+        let(:mock_run_state) do
+          install = {
+            name: package.to_s,
+            path: install_dir,
+            package: package,
+            version: '6.3.4',
+            build: 'cae2458f4aef',
+            x64: true
+          }
+          {
+            'splunk_ingredient' => {
+              'installations' => {
+                install_dir => install
+              }
+            }
+          }
+        end
+
+        it 'should fail the chef run' do
+          expect { subject }.to raise_error Chef::Exceptions::ValidationFailed, /package is required$/
+        end
+      end
+    end
+
+    chef_context 'when config is not provided' do
+      let(:test_params) do
+        {
+          path: 'system/test.conf',
+          scope: :local,
+          user: package.to_s,
+          action: action
+        }
+      end
+      let(:chef_run_stubs) {}
+
+      it { is_expected.to delete_splunk_conf('system/test.conf') }
+      it { is_expected.to delete_template(conf_path) }
+    end
+
+    chef_context 'when user is not specified' do
+      let(:test_params) do
+        {
+          path: 'system/test.conf',
+          package: package,
+          scope: :local,
+          config: config,
+          action: action
+        }
+      end
+
+      it { is_expected.to delete_splunk_conf('system/test.conf') }
+      it { is_expected.to delete_template(conf_path) }
+    end
+
+    chef_context 'when reset is specified' do
+      let(:test_params) do
+        {
+          path: 'system/test.conf',
+          package: package,
+          user: package.to_s,
+          scope: :local,
+          config: config,
+          reset: true,
+          action: action
+        }
+      end
+
+      it { is_expected.to delete_splunk_conf('system/test.conf') }
+      it { is_expected.to delete_template(conf_path) }
+    end
+  end
 end
 
 describe 'splunk_conf' do
