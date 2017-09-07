@@ -79,26 +79,25 @@ module CernerSplunk
         # Check that the extracted app is the same name as the desired app.
         raise "Invalid or corrupt app package; could not find extracted app #{name} at #{new_cache_path}." unless new_cache_path.exist?
 
+        @pkg_app_conf ||= CernerSplunk::ConfHelpers.read_config(new_cache_path + 'default/app.conf')
+        raise 'Packaged app must have a version' unless pkg_app_conf.dig('launcher', 'version')
+
         # Check that the app does not contain local data
         return unless (new_cache_path + 'local').exist? && !(new_cache_path + 'local').children.empty? || (new_cache_path + 'metadata/local.meta').exist?
         raise 'Downloaded app contains local data'
       end
 
-      def validate_versions # rubocop:disable Metrics/PerceivedComplexity, Metrics/CyclomaticComplexity
-        unless new_cache_path.exist?
-          raise "Downloaded app is not structured correctly. Expected sub-directory named #{name}, got #{(app_cache_path + 'new').children(false)}"
-        end
-
-        app_version = version
-        pkg_app_conf = CernerSplunk::ConfHelpers.read_config(new_cache_path + 'default/app.conf')
+      def validate_versions
+        desired_version = version
+        @pkg_app_conf ||= CernerSplunk::ConfHelpers.read_config(new_cache_path + 'default/app.conf')
 
         # If the version is not specified, or the version does not exist in the currently installed app, then continue to install.
-        return true unless app_version && pkg_app_conf.key?('launcher') && pkg_app_conf.dig('launcher', 'version')
+        return true unless desired_version && current_resource.version
 
         pkg_version = CernerSplunk::SplunkVersion.from_string(pkg_app_conf['launcher']['version'])
 
         # Check that the package's version matches the desired base version.
-        unless pkg_version == app_version || !app_version.prerelease? && pkg_version.release_version == app_version.release_version
+        unless pkg_version == desired_version || !desired_version.prerelease? && pkg_version.release_version == desired_version.release_version
           raise "Downloaded app version does not match intended version to install (#{pkg_version} vs. #{version})"
         end
 
