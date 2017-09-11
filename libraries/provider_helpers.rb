@@ -80,7 +80,8 @@ module CernerSplunk
         raise "Invalid or corrupt app package; could not find extracted app #{name} at #{new_cache_path}." unless new_cache_path.exist?
 
         @pkg_app_conf ||= CernerSplunk::ConfHelpers.read_config(new_cache_path + 'default/app.conf')
-        raise 'Packaged app must have a version' unless pkg_app_conf.dig('launcher', 'version')
+
+        raise 'Packaged app must have a version' unless @pkg_app_conf.dig('launcher', 'version')
 
         # Check that the app does not contain local data
         return unless (new_cache_path + 'local').exist? && !(new_cache_path + 'local').children.empty? || (new_cache_path + 'metadata/local.meta').exist?
@@ -94,7 +95,7 @@ module CernerSplunk
         # If the version is not specified, or the version does not exist in the currently installed app, then continue to install.
         return true unless desired_version && current_resource.version
 
-        pkg_version = CernerSplunk::SplunkVersion.from_string(pkg_app_conf['launcher']['version'])
+        pkg_version = CernerSplunk::SplunkVersion.from_string(@pkg_app_conf['launcher']['version'])
 
         # Check that the package's version matches the desired base version.
         unless pkg_version == desired_version || !desired_version.prerelease? && pkg_version.release_version == desired_version.release_version

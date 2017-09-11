@@ -198,11 +198,12 @@ class PackagedApp < SplunkApp
       false
     end
 
-    validate_extracted_app
-
     ruby_block 'upgrade app' do
       block { upgrade_keep_existing }
-      only_if { validate_versions }
+      only_if do
+        validate_extracted_app
+        validate_versions
+      end
     end
 
     apply_config
