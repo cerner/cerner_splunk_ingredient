@@ -76,13 +76,8 @@ class SplunkApp < Chef::Resource
 
     app_conf = CernerSplunk::ConfHelpers.read_config(app_path + 'default/app.conf')
     app_version = (app_conf['launcher'] ||= {})['version']
-    if app_version
-      raise 'Version to install must be specified when app has a version.' unless desired.version
-      version CernerSplunk::SplunkVersion.from_string(app_version)
 
-      # Check that a pre-release version isn't being installed over a similar release version.
-      raise "Attempted to install pre-release version over release version (#{desired.version} vs. #{version})" if desired.version.prerelease? && !version.prerelease?
-    end
+    version CernerSplunk::SplunkVersion.from_string(app_version) if app_version
   end
 
   # Provider exclusive methods
@@ -135,11 +130,12 @@ class CustomApp < SplunkApp
   resource_name :splunk_app_custom
 
   action :install do
-    return unless !version || changed?(:version)
+    return unless !new_resource.version || changed?(:version)
 
     directory app_path.to_s do
       user current_owner
       group current_owner
+      recursive true
       action :create
     end
 
@@ -161,34 +157,53 @@ class PackagedApp < SplunkApp
   resource_name :splunk_app_package
 
   action :install do
-    return unless !version || changed?(:version)
+    return unless !new_resource.version || changed?(:version)
+    # Clear the converge actions before doing anything else.
+    # This is necessary because the desired version may be something like 1.0.0
+    # and the existing version may be 1.0.0.SNAPSHOT, and Chef assumes
+    # that this difference equates to a change in the resource. This is not
+    # always the case, however, as the actual app we download could be
+    # 1.0.0.SNAPSHOT which is the same as the existing version and does not warrant
+    # a resource change. We want to ensure it does not flag the resource as
+    # changed unnecessarily because that will cause notifications on this
+    # resource to be triggered erroneously. The proper comparison to determine a change
+    # is handled below in the 'upgrade app' ruby block.
+    @converge_actions = nil
 
     package_path = app_cache_path + CernerSplunk::PathHelpers.filename_from_url(source_url).gsub(/.spl$/, '.tgz')
 
     remote_file package_path.to_s do
       source source_url
-      show_progress true if defined? show_progress # Chef 12.9 feature
+      show_progress true
     end
 
-    directory app_path.to_s do
+    directory 'ensure app path exists' do
+      path app_path.to_s
+      recursive true
       action :create
     end
 
-    backup_app if changed? :version
+    backup_app if app_installed?
 
-    poise_archive package_path.to_s do
+    extraction_resource = poise_archive package_path.to_s do
       destination((app_cache_path + 'new').to_s)
       user current_owner
       group current_owner
+      strip_components 0
+      action :unpack
     end
 
-    converge_by 'validating the extracted app' do
-      validate_extracted_app
+    # Necessary to prevent this from causing the app resource to be 'updated'
+    def extraction_resource.updated?
+      false
     end
 
     ruby_block 'upgrade app' do
       block { upgrade_keep_existing }
-      only_if { validate_versions }
+      only_if do
+        validate_extracted_app
+        validate_versions
+      end
     end
 
     apply_config

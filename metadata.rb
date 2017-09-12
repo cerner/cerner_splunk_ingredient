@@ -6,7 +6,7 @@ maintainer_email  'splunk@cerner.com'
 license           'Apache-2.0'
 description       'Installs and configures Splunk'
 long_description((Pathname.new(__FILE__).dirname + 'README.md').read)
-version           '0.1.0'
+version           '1.0.0'
 
 source_url        'https://github.com/cerner/cerner_splunk_ingredient'
 issues_url        'https://github.com/cerner/cerner_splunk_ingredient/issues'

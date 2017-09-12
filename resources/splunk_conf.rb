@@ -73,12 +73,14 @@ class SplunkConf < Chef::Resource
     end unless scope == :none
 
     desired.path = Pathname.new(install_dir) + 'etc' + real_path.sub(%r{^/}, '')
-    current_config = existing_config(desired.path)
+    unless @action.first == :delete
+      current_config = existing_config(desired.path)
 
-    evaluated_config = CernerSplunk::ConfHelpers.evaluate_config(desired.path, current_config, desired.config)
-    desired.config = CernerSplunk::ConfHelpers.stringify_config(evaluated_config)
+      evaluated_config = CernerSplunk::ConfHelpers.evaluate_config(desired.path, current_config, desired.config)
+      desired.config = CernerSplunk::ConfHelpers.stringify_config(evaluated_config)
 
-    config reset ? current_config : current_config.select { |key, _| desired.config.keys.include? key.to_s }
+      config reset ? current_config : current_config.select { |key, _| desired.config.keys.include? key.to_s }
+    end
   end
 
   action_class do
@@ -116,5 +118,11 @@ class SplunkConf < Chef::Resource
       group config_group
       variables config: CernerSplunk::ConfHelpers.filter_config(merged_config)
     end if changed?(:config)
+  end
+
+  action :delete do
+    template new_resource.path.to_s do
+      action :delete
+    end
   end
 end

@@ -29,7 +29,7 @@ shared_examples '*start examples' do |action, platform, _, package|
 
   chef_context 'when the service has not been run for the first time' do
     let(:ftr_exists) { true }
-    it { is_expected.to run_execute("#{cmd_prefix} enable boot-start#{is_windows ? '' : ' -user fauxhai'} --accept-license --no-prompt").with(cwd: "#{install_dir}/bin") }
+    it { is_expected.to run_execute("#{cmd_prefix} enable boot-start#{is_windows ? '' : ' -user fauxhai'} --accept-license --answer-yes --no-prompt").with(cwd: "#{install_dir}/bin") }
     include_examples 'positive service examples', action
   end
 

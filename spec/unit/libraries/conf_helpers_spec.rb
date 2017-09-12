@@ -135,7 +135,10 @@ describe 'ConfHelpers' do
       {
         'default' => {
           'outside' => 'true',
-          'inside' => 'true'
+          'inside' => 'true',
+          'empty' => '',
+          'also_empty' => '',
+          'strange' => ''
         },
         'spacey! bit?' => {
           'some thing' => 'is here',
@@ -166,7 +169,10 @@ describe 'ConfHelpers' do
       {
         'default' => {
           'outside' => 'true',
-          'inside' => 'true'
+          'inside' => 'true',
+          'empty' => '',
+          'also_empty' => '',
+          'strange' => ''
         },
         'spacey! bit?' => {
           'some thing' => 'is here',
@@ -214,6 +220,35 @@ describe 'ConfHelpers' do
         expect(CernerSplunk::ConfHelpers.merge_config({}, config)).to eq config
       end
     end
+  end
+
+  describe 'filter_config' do
+    subject { CernerSplunk::ConfHelpers.filter_config(config) }
+    let(:config) do
+      {
+        'default' => {
+          'first' => ''
+        },
+        'other' => nil,
+        'another' => {
+          'something' => 'there',
+          'else' => nil
+        }
+      }
+    end
+
+    let(:expected_config) do
+      {
+        'default' => {
+          'first' => ''
+        },
+        'another' => {
+          'something' => 'there'
+        }
+      }
+    end
+
+    it { is_expected.to eq expected_config }
   end
 
   describe 'filter_config' do

@@ -37,11 +37,11 @@ module CernerSplunk
     end
 
     def release_version
-      @meta.empty? ? self : SplunkVersion.new(@major, @minor, @patch)
+      SplunkVersion.new(@major, @minor, @patch)
     end
 
     def to_s
-      @string ||= '%{major}.%{minor}%{patch_dot}%{patch}%{meta}' % {
+      @string ||= '%<major>s.%<minor>s%<patch_dot>s%<patch>s%<meta>s' % {
         major: @major,
         minor: @minor,
         patch_dot: @patch.nil? ? '' : '.',
