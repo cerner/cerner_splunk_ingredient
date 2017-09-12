@@ -13,7 +13,7 @@ Issues pertaining to cerner\_splunk\_ingredient should be submitted to Github's 
 
 ## Pull Requests
 
-Pull requests for changes should be compared against the 'stable' branch.
+Pull requests for changes should be compared against the 'master' branch.
 
 1. Your branch should use as few logical commits as possible with descriptive commit messages.
 1. _Note: these commits should **not** reference any issues, that will be done in the merge commit._
